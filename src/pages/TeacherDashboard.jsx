@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { CandidateForm } from './CandidateForm';
-import { FileCheck, AlertCircle } from 'lucide-react';
+import { StatusBadge } from '../components/StatusBadge';
+import { AlertCircle, FileCheck, Search } from 'lucide-react';
 
 export const TeacherDashboard = ({ cccd, onLogout }) => {
   const [candidate, setCandidate] = useState(null);
@@ -14,7 +15,6 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
 
   const loadData = async () => {
     setLoading(true);
-    // 1. Tìm đợt xét đang mở
     const { data: batches } = await supabase.from('batches').select('id, name').eq('isActive', true).order('created_at', { ascending: false }).limit(1);
     
     if (!batches || batches.length === 0) {
@@ -26,7 +26,6 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
     const batchId = batches[0].id;
     setActiveBatchId(batchId);
 
-    // 2. Tìm hồ sơ của CCCD này trong đợt đó
     const { data: cands } = await supabase.from('candidates').select('*').eq('batch_id', batchId).eq('cccd', cccd);
     
     if (cands && cands.length > 0) {
@@ -36,9 +35,9 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
     setLoading(false);
   };
 
-  const handleSave = async (formData) => {
+  const saveCandidate = async (formData, newStatus) => {
     setLoading(true);
-    const payload = { ...formData, batch_id: activeBatchId, status: 'draft' };
+    const payload = { ...formData, batch_id: activeBatchId, status: newStatus };
     
     if (candidate && candidate.id) {
       const { error } = await supabase.from('candidates').update(payload).eq('id', candidate.id);
@@ -49,17 +48,33 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
     }
     
     await loadData();
-    alert('Đã lưu hồ sơ thành công!');
+    if(newStatus === 'draft') alert('Đã lưu nháp thành công!');
+    else alert('Đã nộp hồ sơ cho Tổ trưởng!');
+  };
+
+  const handleSaveDraft = async (formData) => {
+    await saveCandidate(formData, 'draft');
+  };
+
+  const handleSubmitToHead = async (formData) => {
+    // Nếu trước đó là head_rejected thì đổi thành resubmitted, ngược lại là submitted_to_head
+    const newStatus = (candidate && candidate.status === 'head_rejected') ? 'resubmitted' : 'submitted_to_head';
+    await saveCandidate(formData, newStatus);
   };
 
   if (loading) return <div className="p-8 text-center">Đang tải dữ liệu...</div>;
 
+  const isReadOnly = candidate && !['draft', 'head_rejected'].includes(candidate.status);
+
   return (
     <div className="min-h-screen bg-slate-100 pb-10">
       <header className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
-        <h2 className="text-xl font-bold text-slate-800">
-          Khai báo hồ sơ cá nhân
-        </h2>
+        <div className="flex items-center gap-4">
+          <h2 className="text-xl font-bold text-slate-800">
+            Hồ sơ xét Thăng hạng
+          </h2>
+          {candidate && <StatusBadge status={candidate.status} />}
+        </div>
         <div className="flex items-center gap-4">
           <span className="text-sm font-medium text-slate-600">CCCD: {cccd}</span>
           <button onClick={onLogout} className="text-sm text-rose-600 hover:bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-200 font-medium">
@@ -73,41 +88,50 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
           <div className="bg-amber-50 text-amber-700 p-4 rounded-lg border border-amber-200 text-center">
             Hiện tại không có đợt xét nào đang mở. Vui lòng quay lại sau.
           </div>
-        ) : candidate?.status === 'verified' ? (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-8 text-center max-w-2xl mx-auto mt-10 shadow-sm">
-            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FileCheck size={32} />
-            </div>
-            <h3 className="text-xl font-bold text-slate-800 mb-2">Hồ sơ đã được phê duyệt!</h3>
-            <p className="text-slate-600 mb-6">
-              Hồ sơ của bạn đã được Tổ trưởng xác nhận hợp lệ. Bạn không thể chỉnh sửa thêm thông tin.
-            </p>
-            <div className="text-left bg-white p-4 rounded-lg border border-slate-200">
-              <p><strong>Họ tên:</strong> {candidate.fullName}</p>
-              <p><strong>Tổ chuyên môn:</strong> {candidate.unit}</p>
-              <p><strong>Chức danh đăng ký:</strong> {candidate.targetTitle}</p>
-            </div>
-          </div>
         ) : (
           <>
-            {candidate?.status === 'rejected' && (
-              <div className="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-lg mb-6 flex items-start gap-3">
+            {candidate?.status === 'head_rejected' && (
+              <div className="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-lg mb-6 flex items-start gap-3 shadow-sm">
                 <AlertCircle className="shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-bold">Hồ sơ cần chỉnh sửa</p>
-                  <p className="text-sm mt-1">Tổ trưởng đã yêu cầu bạn rà soát và sửa lại thông tin. Vui lòng cập nhật và Lưu lại.</p>
+                  <p className="font-bold">Yêu cầu bổ sung hồ sơ</p>
+                  <p className="text-sm mt-1">Tổ trưởng đã xem qua và yêu cầu bạn cập nhật lại thông tin. Vui lòng sửa lại các mục bị thiếu và nhấn nút "Nộp cho Tổ trưởng" để gửi lại.</p>
                 </div>
               </div>
             )}
             
-            <div className="bg-blue-50 border border-blue-200 text-blue-700 p-4 rounded-lg mb-6 text-sm">
-              Hãy điền đầy đủ thông tin bên dưới. Bạn có thể lưu nháp nhiều lần trước khi Tổ trưởng duyệt.
-            </div>
+            {candidate?.status === 'admin_reviewing' && (
+              <div className="bg-blue-50 border border-blue-200 text-blue-700 p-4 rounded-lg mb-6 flex items-center gap-3 shadow-sm">
+                <Search className="shrink-0" />
+                <div>
+                  <p className="font-bold">Hồ sơ đang được rà soát</p>
+                  <p className="text-sm">Tổ rà soát cấp Trường đang tiến hành thẩm định hồ sơ của bạn. Không thể sửa đổi thông tin lúc này.</p>
+                </div>
+              </div>
+            )}
+            
+            {(candidate?.status === 'admin_approved' || candidate?.status === 'ranked' || candidate?.status === 'finalized') && (
+              <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 p-4 rounded-lg mb-6 flex items-center gap-3 shadow-sm">
+                <FileCheck className="shrink-0" />
+                <div>
+                  <p className="font-bold">Hồ sơ đã Đủ điều kiện</p>
+                  <p className="text-sm">Chúc mừng, hồ sơ của bạn đã vượt qua khâu rà soát cấp Trường.</p>
+                </div>
+              </div>
+            )}
+
+            {!isReadOnly && !candidate?.status && (
+               <div className="bg-blue-50 border border-blue-200 text-blue-700 p-4 rounded-lg mb-6 text-sm">
+                 Hãy điền thông tin bên dưới. Bạn có thể nhấn <b>Lưu nháp</b> để lưu tạm và <b>Nộp cho Tổ trưởng</b> khi đã hoàn tất.
+               </div>
+            )}
             
             <CandidateForm 
               initialData={candidate} 
               fixedCccd={cccd} 
-              onSave={handleSave}
+              onSave={handleSaveDraft}
+              onSubmitToHead={handleSubmitToHead}
+              isReadOnly={isReadOnly}
             />
           </>
         )}

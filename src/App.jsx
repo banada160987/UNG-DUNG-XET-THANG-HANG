@@ -7,6 +7,8 @@ import { CandidateList } from './pages/CandidateList';
 import { Login } from './pages/Login';
 import { TeacherDashboard } from './pages/TeacherDashboard';
 import { HeadDashboard } from './pages/HeadDashboard';
+import { SecretaryDashboard } from './pages/SecretaryDashboard';
+import { SecretaryManager } from './components/SecretaryManager';
 import { supabase } from './utils/supabaseClient';
 
 function App() {
@@ -58,6 +60,11 @@ function App() {
     return <HeadDashboard department={session.department} onLogout={handleLogout} />;
   }
 
+  // NẾU LÀ THƯ KÝ
+  if (session.role === 'secretary') {
+    return <SecretaryDashboard secretaryInfo={session.info} onLogout={handleLogout} />;
+  }
+
   // NẾU LÀ QUẢN TRỊ VIÊN (ADMIN)
   return (
     <Layout currentPage={currentPage} setCurrentPage={setCurrentPage} onLogout={handleLogout}>
@@ -72,6 +79,8 @@ function App() {
           <BatchManager activeBatchId={activeBatchId} onSelectBatch={setActiveBatchId} />
           <DepartmentManager />
         </div>
+      ) : currentPage === 'secretaries' ? (
+        <SecretaryManager />
       ) : (
         <>
           <BatchManager activeBatchId={activeBatchId} onSelectBatch={setActiveBatchId} />
@@ -81,8 +90,8 @@ function App() {
             </div>
           ) : (
             <>
-              {currentPage === 'dashboard' && <Dashboard candidates={candidates} />}
-              {currentPage === 'list' && <CandidateList candidates={candidates} />}
+              {currentPage === 'dashboard' && <Dashboard candidates={candidates} onRefresh={fetchAdminCandidates} />}
+              {currentPage === 'list' && <CandidateList candidates={candidates} onRefresh={fetchAdminCandidates} />}
             </>
           )}
         </>

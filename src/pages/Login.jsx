@@ -3,7 +3,7 @@ import { supabase } from '../utils/supabaseClient';
 import { GraduationCap, User, Users, ShieldAlert } from 'lucide-react';
 
 export const Login = ({ onLogin }) => {
-  const [role, setRole] = useState('teacher'); // teacher | head | admin
+  const [role, setRole] = useState('teacher'); // teacher | head | secretary | admin
   const [departments, setDepartments] = useState([]);
   
   // States for Teacher
@@ -13,6 +13,10 @@ export const Login = ({ onLogin }) => {
   const [selectedDept, setSelectedDept] = useState('');
   const [headPass, setHeadPass] = useState('');
   
+  // States for Secretary
+  const [secUser, setSecUser] = useState('');
+  const [secPass, setSecPass] = useState('');
+
   // States for Admin
   const [adminPass, setAdminPass] = useState('');
 
@@ -28,7 +32,7 @@ export const Login = ({ onLogin }) => {
     }
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     
     if (role === 'teacher') {
@@ -45,6 +49,15 @@ export const Login = ({ onLogin }) => {
       }
       onLogin({ role: 'head', department: selectedDept });
     } 
+    else if (role === 'secretary') {
+      // Validate with database
+      const { data } = await supabase.from('secretaries').select('*').eq('username', secUser).eq('password', secPass);
+      if (data && data.length > 0) {
+        onLogin({ role: 'secretary', info: data[0] });
+      } else {
+        alert('Sai tên đăng nhập hoặc mật khẩu Thư ký!');
+      }
+    }
     else if (role === 'admin') {
       if (adminPass !== import.meta.env.VITE_ADMIN_PASS) {
         alert('Sai mật khẩu Quản trị!');
@@ -66,22 +79,28 @@ export const Login = ({ onLogin }) => {
         </div>
         
         <div className="p-6">
-          <div className="flex bg-slate-100 p-1 rounded-lg mb-6">
+          <div className="flex bg-slate-100 p-1 rounded-lg mb-6 overflow-x-auto whitespace-nowrap scrollbar-hide">
             <button 
               onClick={() => setRole('teacher')}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === 'teacher' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
+              className={`flex-1 min-w-[80px] px-2 py-2 text-sm font-medium rounded-md transition-all ${role === 'teacher' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
             >
               Giáo viên
             </button>
             <button 
               onClick={() => setRole('head')}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === 'head' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
+              className={`flex-1 min-w-[80px] px-2 py-2 text-sm font-medium rounded-md transition-all ${role === 'head' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
             >
               Tổ trưởng
             </button>
             <button 
+              onClick={() => setRole('secretary')}
+              className={`flex-1 min-w-[80px] px-2 py-2 text-sm font-medium rounded-md transition-all ${role === 'secretary' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
+            >
+              Thư ký
+            </button>
+            <button 
               onClick={() => setRole('admin')}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === 'admin' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
+              className={`flex-1 min-w-[80px] px-2 py-2 text-sm font-medium rounded-md transition-all ${role === 'admin' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
             >
               Quản trị
             </button>
@@ -135,6 +154,38 @@ export const Login = ({ onLogin }) => {
                     required 
                     value={headPass} 
                     onChange={e => setHeadPass(e.target.value)}
+                    placeholder="Nhập mật khẩu..." 
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+              </>
+            )}
+
+            {role === 'secretary' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Tên đăng nhập Thư ký</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                      <User size={18} />
+                    </div>
+                    <input 
+                      type="text" 
+                      required 
+                      value={secUser} 
+                      onChange={e => setSecUser(e.target.value)}
+                      placeholder="vd: thuky_thu" 
+                      className="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Mật khẩu</label>
+                  <input 
+                    type="password" 
+                    required 
+                    value={secPass} 
+                    onChange={e => setSecPass(e.target.value)}
                     placeholder="Nhập mật khẩu..." 
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   />

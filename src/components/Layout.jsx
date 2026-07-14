@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, List, Settings, GraduationCap, LogOut } from 'lucide-react';
+import { Home, List, Settings, GraduationCap, LogOut, Users } from 'lucide-react';
 
 export const Layout = ({ children, currentPage, setCurrentPage, onLogout }) => {
   return (
@@ -29,6 +29,12 @@ export const Layout = ({ children, currentPage, setCurrentPage, onLogout }) => {
             onClick={() => setCurrentPage('list')} 
           />
           <NavItem 
+            icon={<Users size={20} />} 
+            label="Quản lý Thư ký" 
+            active={currentPage === 'secretaries'} 
+            onClick={() => setCurrentPage('secretaries')} 
+          />
+          <NavItem 
             icon={<Settings size={20} />} 
             label="Cấu hình Đợt & Tổ" 
             active={currentPage === 'settings'} 
@@ -51,6 +57,7 @@ export const Layout = ({ children, currentPage, setCurrentPage, onLogout }) => {
           <h2 className="text-xl font-bold text-slate-800">
             {currentPage === 'dashboard' && 'Dashboard Rà soát'}
             {currentPage === 'list' && 'Bảng Xếp hạng Ưu tiên'}
+            {currentPage === 'secretaries' && 'Quản lý Thư ký Rà soát'}
             {currentPage === 'settings' && 'Cài đặt Hệ thống'}
           </h2>
           <div className="flex items-center gap-2 text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full">

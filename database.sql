@@ -2,6 +2,15 @@
 DROP TABLE IF EXISTS candidates;
 DROP TABLE IF EXISTS batches;
 DROP TABLE IF EXISTS departments;
+DROP TABLE IF EXISTS secretaries;
+
+-- 0. Bảng Thư ký (Secretaries)
+CREATE TABLE secretaries (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  username text NOT NULL UNIQUE,
+  password text NOT NULL,
+  departments text[] DEFAULT '{}'
+);
 
 -- 1. Bảng Đợt xét (Batches)
 CREATE TABLE batches (
@@ -60,11 +69,13 @@ CREATE TABLE candidates (
   UNIQUE(batch_id, cccd)
 );
 
--- Bật RLS và cấp quyền Public cho cả 3 bảng
+-- Bật RLS và cấp quyền Public cho cả 4 bảng
 ALTER TABLE batches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE departments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE candidates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE secretaries ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Enable all access for all users on batches" ON batches FOR ALL TO public USING (true) WITH CHECK (true);
 CREATE POLICY "Enable all access for all users on departments" ON departments FOR ALL TO public USING (true) WITH CHECK (true);
 CREATE POLICY "Enable all access for all users on candidates" ON candidates FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "Enable all access for all users on secretaries" ON secretaries FOR ALL TO public USING (true) WITH CHECK (true);

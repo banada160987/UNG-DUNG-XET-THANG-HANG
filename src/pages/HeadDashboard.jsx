@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { checkEligibility } from '../utils/validation';
+import { StatusBadge } from '../components/StatusBadge';
 import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle } from 'lucide-react';
 
 export const HeadDashboard = ({ department, onLogout }) => {
@@ -31,7 +32,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
   };
 
   const updateStatus = async (id, status) => {
-    const action = status === 'verified' ? 'XÁC NHẬN HỢP LỆ' : 'YÊU CẦU SỬA';
+    const action = status === 'head_approved' ? 'XÁC NHẬN HỢP LỆ' : 'YÊU CẦU BỔ SUNG';
     if (!confirm(`Bạn có chắc chắn muốn ${action} hồ sơ này?`)) return;
 
     const { error } = await supabase.from('candidates').update({ status }).eq('id', id);
@@ -41,6 +42,9 @@ export const HeadDashboard = ({ department, onLogout }) => {
       alert('Lỗi cập nhật trạng thái');
     }
   };
+
+  // Tổ trưởng chỉ thấy hồ sơ nếu trạng thái KHÁC 'draft'
+  const displayCandidates = candidates.filter(c => c.status !== 'draft');
 
   return (
     <div className="min-h-screen bg-slate-100 pb-10">
@@ -56,11 +60,11 @@ export const HeadDashboard = ({ department, onLogout }) => {
       <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
         {!activeBatchId ? (
           <div className="text-center p-8 text-slate-500 bg-white rounded-lg border">Chưa có đợt xét nào đang mở.</div>
-        ) : candidates.length === 0 ? (
+        ) : displayCandidates.length === 0 ? (
           <div className="text-center p-12 text-slate-500 bg-white rounded-lg border flex flex-col items-center">
             <Search size={48} className="text-slate-300 mb-4" />
             <p className="text-lg font-medium">Chưa có giáo viên nào nộp hồ sơ.</p>
-            <p className="text-sm mt-1">Hồ sơ của giáo viên thuộc tổ {department} sẽ hiện ở đây.</p>
+            <p className="text-sm mt-1">Hồ sơ đã nộp của giáo viên thuộc tổ {department} sẽ hiện ở đây.</p>
           </div>
         ) : (
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -69,13 +73,15 @@ export const HeadDashboard = ({ department, onLogout }) => {
                 <tr className="bg-slate-50 border-b border-slate-200 text-sm text-slate-600 font-medium">
                   <th className="p-4">Họ tên / CCCD</th>
                   <th className="p-4">Tự động quét ĐK</th>
-                  <th className="p-4">Trạng thái duyệt</th>
+                  <th className="p-4">Trạng thái</th>
                   <th className="p-4 text-right">Thao tác của Tổ trưởng</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {candidates.map(c => {
+                {displayCandidates.map(c => {
                   const eligibility = checkEligibility(c);
+                  // Tổ trưởng chỉ được thao tác nếu trạng thái là đã gửi Tổ trưởng, đã bổ sung, hoặc trả lại
+                  const canAct = ['submitted_to_head', 'resubmitted', 'head_rejected'].includes(c.status);
                   
                   return (
                     <tr key={c.id} className="hover:bg-slate-50/50">
@@ -96,24 +102,28 @@ export const HeadDashboard = ({ department, onLogout }) => {
                         )}
                       </td>
                       <td className="p-4">
-                        {c.status === 'verified' && <span className="inline-flex gap-1 items-center text-sm font-semibold text-emerald-600"><CheckCircle size={16}/> Đã xác nhận</span>}
-                        {c.status === 'rejected' && <span className="inline-flex gap-1 items-center text-sm font-semibold text-rose-600"><AlertTriangle size={16}/> Yêu cầu sửa</span>}
-                        {c.status === 'draft' && <span className="inline-flex gap-1 items-center text-sm font-semibold text-amber-600">Chờ duyệt</span>}
+                        <StatusBadge status={c.status} />
                       </td>
                       <td className="p-4 text-right space-x-2">
-                        <button 
-                          onClick={() => updateStatus(c.id, 'verified')}
-                          disabled={c.status === 'verified'}
-                          className="inline-flex items-center gap-1 text-sm bg-emerald-600 text-white px-3 py-1.5 rounded hover:bg-emerald-700 disabled:opacity-50 disabled:grayscale"
-                        >
-                          <UserCheck size={16} /> Duyệt
-                        </button>
-                        <button 
-                          onClick={() => updateStatus(c.id, 'rejected')}
-                          className="inline-flex items-center gap-1 text-sm bg-white border border-rose-300 text-rose-600 px-3 py-1.5 rounded hover:bg-rose-50"
-                        >
-                          <XCircle size={16} /> Báo sửa
-                        </button>
+                        {canAct ? (
+                          <>
+                            <button 
+                              onClick={() => updateStatus(c.id, 'head_approved')}
+                              className="inline-flex items-center gap-1 text-sm bg-emerald-600 text-white px-3 py-1.5 rounded hover:bg-emerald-700 shadow-sm"
+                            >
+                              <UserCheck size={16} /> Xác nhận
+                            </button>
+                            <button 
+                              onClick={() => updateStatus(c.id, 'head_rejected')}
+                              disabled={c.status === 'head_rejected'}
+                              className="inline-flex items-center gap-1 text-sm bg-white border border-rose-300 text-rose-600 px-3 py-1.5 rounded hover:bg-rose-50 shadow-sm disabled:opacity-50"
+                            >
+                              <XCircle size={16} /> YC Bổ sung
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-xs text-slate-400 italic">Đã chuyển cấp trên</span>
+                        )}
                       </td>
                     </tr>
                   )

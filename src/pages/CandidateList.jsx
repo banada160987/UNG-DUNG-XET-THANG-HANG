@@ -1,31 +1,56 @@
 import React, { useState, useMemo } from 'react';
+import { supabase } from '../utils/supabaseClient';
 import { checkEligibility } from '../utils/validation';
 import { rankCandidates } from '../utils/ranking';
-import { Download, Calculator, CheckCircle, XCircle } from 'lucide-react';
+import { StatusBadge } from '../components/StatusBadge';
+import { Download, Calculator, CheckCircle, FileText } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
-export const CandidateList = ({ candidates }) => {
+export const CandidateList = ({ candidates, onRefresh }) => {
   const [rankedList, setRankedList] = useState([]);
   const [hasCalculated, setHasCalculated] = useState(false);
 
-  // Chỉ lấy những hồ sơ ĐÃ ĐƯỢC TỔ TRƯỞNG DUYỆT để rà soát xếp hạng
-  const verifiedCandidates = useMemo(() => {
-    return candidates.filter(c => c.status === 'verified').map(c => ({
-      ...c,
-      eligibility: checkEligibility(c)
-    }));
+  // Chỉ lấy những hồ sơ ĐÃ ĐƯỢC QUẢN TRỊ DUYỆT (admin_approved) hoặc đã xếp hạng (ranked, finalized)
+  const approvedCandidates = useMemo(() => {
+    return candidates
+      .filter(c => ['admin_approved', 'ranked', 'finalized'].includes(c.status))
+      .map(c => ({
+        ...c,
+        eligibility: checkEligibility(c)
+      }));
   }, [candidates]);
 
   // Hành động 1: Nút tính xếp hạng (Bỏ qua người không đủ điều kiện)
-  const calculateRanking = () => {
-    const valid = verifiedCandidates.filter(c => c.eligibility.isValid);
-    const invalid = verifiedCandidates.filter(c => !c.eligibility.isValid);
-    
+  const calculateRanking = async () => {
+    // Rank chỉ những người admin_approved hoặc ranked
+    const valid = approvedCandidates.filter(c => c.eligibility.isValid);
     const sortedValid = valid.sort(rankCandidates);
     sortedValid.forEach((c, i) => c.rank = i + 1);
     
-    setRankedList([...sortedValid, ...invalid]);
+    setRankedList(sortedValid);
     setHasCalculated(true);
+    
+    // Lưu trạng thái 'ranked' xuống DB cho những người mới 'admin_approved'
+    const toUpdate = sortedValid.filter(c => c.status === 'admin_approved').map(c => c.id);
+    if(toUpdate.length > 0) {
+      await supabase.from('candidates').update({ status: 'ranked' }).in('id', toUpdate);
+      if(onRefresh) onRefresh();
+    }
+  };
+
+  const finalizeList = async () => {
+    if (!hasCalculated) {
+      alert('Vui lòng tính thứ tự ưu tiên trước khi chốt danh sách!');
+      return;
+    }
+    if (!confirm('Bạn có chắc chắn muốn chốt danh sách trình Hiệu trưởng? Hồ sơ sẽ bị khóa ở trạng thái cuối cùng.')) return;
+    
+    const toUpdate = rankedList.filter(c => c.status === 'ranked').map(c => c.id);
+    if(toUpdate.length > 0) {
+      await supabase.from('candidates').update({ status: 'finalized' }).in('id', toUpdate);
+      if(onRefresh) onRefresh();
+      alert('Đã chốt danh sách trình Hiệu trưởng thành công!');
+    }
   };
 
   // Các hàm xuất Excel
@@ -37,7 +62,7 @@ export const CandidateList = ({ candidates }) => {
   };
 
   const exportValid = () => {
-    const data = verifiedCandidates
+    const data = approvedCandidates
       .filter(c => c.eligibility.isValid)
       .map((c, i) => ({
         'STT': i + 1,
@@ -48,19 +73,6 @@ export const CandidateList = ({ candidates }) => {
         'Chức danh ĐK': c.targetTitle,
       }));
     exportToExcel(data, 'Danh_sach_du_dieu_kien');
-  };
-
-  const exportInvalid = () => {
-    const data = verifiedCandidates
-      .filter(c => !c.eligibility.isValid)
-      .map((c, i) => ({
-        'STT': i + 1,
-        'Họ tên': c.fullName,
-        'CCCD': c.cccd,
-        'Tổ chuyên môn': c.unit,
-        'Lý do thiếu': c.eligibility.missing.join('; ')
-      }));
-    exportToExcel(data, 'Danh_sach_thieu_dieu_kien');
   };
 
   const exportRanked = () => {
@@ -79,28 +91,37 @@ export const CandidateList = ({ candidates }) => {
     exportToExcel(data, 'Danh_sach_thu_tu_uu_tien');
   };
 
-  const displayList = hasCalculated ? rankedList : verifiedCandidates;
+  const displayList = hasCalculated ? rankedList : approvedCandidates;
 
   return (
     <div className="space-y-6 pb-10">
       <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
-        <button 
-          onClick={calculateRanking} 
-          className="w-full md:w-auto flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-bold shadow-md hover:bg-blue-700 transition-all active:scale-95"
-        >
-          <Calculator size={20} /> Tính thứ tự ưu tiên
-        </button>
+        <div className="flex gap-2 w-full md:w-auto">
+          <button 
+            onClick={calculateRanking} 
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-bold shadow-md hover:bg-blue-700 transition-all active:scale-95"
+          >
+            <Calculator size={20} /> Xếp hạng Ưu tiên
+          </button>
+          
+          <button 
+            onClick={finalizeList} 
+            disabled={!hasCalculated}
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-slate-800 text-white px-6 py-3 rounded-lg font-bold shadow-md hover:bg-slate-900 transition-all disabled:opacity-50 disabled:grayscale"
+          >
+            <FileText size={20} /> Trình Hiệu trưởng
+          </button>
+        </div>
 
-        <div className="flex flex-wrap gap-2 w-full md:w-auto">
-          <ExportBtn label="BC 1: Đủ ĐK" onClick={exportValid} color="emerald" />
-          <ExportBtn label="BC 2: Thiếu ĐK" onClick={exportInvalid} color="rose" />
-          <ExportBtn label="BC 3: Xếp hạng" onClick={exportRanked} color="amber" disabled={!hasCalculated} />
+        <div className="flex flex-wrap gap-2 w-full md:w-auto justify-end">
+          <ExportBtn label="Tải DS Đủ ĐK" onClick={exportValid} color="emerald" />
+          <ExportBtn label="Tải DS Xếp hạng" onClick={exportRanked} color="amber" disabled={!hasCalculated} />
         </div>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
         <div className="bg-blue-50 text-blue-700 px-4 py-3 text-sm font-medium border-b border-blue-100 flex items-center justify-between">
-          <span>* Lưu ý: Hệ thống chỉ tính toán xếp hạng trên những hồ sơ ĐÃ ĐƯỢC TỔ TRƯỞNG DUYỆT ({verifiedCandidates.length} hồ sơ)</span>
+          <span>* Lưu ý: Danh sách này chỉ bao gồm {approvedCandidates.length} hồ sơ ĐÃ ĐƯỢC TỔ RÀ SOÁT CẤP TRƯỜNG đánh giá Đủ Điều Kiện.</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -115,7 +136,7 @@ export const CandidateList = ({ candidates }) => {
             <tbody>
               {displayList.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="p-8 text-center text-slate-400">Không có hồ sơ nào được duyệt trong đợt này.</td>
+                  <td colSpan="4" className="p-8 text-center text-slate-400">Không có hồ sơ nào đủ điều kiện xếp hạng.</td>
                 </tr>
               ) : displayList.map(c => (
                 <tr key={c.id} className="border-b border-slate-100 hover:bg-slate-50/50">
@@ -134,15 +155,7 @@ export const CandidateList = ({ candidates }) => {
                     {c.targetTitle}
                   </td>
                   <td className="p-4">
-                    {c.eligibility.isValid ? (
-                      <span className="inline-flex items-center gap-1 text-emerald-600 text-xs font-medium bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
-                        <CheckCircle size={14} /> Đủ điều kiện
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-rose-600 text-xs font-medium bg-rose-50 px-2 py-1 rounded-md border border-rose-100">
-                        <XCircle size={14} /> Thiếu {c.eligibility.missing.length} mục
-                      </span>
-                    )}
+                    <StatusBadge status={c.status} />
                   </td>
                 </tr>
               ))}
@@ -157,7 +170,6 @@ export const CandidateList = ({ candidates }) => {
 const ExportBtn = ({ label, onClick, color, disabled }) => {
   const colors = {
     emerald: 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-200',
-    rose: 'bg-rose-50 text-rose-600 hover:bg-rose-100 border-rose-200',
     amber: 'bg-amber-50 text-amber-600 hover:bg-amber-100 border-amber-200'
   };
   const base = colors[color];
