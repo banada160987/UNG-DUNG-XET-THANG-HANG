@@ -1,59 +1,91 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Layout } from './components/Layout';
+import { BatchManager } from './components/BatchManager';
+import { DepartmentManager } from './components/DepartmentManager';
 import { Dashboard } from './pages/Dashboard';
 import { CandidateList } from './pages/CandidateList';
-import { CandidateForm } from './pages/CandidateForm';
-import { useLocalStorage } from './utils/storage';
+import { Login } from './pages/Login';
+import { TeacherDashboard } from './pages/TeacherDashboard';
+import { HeadDashboard } from './pages/HeadDashboard';
+import { supabase } from './utils/supabaseClient';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('list');
-  const [candidates, setCandidates] = useLocalStorage('candidates_db', []);
-  const [editingId, setEditingId] = useState(null);
+  const [session, setSession] = useState(null); // { role, cccd?, department? }
+  
+  // Admin states
+  const [currentPage, setCurrentPage] = useState('dashboard');
+  const [activeBatchId, setActiveBatchId] = useState(null);
+  const [candidates, setCandidates] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleEdit = (id) => {
-    setEditingId(id);
-    setCurrentPage('add');
-  };
-
-  const handleSave = (data) => {
-    if (data.id) {
-      // Cập nhật
-      setCandidates(candidates.map(c => c.id === data.id ? data : c));
-    } else {
-      // Thêm mới
-      setCandidates([...candidates, { ...data, id: Date.now().toString() }]);
+  useEffect(() => {
+    // Chỉ Admin mới cần tải danh sách chung
+    if (session?.role === 'admin') {
+      if (activeBatchId) fetchAdminCandidates();
+      else setCandidates([]);
     }
-    setCurrentPage('list');
-    setEditingId(null);
+  }, [activeBatchId, session]);
+
+  const fetchAdminCandidates = async () => {
+    setLoading(true);
+    // Lấy TẤT CẢ hồ sơ để Admin rà soát, kể cả nháp hay chưa duyệt (để đôn đốc)
+    const { data, error } = await supabase
+      .from('candidates')
+      .select('*')
+      .eq('batch_id', activeBatchId)
+      .order('created_at', { ascending: false });
+      
+    if (!error) setCandidates(data);
+    setLoading(false);
   };
 
-  const handleDelete = (id) => {
-    if (confirm('Bạn có chắc chắn muốn xóa hồ sơ này?')) {
-      setCandidates(candidates.filter(c => c.id !== id));
-    }
+  const handleLogout = () => {
+    setSession(null);
   };
 
+  // NẾU CHƯA ĐĂNG NHẬP
+  if (!session) {
+    return <Login onLogin={setSession} />;
+  }
+
+  // NẾU LÀ GIÁO VIÊN
+  if (session.role === 'teacher') {
+    return <TeacherDashboard cccd={session.cccd} onLogout={handleLogout} />;
+  }
+
+  // NẾU LÀ TỔ TRƯỞNG
+  if (session.role === 'head') {
+    return <HeadDashboard department={session.department} onLogout={handleLogout} />;
+  }
+
+  // NẾU LÀ QUẢN TRỊ VIÊN (ADMIN)
   return (
-    <Layout currentPage={currentPage} setCurrentPage={(page) => {
-      setCurrentPage(page);
-      if (page !== 'add') setEditingId(null);
-    }}>
-      {currentPage === 'dashboard' && (
-        <Dashboard candidates={candidates} />
+    <Layout currentPage={currentPage} setCurrentPage={setCurrentPage} onLogout={handleLogout}>
+      {loading && (
+        <div className="fixed top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded shadow z-50">
+          Đang đồng bộ dữ liệu...
+        </div>
       )}
-      {currentPage === 'list' && (
-        <CandidateList 
-          candidates={candidates} 
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-      )}
-      {currentPage === 'add' && (
-        <CandidateForm 
-          onSave={handleSave} 
-          onCancel={() => setCurrentPage('list')}
-          initialData={candidates.find(c => c.id === editingId)}
-        />
+      
+      {currentPage === 'settings' ? (
+        <div className="space-y-6">
+          <BatchManager activeBatchId={activeBatchId} onSelectBatch={setActiveBatchId} />
+          <DepartmentManager />
+        </div>
+      ) : (
+        <>
+          <BatchManager activeBatchId={activeBatchId} onSelectBatch={setActiveBatchId} />
+          {!activeBatchId ? (
+            <div className="text-center py-20 text-slate-500 bg-white rounded-xl border border-slate-200">
+              Vui lòng tạo hoặc chọn một Đợt xét ở trên để bắt đầu rà soát.
+            </div>
+          ) : (
+            <>
+              {currentPage === 'dashboard' && <Dashboard candidates={candidates} />}
+              {currentPage === 'list' && <CandidateList candidates={candidates} />}
+            </>
+          )}
+        </>
       )}
     </Layout>
   );

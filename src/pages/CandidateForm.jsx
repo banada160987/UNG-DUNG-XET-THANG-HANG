@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../utils/supabaseClient';
 import { ACHIEVEMENT_LEVELS, TARGET_TITLES } from '../data/config';
 import { Save, X, Plus, Trash2 } from 'lucide-react';
 
-export const CandidateForm = ({ onSave, onCancel, initialData }) => {
+export const CandidateForm = ({ onSave, onCancel, initialData, fixedCccd }) => {
+  const [departments, setDepartments] = useState([]);
+  
   const [formData, setFormData] = useState(initialData || {
+    cccd: fixedCccd || '',
     fullName: '',
     dob: '',
     gender: 'Nam',
@@ -11,19 +15,31 @@ export const CandidateForm = ({ onSave, onCancel, initialData }) => {
     unit: '',
     currentTitle: '',
     targetTitle: 'Hạng II',
-    dateRecruitment: '',
-    dateProbationEnd: '',
-    dateAppointment: '',
-    dateSalaryRaise: '',
-    degreeBachelor: false,
-    degreeMaster: false,
-    degreePhD: false,
-    degreeOther: false,
+    decisionRecruitment: { date: '', number: '', issuer: '' },
+    decisionProbation: { date: '', number: '', issuer: '' },
+    decisionAppointment: { date: '', number: '', issuer: '' },
+    decisionSalary: { date: '', number: '', issuer: '' },
+    degrees: [],
     certIT: false,
     certLanguage: false,
     reviewDoc: false,
-    achievements: []
+    achievements: [],
+    status: 'draft' // Luôn là nháp khi nộp
   });
+
+  useEffect(() => {
+    fetchDepts();
+  }, []);
+
+  const fetchDepts = async () => {
+    const { data } = await supabase.from('departments').select('*').order('name');
+    if (data) {
+      setDepartments(data);
+      if (!formData.unit && data.length > 0) {
+        setFormData(prev => ({ ...prev, unit: data[0].name }));
+      }
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -31,6 +47,33 @@ export const CandidateForm = ({ onSave, onCancel, initialData }) => {
       ...formData,
       [name]: type === 'checkbox' ? checked : value
     });
+  };
+
+  const handleDecisionChange = (type, field, value) => {
+    setFormData({
+      ...formData,
+      [type]: {
+        ...formData[type],
+        [field]: value
+      }
+    });
+  };
+
+  const addDegree = () => {
+    setFormData({
+      ...formData,
+      degrees: [...formData.degrees, { level: 'Đại học', major: '', school: '', year: '', number: '' }]
+    });
+  };
+
+  const updateDegree = (index, field, value) => {
+    const newDegrees = [...formData.degrees];
+    newDegrees[index][field] = value;
+    setFormData({ ...formData, degrees: newDegrees });
+  };
+
+  const removeDegree = (index) => {
+    setFormData({ ...formData, degrees: formData.degrees.filter((_, i) => i !== index) });
   };
 
   const addAchievement = () => {
@@ -50,21 +93,20 @@ export const CandidateForm = ({ onSave, onCancel, initialData }) => {
   };
 
   const removeAchievement = (index) => {
-    const newAchievements = formData.achievements.filter((_, i) => i !== index);
-    setFormData({ ...formData, achievements: newAchievements });
+    setFormData({ ...formData, achievements: formData.achievements.filter((_, i) => i !== index) });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(formData);
+    onSave({ ...formData, status: 'draft' }); // Reset về draft khi sửa/lưu
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 pb-10">
-      {/* 1. Thông tin cá nhân */}
       <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <h3 className="text-lg font-semibold border-b pb-2 mb-4 text-slate-800">1. Thông tin cá nhân</h3>
+        <h3 className="text-lg font-semibold border-b pb-2 mb-4 text-slate-800">I. Thông tin cá nhân</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input label="Số CCCD" name="cccd" value={formData.cccd} onChange={handleChange} required disabled={!!fixedCccd} />
           <Input label="Họ tên" name="fullName" value={formData.fullName} onChange={handleChange} required />
           <Input label="Ngày sinh" name="dob" type="date" value={formData.dob} onChange={handleChange} required />
           
@@ -77,7 +119,15 @@ export const CandidateForm = ({ onSave, onCancel, initialData }) => {
           </div>
           
           <Input label="Dân tộc" name="ethnicity" value={formData.ethnicity} onChange={handleChange} />
-          <Input label="Đơn vị công tác" name="unit" value={formData.unit} onChange={handleChange} required />
+          
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-slate-700">Tổ chuyên môn <span className="text-rose-500">*</span></label>
+            <select name="unit" value={formData.unit} onChange={handleChange} className="border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+              {departments.length === 0 && <option value="">Chưa có dữ liệu Tổ</option>}
+              {departments.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
+            </select>
+          </div>
+
           <Input label="Chức danh hiện giữ" name="currentTitle" value={formData.currentTitle} onChange={handleChange} required />
           
           <div className="flex flex-col gap-1">
@@ -89,47 +139,88 @@ export const CandidateForm = ({ onSave, onCancel, initialData }) => {
         </div>
       </section>
 
-      {/* 2. Thông tin công tác */}
+      {/* 2. Quyết định công tác */}
       <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <h3 className="text-lg font-semibold border-b pb-2 mb-4 text-slate-800">2. Thông tin công tác & Văn bằng</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <Input label="Ngày tuyển dụng" name="dateRecruitment" type="date" value={formData.dateRecruitment} onChange={handleChange} />
-          <Input label="Ngày hết tập sự" name="dateProbationEnd" type="date" value={formData.dateProbationEnd} onChange={handleChange} />
-          <Input label="Ngày bổ nhiệm hạng" name="dateAppointment" type="date" value={formData.dateAppointment} onChange={handleChange} />
-          <Input label="Ngày nâng lương gần nhất" name="dateSalaryRaise" type="date" value={formData.dateSalaryRaise} onChange={handleChange} />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <h4 className="font-medium text-slate-700 mb-2">Văn bằng</h4>
-            <Checkbox label="Đại học" name="degreeBachelor" checked={formData.degreeBachelor} onChange={handleChange} />
-            <Checkbox label="Thạc sĩ" name="degreeMaster" checked={formData.degreeMaster} onChange={handleChange} />
-            <Checkbox label="Tiến sĩ" name="degreePhD" checked={formData.degreePhD} onChange={handleChange} />
-            <Checkbox label="Khác" name="degreeOther" checked={formData.degreeOther} onChange={handleChange} />
-          </div>
-          <div>
-            <h4 className="font-medium text-slate-700 mb-2">Chứng chỉ</h4>
-            <Checkbox label="Tin học (hoặc XN)" name="certIT" checked={formData.certIT} onChange={handleChange} />
-            <Checkbox label="Ngoại ngữ (hoặc XN)" name="certLanguage" checked={formData.certLanguage} onChange={handleChange} />
-          </div>
-          <div>
-            <h4 className="font-medium text-slate-700 mb-2">Hồ sơ khác</h4>
-            <Checkbox label="Bản nhận xét của thủ trưởng" name="reviewDoc" checked={formData.reviewDoc} onChange={handleChange} />
-          </div>
+        <h3 className="text-lg font-semibold border-b pb-2 mb-4 text-slate-800">II. Thông tin công tác</h3>
+        <div className="space-y-6">
+          <DecisionInputGroup title="Quyết định Tuyển dụng" type="decisionRecruitment" data={formData.decisionRecruitment} onChange={handleDecisionChange} />
+          <DecisionInputGroup title="Quyết định Hết tập sự" type="decisionProbation" data={formData.decisionProbation} onChange={handleDecisionChange} />
+          <DecisionInputGroup title="Quyết định Bổ nhiệm hạng" type="decisionAppointment" data={formData.decisionAppointment} onChange={handleDecisionChange} />
+          <DecisionInputGroup title="Quyết định Nâng lương gần nhất" type="decisionSalary" data={formData.decisionSalary} onChange={handleDecisionChange} />
         </div>
       </section>
 
-      {/* 3. Thành tích */}
+      {/* 3. Văn bằng */}
       <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <div className="flex justify-between items-center border-b pb-2 mb-4">
-          <h3 className="text-lg font-semibold text-slate-800">3. Thành tích</h3>
-          <button type="button" onClick={addAchievement} className="flex items-center gap-1 text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors font-medium">
+          <h3 className="text-lg font-semibold text-slate-800">III. Văn bằng</h3>
+          <button type="button" onClick={addDegree} className="flex items-center gap-1 text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 font-medium">
+            <Plus size={16} /> Thêm văn bằng
+          </button>
+        </div>
+        
+        {formData.degrees.length === 0 ? (
+          <p className="text-slate-400 italic text-center py-4">Chưa có văn bằng nào được thêm.</p>
+        ) : (
+          <div className="space-y-4">
+            {formData.degrees.map((deg, index) => (
+              <div key={index} className="grid grid-cols-1 md:grid-cols-6 gap-3 bg-slate-50 p-4 rounded-lg border border-slate-200 relative">
+                <div className="col-span-1">
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Trình độ</label>
+                  <select value={deg.level} onChange={(e) => updateDegree(index, 'level', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white">
+                    <option value="Đại học">Đại học</option>
+                    <option value="Thạc sĩ">Thạc sĩ</option>
+                    <option value="Tiến sĩ">Tiến sĩ</option>
+                  </select>
+                </div>
+                <div className="col-span-1">
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Chuyên ngành</label>
+                  <input type="text" value={deg.major} onChange={(e) => updateDegree(index, 'major', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm" />
+                </div>
+                <div className="col-span-1 md:col-span-2">
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Trường cấp</label>
+                  <input type="text" value={deg.school} onChange={(e) => updateDegree(index, 'school', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm" />
+                </div>
+                <div className="col-span-1">
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Năm cấp</label>
+                  <input type="text" value={deg.year} onChange={(e) => updateDegree(index, 'year', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm" />
+                </div>
+                <div className="col-span-1 flex items-end gap-2">
+                  <div className="flex-1">
+                    <label className="text-xs font-medium text-slate-500 mb-1 block">Số hiệu</label>
+                    <input type="text" value={deg.number} onChange={(e) => updateDegree(index, 'number', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm" />
+                  </div>
+                  <button type="button" onClick={() => removeDegree(index)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg">
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 4. Chứng chỉ & Nhận xét */}
+      <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h3 className="text-lg font-semibold border-b pb-2 mb-4 text-slate-800">IV, V, VI. Chứng chỉ & Nhận xét</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Checkbox label="Tin học (Có chứng chỉ/xác nhận)" name="certIT" checked={formData.certIT} onChange={handleChange} />
+          <Checkbox label="Ngoại ngữ (Có chứng chỉ/xác nhận)" name="certLanguage" checked={formData.certLanguage} onChange={handleChange} />
+          <Checkbox label="Nhận xét của đơn vị (Đã có)" name="reviewDoc" checked={formData.reviewDoc} onChange={handleChange} />
+        </div>
+      </section>
+
+      {/* 5. Thành tích */}
+      <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div className="flex justify-between items-center border-b pb-2 mb-4">
+          <h3 className="text-lg font-semibold text-slate-800">VII. Thành tích (Cập nhật đúng theo Kế hoạch)</h3>
+          <button type="button" onClick={addAchievement} className="flex items-center gap-1 text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 font-medium">
             <Plus size={16} /> Thêm thành tích
           </button>
         </div>
 
         {formData.achievements.length === 0 ? (
-          <p className="text-slate-400 italic text-center py-4">Chưa có thành tích nào được thêm.</p>
+          <p className="text-slate-400 italic text-center py-4">Chưa khai báo thành tích nào.</p>
         ) : (
           <div className="space-y-4">
             {formData.achievements.map((ach, index) => (
@@ -158,10 +249,10 @@ export const CandidateForm = ({ onSave, onCancel, initialData }) => {
                   </select>
                 </div>
                 <div className="w-full md:w-48">
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">Số QĐ / Ghi chú</label>
-                  <input type="text" value={ach.decisionNo} onChange={(e) => updateAchievement(index, 'decisionNo', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm" placeholder="VD: 123/QĐ-UBND" />
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Số Quyết định</label>
+                  <input type="text" value={ach.decisionNo} onChange={(e) => updateAchievement(index, 'decisionNo', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm" />
                 </div>
-                <button type="button" onClick={() => removeAchievement(index)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors mt-4 md:mt-0">
+                <button type="button" onClick={() => removeAchievement(index)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg mt-4 md:mt-0">
                   <Trash2 size={18} />
                 </button>
               </div>
@@ -172,40 +263,42 @@ export const CandidateForm = ({ onSave, onCancel, initialData }) => {
 
       {/* Actions */}
       <div className="flex justify-end gap-3 sticky bottom-0 bg-slate-50 p-4 border-t border-slate-200 shadow-sm -mx-8 -mb-8 px-8">
-        <button type="button" onClick={onCancel} className="flex items-center gap-2 px-6 py-2 rounded-lg font-medium text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 transition-colors">
-          <X size={18} /> Hủy
-        </button>
-        <button type="submit" className="flex items-center gap-2 px-6 py-2 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">
-          <Save size={18} /> Lưu hồ sơ
+        {onCancel && (
+          <button type="button" onClick={onCancel} className="flex items-center gap-2 px-6 py-2 rounded-lg font-medium text-slate-600 bg-white border border-slate-300 hover:bg-slate-50">
+            <X size={18} /> Thoát
+          </button>
+        )}
+        <button type="submit" className="flex items-center gap-2 px-6 py-2 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-sm">
+          <Save size={18} /> Nộp hồ sơ
         </button>
       </div>
     </form>
   );
 };
 
+const DecisionInputGroup = ({ title, type, data, onChange }) => (
+  <div className="flex flex-col gap-2">
+    <h4 className="font-medium text-sm text-slate-700">{title}</h4>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <input type="text" placeholder="Số quyết định" value={data.number} onChange={e => onChange(type, 'number', e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+      <input type="date" title="Ngày ký" value={data.date} onChange={e => onChange(type, 'date', e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+      <input type="text" placeholder="Cơ quan ban hành" value={data.issuer} onChange={e => onChange(type, 'issuer', e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+    </div>
+  </div>
+);
+
 const Input = ({ label, ...props }) => (
   <div className="flex flex-col gap-1">
     <label className="text-sm font-medium text-slate-700">
       {label} {props.required && <span className="text-rose-500">*</span>}
     </label>
-    <input 
-      className="border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none transition-shadow" 
-      {...props} 
-    />
+    <input className="border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500" {...props} />
   </div>
 );
 
 const Checkbox = ({ label, name, checked, onChange }) => (
   <label className="flex items-center gap-2 mb-2 cursor-pointer group">
-    <div className="relative flex items-center">
-      <input 
-        type="checkbox" 
-        name={name} 
-        checked={checked} 
-        onChange={onChange}
-        className="w-5 h-5 border-2 border-slate-300 rounded text-blue-600 focus:ring-blue-500 transition-all cursor-pointer peer"
-      />
-    </div>
-    <span className="text-sm text-slate-700 group-hover:text-slate-900 transition-colors">{label}</span>
+    <input type="checkbox" name={name} checked={checked} onChange={onChange} className="w-5 h-5 border-2 border-slate-300 rounded text-blue-600 focus:ring-blue-500 peer" />
+    <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">{label}</span>
   </label>
 );
