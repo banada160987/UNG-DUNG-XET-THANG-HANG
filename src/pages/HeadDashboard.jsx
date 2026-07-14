@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { checkEligibility } from '../utils/validation';
+import { logAction } from '../utils/logger';
 import { StatusBadge } from '../components/StatusBadge';
-import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle } from 'lucide-react';
+import { CandidateTimeline } from '../components/CandidateTimeline';
+import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle, Send, History } from 'lucide-react';
 
 export const HeadDashboard = ({ department, onLogout }) => {
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeBatchId, setActiveBatchId] = useState(null);
+  
+  // Trạng thái modal từ chối
+  const [rejectingCand, setRejectingCand] = useState(null);
+  const [feedback, setFeedback] = useState('');
+  
+  // Trạng thái modal lịch sử
+  const [timelineCandId, setTimelineCandId] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -31,16 +40,39 @@ export const HeadDashboard = ({ department, onLogout }) => {
     setLoading(false);
   };
 
-  const updateStatus = async (id, status) => {
+  const updateStatus = async (c, status, feedbackMsg = '') => {
     const action = status === 'head_approved' ? 'XÁC NHẬN HỢP LỆ' : 'YÊU CẦU BỔ SUNG';
-    if (!confirm(`Bạn có chắc chắn muốn ${action} hồ sơ này?`)) return;
+    if (status === 'head_approved' && !confirm(`Bạn có chắc chắn muốn ${action} hồ sơ này?`)) return;
 
-    const { error } = await supabase.from('candidates').update({ status }).eq('id', id);
+    const payload = { status };
+    if (feedbackMsg) payload.feedback_message = feedbackMsg;
+
+    const { error } = await supabase.from('candidates').update(payload).eq('id', c.id);
     if (!error) {
+      await logAction(c.id, 'head', `Tổ trưởng ${department}`, action, feedbackMsg);
       loadData();
     } else {
       alert('Lỗi cập nhật trạng thái');
     }
+  };
+
+  const handleRejectSubmit = async (withZalo) => {
+    if (!feedback.trim()) {
+      alert("Vui lòng nhập lý do!");
+      return;
+    }
+    
+    await updateStatus(rejectingCand, 'head_rejected', feedback);
+    
+    if (withZalo && rejectingCand.phone) {
+      const msg = `Chào thầy/cô, hồ sơ thăng hạng của thầy/cô cần bổ sung: ${feedback}. Thầy/cô vui lòng lên hệ thống cập nhật nhé!`;
+      window.open(`https://zalo.me/${rejectingCand.phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    } else if (withZalo) {
+      alert("Giáo viên này chưa cập nhật Số điện thoại Zalo.");
+    }
+    
+    setRejectingCand(null);
+    setFeedback('');
   };
 
   // Tổ trưởng chỉ thấy hồ sơ nếu trạng thái KHÁC 'draft'
@@ -108,13 +140,13 @@ export const HeadDashboard = ({ department, onLogout }) => {
                         {canAct ? (
                           <>
                             <button 
-                              onClick={() => updateStatus(c.id, 'head_approved')}
+                              onClick={() => updateStatus(c, 'head_approved')}
                               className="inline-flex items-center gap-1 text-sm bg-emerald-600 text-white px-3 py-1.5 rounded hover:bg-emerald-700 shadow-sm"
                             >
                               <UserCheck size={16} /> Xác nhận
                             </button>
                             <button 
-                              onClick={() => updateStatus(c.id, 'head_rejected')}
+                              onClick={() => setRejectingCand(c)}
                               disabled={c.status === 'head_rejected'}
                               className="inline-flex items-center gap-1 text-sm bg-white border border-rose-300 text-rose-600 px-3 py-1.5 rounded hover:bg-rose-50 shadow-sm disabled:opacity-50"
                             >
@@ -124,6 +156,13 @@ export const HeadDashboard = ({ department, onLogout }) => {
                         ) : (
                           <span className="text-xs text-slate-400 italic">Đã chuyển cấp trên</span>
                         )}
+                        <button 
+                          onClick={() => setTimelineCandId(c.id)}
+                          className="inline-flex items-center gap-1 text-sm bg-slate-100 text-slate-600 px-2 py-1.5 rounded hover:bg-slate-200 ml-2 shadow-sm"
+                          title="Xem lịch sử thao tác"
+                        >
+                          <History size={16} />
+                        </button>
                       </td>
                     </tr>
                   )
@@ -133,6 +172,39 @@ export const HeadDashboard = ({ department, onLogout }) => {
           </div>
         )}
       </div>
+
+      {rejectingCand && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+            <div className="p-4 border-b border-slate-200 bg-rose-50 text-rose-700 font-bold flex justify-between items-center">
+              <span>Yêu cầu bổ sung hồ sơ</span>
+              <button onClick={() => setRejectingCand(null)} className="text-rose-500 hover:text-rose-700"><XCircle size={20} /></button>
+            </div>
+            <div className="p-4 space-y-4">
+              <p className="text-sm text-slate-600">Giáo viên: <b>{rejectingCand.fullName}</b></p>
+              <textarea 
+                className="w-full border border-slate-300 p-3 rounded-lg outline-none focus:ring-2 focus:ring-rose-500" 
+                rows="4"
+                placeholder="Nhập lý do cần bổ sung (VD: Chụp thiếu ảnh quyết định lương)..."
+                value={feedback}
+                onChange={e => setFeedback(e.target.value)}
+              />
+              <div className="flex gap-2 justify-end mt-4">
+                <button onClick={() => handleRejectSubmit(false)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium">
+                  Lưu (Không báo Zalo)
+                </button>
+                <button onClick={() => handleRejectSubmit(true)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 text-sm font-medium shadow-sm">
+                  <Send size={16} /> Lưu & Báo Zalo
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {timelineCandId && (
+        <CandidateTimeline candidateId={timelineCandId} onClose={() => setTimelineCandId(null)} />
+      )}
     </div>
   );
 };

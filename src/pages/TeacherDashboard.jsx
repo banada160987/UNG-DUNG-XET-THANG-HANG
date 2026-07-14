@@ -57,14 +57,13 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
   };
 
   const handleSubmitToHead = async (formData) => {
-    // Nếu trước đó là head_rejected thì đổi thành resubmitted, ngược lại là submitted_to_head
-    const newStatus = (candidate && candidate.status === 'head_rejected') ? 'resubmitted' : 'submitted_to_head';
+    const newStatus = 'submitted_to_head'; // Luôn nộp cho tổ trưởng
     await saveCandidate(formData, newStatus);
   };
 
   if (loading) return <div className="p-8 text-center">Đang tải dữ liệu...</div>;
 
-  const isReadOnly = candidate && !['draft', 'head_rejected'].includes(candidate.status);
+  const isReadOnly = candidate && !['draft', 'head_rejected', 'returned'].includes(candidate.status);
 
   return (
     <div className="min-h-screen bg-slate-100 pb-10">

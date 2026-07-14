@@ -1,14 +1,23 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { checkEligibility } from '../utils/validation';
+import { logAction } from '../utils/logger';
 import { StatusBadge } from '../components/StatusBadge';
-import { Users, FileText, CheckSquare, Search, ThumbsUp, ThumbsDown, LogOut } from 'lucide-react';
+import { CandidateTimeline } from '../components/CandidateTimeline';
+import { Users, FileText, CheckSquare, Search, ThumbsUp, ThumbsDown, LogOut, XCircle, Send, History } from 'lucide-react';
 
 export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeBatchId, setActiveBatchId] = useState(null);
   const [selectedFilter, setSelectedFilter] = useState('all');
+
+  // Trạng thái modal từ chối
+  const [rejectingCand, setRejectingCand] = useState(null);
+  const [feedback, setFeedback] = useState('');
+  
+  // Trạng thái modal lịch sử
+  const [timelineCandId, setTimelineCandId] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -39,13 +48,40 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
     setLoading(false);
   };
 
-  const updateStatus = async (id, status) => {
-    const { error } = await supabase.from('candidates').update({ status }).eq('id', id);
+  const updateStatus = async (c, status, feedbackMsg = '') => {
+    let action = 'Bắt đầu rà soát';
+    if(status === 'admin_approved') action = 'ĐỦ ĐIỀU KIỆN';
+    if(status === 'returned') action = 'TRẢ LẠI / YÊU CẦU BỔ SUNG'; // Đổi status thành returned thay vì admin_rejected
+
+    const payload = { status };
+    if (feedbackMsg) payload.feedback_message = feedbackMsg;
+
+    const { error } = await supabase.from('candidates').update(payload).eq('id', c.id);
     if (!error) {
+      await logAction(c.id, 'secretary', `Thư ký ${secretaryInfo.username}`, action, feedbackMsg);
       loadData();
     } else {
       alert('Lỗi cập nhật trạng thái!');
     }
+  };
+
+  const handleRejectSubmit = async (withZalo) => {
+    if (!feedback.trim()) {
+      alert("Vui lòng nhập lý do!");
+      return;
+    }
+    
+    await updateStatus(rejectingCand, 'returned', feedback);
+    
+    if (withZalo && rejectingCand.phone) {
+      const msg = `Chào thầy/cô, hồ sơ thăng hạng của thầy/cô cần bổ sung: ${feedback}. Thầy/cô vui lòng lên hệ thống cập nhật nhé!`;
+      window.open(`https://zalo.me/${rejectingCand.phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    } else if (withZalo) {
+      alert("Giáo viên này chưa cập nhật Số điện thoại Zalo.");
+    }
+    
+    setRejectingCand(null);
+    setFeedback('');
   };
 
   const evaluated = useMemo(() => {
@@ -59,12 +95,12 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
   const totalCount = evaluated.length;
   const waitingAdminCount = evaluated.filter(c => c.status === 'head_approved').length;
   const reviewingCount = evaluated.filter(c => c.status === 'admin_reviewing').length;
-  const adminFinishedCount = evaluated.filter(c => ['admin_approved', 'admin_rejected', 'ranked', 'finalized'].includes(c.status)).length;
+  const adminFinishedCount = evaluated.filter(c => ['admin_approved', 'returned', 'ranked', 'finalized'].includes(c.status)).length;
 
   const displayList = evaluated.filter(c => {
     if (selectedFilter === 'waiting') return c.status === 'head_approved';
     if (selectedFilter === 'reviewing') return c.status === 'admin_reviewing';
-    if (selectedFilter === 'finished') return ['admin_approved', 'admin_rejected', 'ranked', 'finalized'].includes(c.status);
+    if (selectedFilter === 'finished') return ['admin_approved', 'returned', 'ranked', 'finalized'].includes(c.status);
     return true; 
   });
 
@@ -186,28 +222,34 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                             Hệ thống: Đủ điều kiện ban đầu
                           </span>
                         )}
+                        <button 
+                          onClick={() => setTimelineCandId(c.id)}
+                          className="inline-flex items-center gap-1 text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded hover:bg-slate-200 mt-2 shadow-sm"
+                        >
+                          <History size={14} /> Xem lịch sử thao tác
+                        </button>
                       </div>
                       
                       <div className="flex flex-col gap-2 min-w-[200px]">
                         {c.status === 'head_approved' && (
-                          <button onClick={() => updateStatus(c.id, 'admin_reviewing')} className="flex items-center justify-center gap-1 text-sm bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 shadow-sm">
+                          <button onClick={() => updateStatus(c, 'admin_reviewing')} className="flex items-center justify-center gap-1 text-sm bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 shadow-sm">
                             <Search size={16} /> Bắt đầu rà soát
                           </button>
                         )}
                         
                         {c.status === 'admin_reviewing' && (
                           <div className="flex items-center gap-2">
-                            <button onClick={() => updateStatus(c.id, 'admin_approved')} className="flex-1 flex items-center justify-center gap-1 text-sm bg-emerald-600 text-white px-2 py-2 rounded-lg hover:bg-emerald-700 shadow-sm">
+                            <button onClick={() => updateStatus(c, 'admin_approved')} className="flex-1 flex items-center justify-center gap-1 text-sm bg-emerald-600 text-white px-2 py-2 rounded-lg hover:bg-emerald-700 shadow-sm">
                               <ThumbsUp size={16} /> Đủ ĐK
                             </button>
-                            <button onClick={() => updateStatus(c.id, 'admin_rejected')} className="flex-1 flex items-center justify-center gap-1 text-sm bg-white border border-rose-300 text-rose-600 px-2 py-2 rounded-lg hover:bg-rose-50 shadow-sm">
+                            <button onClick={() => setRejectingCand(c)} className="flex-1 flex items-center justify-center gap-1 text-sm bg-white border border-rose-300 text-rose-600 px-2 py-2 rounded-lg hover:bg-rose-50 shadow-sm">
                               <ThumbsDown size={16} /> Loại
                             </button>
                           </div>
                         )}
                         
-                        {['admin_approved', 'admin_rejected', 'ranked', 'finalized'].includes(c.status) && (
-                          <button onClick={() => updateStatus(c.id, 'admin_reviewing')} className="text-xs text-slate-500 hover:text-blue-600 underline text-right">
+                        {['admin_approved', 'returned', 'ranked', 'finalized'].includes(c.status) && (
+                          <button onClick={() => updateStatus(c, 'admin_reviewing')} className="text-xs text-slate-500 hover:text-blue-600 underline text-right">
                             Rà soát lại
                           </button>
                         )}
@@ -220,6 +262,39 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
           )}
         </div>
       </main>
+
+      {rejectingCand && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+            <div className="p-4 border-b border-slate-200 bg-rose-50 text-rose-700 font-bold flex justify-between items-center">
+              <span>Yêu cầu bổ sung hồ sơ</span>
+              <button onClick={() => setRejectingCand(null)} className="text-rose-500 hover:text-rose-700"><XCircle size={20} /></button>
+            </div>
+            <div className="p-4 space-y-4">
+              <p className="text-sm text-slate-600">Giáo viên: <b>{rejectingCand.fullName}</b></p>
+              <textarea 
+                className="w-full border border-slate-300 p-3 rounded-lg outline-none focus:ring-2 focus:ring-rose-500" 
+                rows="4"
+                placeholder="Nhập lý do cần bổ sung (VD: Chụp thiếu ảnh quyết định lương)..."
+                value={feedback}
+                onChange={e => setFeedback(e.target.value)}
+              />
+              <div className="flex gap-2 justify-end mt-4">
+                <button onClick={() => handleRejectSubmit(false)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium">
+                  Lưu (Không báo Zalo)
+                </button>
+                <button onClick={() => handleRejectSubmit(true)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 text-sm font-medium shadow-sm">
+                  <Send size={16} /> Lưu & Báo Zalo
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {timelineCandId && (
+        <CandidateTimeline candidateId={timelineCandId} onClose={() => setTimelineCandId(null)} />
+      )}
     </div>
   );
 };

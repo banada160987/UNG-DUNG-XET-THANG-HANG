@@ -35,7 +35,7 @@ CREATE TABLE candidates (
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
   batch_id uuid REFERENCES batches(id) ON DELETE CASCADE,
   
-  -- Trạng thái hồ sơ: 'draft' (nháp/chờ duyệt), 'verified' (tổ trưởng đã xác nhận), 'rejected' (yêu cầu sửa)
+  -- Trạng thái hồ sơ: 'draft' (nháp/chờ duyệt), 'submitted_to_head', 'head_approved', 'admin_reviewing', 'admin_approved', 'admin_rejected', 'returned', 'ranked', 'finalized'
   status text DEFAULT 'draft',
   
   -- I. Thông tin cá nhân
@@ -44,9 +44,13 @@ CREATE TABLE candidates (
   dob text,
   gender text,
   ethnicity text,
+  phone text, -- SDT Zalo
   unit text, -- Tên tổ chuyên môn (lấy từ departments)
   "currentTitle" text,
   "targetTitle" text,
+  
+  -- Lời nhắn khi trả hồ sơ
+  feedback_message text,
   
   -- II. Thông tin công tác
   "decisionRecruitment" jsonb DEFAULT '{"date": "", "number": "", "issuer": ""}'::jsonb,
@@ -65,17 +69,37 @@ CREATE TABLE candidates (
   
   -- Thành tích
   achievements jsonb DEFAULT '[]'::jsonb,
+  
+  -- Files đính kèm (mảng các URL)
+  files jsonb DEFAULT '[]'::jsonb,
 
   UNIQUE(batch_id, cccd)
 );
 
--- Bật RLS và cấp quyền Public cho cả 4 bảng
+-- 4. Bảng Lịch sử Thao tác (Candidate Logs)
+CREATE TABLE candidate_logs (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  candidate_id uuid REFERENCES candidates(id) ON DELETE CASCADE,
+  actor_role text NOT NULL, -- 'teacher', 'head', 'secretary', 'admin'
+  actor_name text NOT NULL,
+  action text NOT NULL,
+  notes text
+);
+
+-- Bật RLS và cấp quyền Public cho cả 5 bảng
 ALTER TABLE batches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE departments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE candidates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE secretaries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE candidate_logs ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Enable all access for all users on batches" ON batches FOR ALL TO public USING (true) WITH CHECK (true);
 CREATE POLICY "Enable all access for all users on departments" ON departments FOR ALL TO public USING (true) WITH CHECK (true);
 CREATE POLICY "Enable all access for all users on candidates" ON candidates FOR ALL TO public USING (true) WITH CHECK (true);
 CREATE POLICY "Enable all access for all users on secretaries" ON secretaries FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "Enable all access for all users on candidate_logs" ON candidate_logs FOR ALL TO public USING (true) WITH CHECK (true);
+
+-- 5. Tạo Storage Bucket cho File minh chứng (cần kích hoạt Storage trên Supabase)
+INSERT INTO storage.buckets (id, name, public) VALUES ('evidence_files', 'evidence_files', true) ON CONFLICT DO NOTHING;
+CREATE POLICY "Public Access" ON storage.objects FOR ALL TO public USING (bucket_id = 'evidence_files') WITH CHECK (bucket_id = 'evidence_files');

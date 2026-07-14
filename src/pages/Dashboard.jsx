@@ -2,10 +2,14 @@ import React, { useState, useMemo } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { checkEligibility } from '../utils/validation';
 import { StatusBadge } from '../components/StatusBadge';
-import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { logAction } from '../utils/logger';
+import { CandidateTimeline } from '../components/CandidateTimeline';
+import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History } from 'lucide-react';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 
 export const Dashboard = ({ candidates, onRefresh }) => {
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [timelineCandId, setTimelineCandId] = useState(null);
 
   const evaluated = useMemo(() => {
     return candidates.map(c => ({
@@ -15,8 +19,13 @@ export const Dashboard = ({ candidates, onRefresh }) => {
   }, [candidates]);
 
   const updateStatus = async (id, status) => {
+    let action = 'Bắt đầu rà soát';
+    if(status === 'admin_approved') action = 'ĐỦ ĐIỀU KIỆN';
+    if(status === 'admin_rejected') action = 'TỪ CHỐI / LOẠI';
+
     const { error } = await supabase.from('candidates').update({ status }).eq('id', id);
     if (!error) {
+      await logAction(id, 'admin', 'Ban Giám Hiệu', action, '');
       if(onRefresh) onRefresh();
     } else {
       alert('Lỗi cập nhật trạng thái!');
@@ -32,9 +41,28 @@ export const Dashboard = ({ candidates, onRefresh }) => {
   const displayList = evaluated.filter(c => {
     if (selectedFilter === 'waiting') return c.status === 'head_approved';
     if (selectedFilter === 'reviewing') return c.status === 'admin_reviewing';
-    if (selectedFilter === 'finished') return ['admin_approved', 'admin_rejected', 'ranked', 'finalized'].includes(c.status);
+    if (selectedFilter === 'finished') return ['admin_approved', 'returned', 'ranked', 'finalized'].includes(c.status);
     return true; 
   });
+
+  // Dữ liệu Biểu đồ tròn
+  const pieData = [
+    { name: 'Đủ điều kiện', value: evaluated.filter(c => ['admin_approved', 'ranked', 'finalized'].includes(c.status)).length, color: '#10b981' },
+    { name: 'Đang rà soát', value: evaluated.filter(c => ['admin_reviewing', 'head_approved'].includes(c.status)).length, color: '#f59e0b' },
+    { name: 'Trả lại/Loại', value: evaluated.filter(c => ['returned', 'admin_rejected', 'head_rejected'].includes(c.status)).length, color: '#f43f5e' },
+  ].filter(d => d.value > 0);
+
+  // Dữ liệu Biểu đồ cột
+  const barData = useMemo(() => {
+    const counts = {};
+    evaluated.forEach(c => {
+      counts[c.unit] = (counts[c.unit] || 0) + 1;
+    });
+    return Object.keys(counts).map(unit => ({
+      name: unit || 'Chưa có tổ',
+      total: counts[unit]
+    })).sort((a, b) => b.total - a.total);
+  }, [evaluated]);
 
   return (
     <div className="space-y-6 pb-10">
@@ -73,6 +101,59 @@ export const Dashboard = ({ candidates, onRefresh }) => {
           onClick={() => setSelectedFilter('finished')}
         />
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 h-80 flex flex-col">
+          <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
+            Tỉ lệ phê duyệt
+          </h3>
+          <div className="flex-1 min-h-0">
+            {pieData.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-slate-400">Chưa có dữ liệu</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip />
+                  <Legend verticalAlign="bottom" height={36}/>
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 h-80 flex flex-col">
+          <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
+            Số lượng nộp theo Tổ
+          </h3>
+          <div className="flex-1 min-h-0">
+            {barData.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-slate-400">Chưa có dữ liệu</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={barData} layout="vertical" margin={{ left: 50, right: 20 }}>
+                  <XAxis type="number" hide />
+                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} fontSize={12} width={100} />
+                  <RechartsTooltip cursor={{fill: '#f8fafc'}} />
+                  <Bar dataKey="total" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+      </div>
       
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
         <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
@@ -110,6 +191,12 @@ export const Dashboard = ({ candidates, onRefresh }) => {
                     Hệ thống: Đủ điều kiện ban đầu
                   </span>
                 )}
+                <button 
+                  onClick={() => setTimelineCandId(c.id)}
+                  className="inline-flex items-center gap-1 text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded hover:bg-slate-200 mt-2 shadow-sm"
+                >
+                  <History size={14} /> Xem lịch sử thao tác
+                </button>
               </div>
               
               {/* Vùng thao tác của Admin */}
@@ -141,6 +228,10 @@ export const Dashboard = ({ candidates, onRefresh }) => {
           )})}
         </div>
       </div>
+
+      {timelineCandId && (
+        <CandidateTimeline candidateId={timelineCandId} onClose={() => setTimelineCandId(null)} />
+      )}
     </div>
   );
 };

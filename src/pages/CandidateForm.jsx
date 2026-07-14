@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { ACHIEVEMENT_LEVELS, TARGET_TITLES } from '../data/config';
-import { Save, X, Plus, Trash2, Send } from 'lucide-react';
+import { Save, X, Plus, Trash2, Send, Upload, Paperclip, AlertCircle } from 'lucide-react';
 
 export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, fixedCccd, isReadOnly }) => {
   const [departments, setDepartments] = useState([]);
@@ -12,6 +12,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
     dob: '',
     gender: 'Nam',
     ethnicity: 'Kinh',
+    phone: '',
     unit: '',
     currentTitle: '',
     targetTitle: 'Hạng II',
@@ -25,8 +26,12 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
     certLanguage: false,
     reviewDoc: false,
     achievements: [],
-    status: 'draft' // Luôn là nháp khi nộp
+    files: [],
+    status: 'draft',
+    feedback_message: ''
   });
+
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchDepts();
@@ -97,6 +102,51 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
     setFormData({ ...formData, achievements: formData.achievements.filter((_, i) => i !== index) });
   };
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File quá lớn! Vui lòng chọn file dưới 5MB.");
+      return;
+    }
+
+    setUploading(true);
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `uploads/${fileName}`;
+
+    const { error } = await supabase.storage.from('evidence_files').upload(filePath, file);
+    
+    if (error) {
+      alert("Lỗi tải file: " + error.message);
+    } else {
+      const { data } = supabase.storage.from('evidence_files').getPublicUrl(filePath);
+      if (data) {
+        setFormData(prev => ({
+          ...prev,
+          files: [...(prev.files || []), { name: file.name, url: data.publicUrl, path: filePath }]
+        }));
+      }
+    }
+    setUploading(false);
+  };
+
+  const removeFile = async (index) => {
+    if (!confirm("Bạn muốn xóa file này?")) return;
+    const fileToRemove = formData.files[index];
+    
+    // Tùy chọn: Xóa file trên Storage thực tế
+    if (fileToRemove.path) {
+      await supabase.storage.from('evidence_files').remove([fileToRemove.path]);
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      files: prev.files.filter((_, i) => i !== index)
+    }));
+  };
+
   const handleSaveDraft = (e) => {
     e.preventDefault();
     onSave({ ...formData }); 
@@ -111,6 +161,16 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
 
   return (
     <form className="space-y-8 pb-10">
+      {formData.status === 'returned' && formData.feedback_message && (
+        <div className="bg-rose-50 border-l-4 border-rose-500 p-4 rounded-r-lg flex items-start gap-3 shadow-sm">
+          <AlertCircle className="text-rose-500 mt-0.5" size={20} />
+          <div>
+            <h3 className="font-semibold text-rose-800">Hồ sơ cần chỉnh sửa</h3>
+            <p className="text-rose-700 text-sm mt-1 whitespace-pre-wrap">{formData.feedback_message}</p>
+          </div>
+        </div>
+      )}
+
       <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <h3 className="text-lg font-semibold border-b pb-2 mb-4 text-slate-800">I. Thông tin cá nhân</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -127,6 +187,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
           </div>
           
           <Input label="Dân tộc" name="ethnicity" value={formData.ethnicity} onChange={handleChange} disabled={isReadOnly} />
+          <Input label="SĐT (Có Zalo)" name="phone" value={formData.phone} onChange={handleChange} placeholder="09xxxxxxx" required disabled={isReadOnly} />
           
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-slate-700">Tổ chuyên môn <span className="text-rose-500">*</span></label>
@@ -276,6 +337,50 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
               </div>
             ))}
           </div>
+        )}
+      </section>
+
+      {/* 6. Đính kèm File */}
+      <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h3 className="text-lg font-semibold border-b pb-2 mb-4 text-slate-800">VIII. Đính kèm File/Ảnh Minh chứng (Tùy chọn)</h3>
+        
+        {!isReadOnly && (
+          <div className="mb-4">
+            <label className="flex items-center justify-center w-full md:w-auto px-4 py-3 bg-slate-50 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
+              <div className="flex items-center gap-2 text-slate-600 font-medium">
+                {uploading ? (
+                  <span className="animate-pulse">Đang tải lên...</span>
+                ) : (
+                  <>
+                    <Upload size={20} className="text-blue-500" />
+                    <span>Click để chọn file tải lên (Dưới 5MB)</span>
+                  </>
+                )}
+              </div>
+              <input type="file" className="hidden" onChange={handleFileUpload} disabled={uploading || isReadOnly} accept=".pdf,.jpg,.jpeg,.png" />
+            </label>
+            <p className="text-xs text-slate-500 mt-2">Định dạng hỗ trợ: PDF, JPG, PNG. Vui lòng nén ảnh hoặc dùng PDF để tối ưu.</p>
+          </div>
+        )}
+
+        {(!formData.files || formData.files.length === 0) ? (
+          <p className="text-slate-400 italic py-2">Chưa có file nào được đính kèm.</p>
+        ) : (
+          <ul className="space-y-2 mt-4">
+            {formData.files.map((file, idx) => (
+              <li key={idx} className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200">
+                <a href={file.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium truncate flex-1">
+                  <Paperclip size={18} className="flex-shrink-0" />
+                  <span className="truncate">{file.name}</span>
+                </a>
+                {!isReadOnly && (
+                  <button type="button" onClick={() => removeFile(idx)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg flex-shrink-0 ml-2">
+                    <Trash2 size={18} />
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
         )}
       </section>
 
