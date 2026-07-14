@@ -48,7 +48,8 @@ CREATE TABLE candidates (
   -- III. Văn bằng
   degrees jsonb DEFAULT '[]'::jsonb,
   
-  -- IV, V, VI. Chứng chỉ & Nhận xét
+  -- IV, V, VI. Các thành phần hồ sơ khác
+  "resumeDoc" boolean DEFAULT false,
   "certIT" boolean DEFAULT false,
   "certLanguage" boolean DEFAULT false,
   "reviewDoc" boolean DEFAULT false,

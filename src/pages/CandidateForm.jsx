@@ -20,6 +20,7 @@ export const CandidateForm = ({ onSave, onCancel, initialData, fixedCccd }) => {
     decisionAppointment: { date: '', number: '', issuer: '' },
     decisionSalary: { date: '', number: '', issuer: '' },
     degrees: [],
+    resumeDoc: false,
     certIT: false,
     certLanguage: false,
     reviewDoc: false,
@@ -200,13 +201,14 @@ export const CandidateForm = ({ onSave, onCancel, initialData, fixedCccd }) => {
         )}
       </section>
 
-      {/* 4. Chứng chỉ & Nhận xét */}
+      {/* 4. Thành phần hồ sơ khác (Sơ yếu lý lịch, Chứng chỉ, Nhận xét) */}
       <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <h3 className="text-lg font-semibold border-b pb-2 mb-4 text-slate-800">IV, V, VI. Chứng chỉ & Nhận xét</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Checkbox label="Tin học (Có chứng chỉ/xác nhận)" name="certIT" checked={formData.certIT} onChange={handleChange} />
-          <Checkbox label="Ngoại ngữ (Có chứng chỉ/xác nhận)" name="certLanguage" checked={formData.certLanguage} onChange={handleChange} />
-          <Checkbox label="Nhận xét của đơn vị (Đã có)" name="reviewDoc" checked={formData.reviewDoc} onChange={handleChange} />
+        <h3 className="text-lg font-semibold border-b pb-2 mb-4 text-slate-800">IV. Thành phần hồ sơ khác</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg">
+          <Checkbox label="Đã có Sơ yếu lý lịch (Mẫu HS02-VC/BNV)" name="resumeDoc" checked={formData.resumeDoc} onChange={handleChange} />
+          <Checkbox label="Đã có Bản nhận xét, đánh giá của thủ trưởng" name="reviewDoc" checked={formData.reviewDoc} onChange={handleChange} />
+          <Checkbox label="Tin học (Có chứng chỉ hoặc xác nhận)" name="certIT" checked={formData.certIT} onChange={handleChange} />
+          <Checkbox label="Ngoại ngữ (Có chứng chỉ hoặc xác nhận)" name="certLanguage" checked={formData.certLanguage} onChange={handleChange} />
         </div>
       </section>
 
