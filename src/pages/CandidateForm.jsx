@@ -215,7 +215,7 @@ export const CandidateForm = ({ onSave, onCancel, initialData, fixedCccd }) => {
       {/* 5. Thành tích */}
       <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <div className="flex justify-between items-center border-b pb-2 mb-4">
-          <h3 className="text-lg font-semibold text-slate-800">VII. Thành tích (Cập nhật đúng theo Kế hoạch)</h3>
+          <h3 className="text-lg font-semibold text-slate-800">VII. Thành tích (Cập nhật đúng theo Kế hoạch 125)</h3>
           <button type="button" onClick={addAchievement} className="flex items-center gap-1 text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 font-medium">
             <Plus size={16} /> Thêm thành tích
           </button>
