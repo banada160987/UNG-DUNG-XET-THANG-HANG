@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { CandidateForm } from './CandidateForm';
 import { StatusBadge } from '../components/StatusBadge';
-import { AlertCircle, FileCheck, Search } from 'lucide-react';
+import { AlertCircle, FileCheck, Search, Download } from 'lucide-react';
+import { exportCandidateToWord } from '../utils/exportWord';
 
 export const TeacherDashboard = ({ cccd, onLogout }) => {
   const [candidate, setCandidate] = useState(null);
@@ -75,6 +76,16 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
           {candidate && <StatusBadge status={candidate.status} />}
         </div>
         <div className="flex items-center gap-4">
+          {candidate && (
+            <button 
+              onClick={() => exportCandidateToWord(candidate)} 
+              className="flex items-center gap-2 text-sm bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 shadow-sm font-medium"
+              title="Tải Danh mục hồ sơ bản Word"
+            >
+              <Download size={16} />
+              Xuất Bìa & Danh Mục
+            </button>
+          )}
           <span className="text-sm font-medium text-slate-600">CCCD: {cccd}</span>
           <button onClick={onLogout} className="text-sm text-rose-600 hover:bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-200 font-medium">
             Thoát

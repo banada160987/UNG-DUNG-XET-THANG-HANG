@@ -1,6 +1,7 @@
 import React from 'react';
-import { XCircle, FileText } from 'lucide-react';
+import { XCircle, FileText, Download } from 'lucide-react';
 import { CandidateForm } from '../pages/CandidateForm';
+import { exportCandidateToWord } from '../utils/exportWord';
 
 export const CandidateDetailsModal = ({ candidate, onClose }) => {
   return (
@@ -11,9 +12,19 @@ export const CandidateDetailsModal = ({ candidate, onClose }) => {
             <FileText size={20} className="text-blue-500" />
             Chi tiết hồ sơ: {candidate.fullName} ({candidate.cccd})
           </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-rose-500 transition-colors p-1 bg-white rounded-full shadow-sm hover:shadow">
-            <XCircle size={24} />
-          </button>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => exportCandidateToWord(candidate)} 
+              className="flex items-center gap-2 text-sm bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-200 shadow-sm font-medium"
+              title="Tải Danh mục hồ sơ bản Word"
+            >
+              <Download size={16} />
+              Xuất Bìa & Danh Mục
+            </button>
+            <button onClick={onClose} className="text-slate-400 hover:text-rose-500 transition-colors p-1 bg-white rounded-full shadow-sm hover:shadow">
+              <XCircle size={24} />
+            </button>
+          </div>
         </div>
         
         <div className="p-4 overflow-y-auto flex-1 bg-slate-100/50">
