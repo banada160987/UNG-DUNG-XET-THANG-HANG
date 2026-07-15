@@ -379,49 +379,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
         )}
       </section>
 
-      {/* 6. Đính kèm File */}
-      <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <h3 className="text-lg font-semibold border-b pb-2 mb-4 text-slate-800">VIII. Đính kèm File/Ảnh Minh chứng (Tùy chọn)</h3>
-        
-        {!isReadOnly && (
-          <div className="mb-4">
-            <label className="flex items-center justify-center w-full md:w-auto px-4 py-3 bg-slate-50 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
-              <div className="flex items-center gap-2 text-slate-600 font-medium">
-                {uploading ? (
-                  <span className="animate-pulse">Đang tải lên...</span>
-                ) : (
-                  <>
-                    <Upload size={20} className="text-blue-500" />
-                    <span>Click để chọn file tải lên (Dưới 5MB)</span>
-                  </>
-                )}
-              </div>
-              <input type="file" className="hidden" onChange={handleFileUpload} disabled={uploading || isReadOnly} accept=".pdf,.jpg,.jpeg,.png" />
-            </label>
-            <p className="text-xs text-slate-500 mt-2">Định dạng hỗ trợ: PDF, JPG, PNG. Vui lòng nén ảnh hoặc dùng PDF để tối ưu.</p>
-          </div>
-        )}
-
-        {(!formData.files || formData.files.length === 0) ? (
-          <p className="text-slate-400 italic py-2">Chưa có file nào được đính kèm.</p>
-        ) : (
-          <ul className="space-y-2 mt-4">
-            {formData.files.map((file, idx) => (
-              <li key={idx} className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200">
-                <a href={file.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium truncate flex-1">
-                  <Paperclip size={18} className="flex-shrink-0" />
-                  <span className="truncate">{file.name}</span>
-                </a>
-                {!isReadOnly && (
-                  <button type="button" onClick={() => removeFile(idx)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg flex-shrink-0 ml-2">
-                    <Trash2 size={18} />
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {/* 6. Đã Xóa phần đính kèm file chung */}
 
       {/* Actions */}
       {!isReadOnly && (
