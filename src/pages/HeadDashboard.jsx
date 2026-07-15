@@ -4,7 +4,8 @@ import { checkEligibility } from '../utils/validation';
 import { logAction } from '../utils/logger';
 import { StatusBadge } from '../components/StatusBadge';
 import { CandidateTimeline } from '../components/CandidateTimeline';
-import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle, Send, History } from 'lucide-react';
+import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
+import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle, Send, History, Eye } from 'lucide-react';
 
 export const HeadDashboard = ({ department, onLogout }) => {
   const [candidates, setCandidates] = useState([]);
@@ -17,6 +18,9 @@ export const HeadDashboard = ({ department, onLogout }) => {
   
   // Trạng thái modal lịch sử
   const [timelineCandId, setTimelineCandId] = useState(null);
+  
+  // Trạng thái modal xem chi tiết
+  const [viewCand, setViewCand] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -140,6 +144,13 @@ export const HeadDashboard = ({ department, onLogout }) => {
                         {canAct ? (
                           <>
                             <button 
+                              onClick={() => setViewCand(c)}
+                              className="inline-flex items-center gap-1 text-sm bg-blue-100 text-blue-700 px-3 py-1.5 rounded hover:bg-blue-200 shadow-sm mr-2"
+                              title="Xem chi tiết hồ sơ & minh chứng"
+                            >
+                              <Eye size={16} /> Xem
+                            </button>
+                            <button 
                               onClick={() => updateStatus(c, 'head_approved')}
                               className="inline-flex items-center gap-1 text-sm bg-emerald-600 text-white px-3 py-1.5 rounded hover:bg-emerald-700 shadow-sm"
                             >
@@ -154,7 +165,15 @@ export const HeadDashboard = ({ department, onLogout }) => {
                             </button>
                           </>
                         ) : (
-                          <span className="text-xs text-slate-400 italic">Đã chuyển cấp trên</span>
+                          <>
+                            <button 
+                              onClick={() => setViewCand(c)}
+                              className="inline-flex items-center gap-1 text-sm bg-slate-100 text-slate-600 px-3 py-1.5 rounded hover:bg-slate-200 mr-2 shadow-sm"
+                            >
+                              <Eye size={16} /> Xem
+                            </button>
+                            <span className="text-xs text-slate-400 italic">Đã chuyển cấp trên</span>
+                          </>
                         )}
                         <button 
                           onClick={() => setTimelineCandId(c.id)}
@@ -204,6 +223,10 @@ export const HeadDashboard = ({ department, onLogout }) => {
 
       {timelineCandId && (
         <CandidateTimeline candidateId={timelineCandId} onClose={() => setTimelineCandId(null)} />
+      )}
+
+      {viewCand && (
+        <CandidateDetailsModal candidate={viewCand} onClose={() => setViewCand(null)} />
       )}
     </div>
   );

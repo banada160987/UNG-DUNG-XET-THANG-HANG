@@ -4,7 +4,8 @@ import { checkEligibility } from '../utils/validation';
 import { logAction } from '../utils/logger';
 import { StatusBadge } from '../components/StatusBadge';
 import { CandidateTimeline } from '../components/CandidateTimeline';
-import { Users, FileText, CheckSquare, Search, ThumbsUp, ThumbsDown, LogOut, XCircle, Send, History } from 'lucide-react';
+import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
+import { Users, FileText, CheckSquare, Search, ThumbsUp, ThumbsDown, LogOut, XCircle, Send, History, Eye } from 'lucide-react';
 
 export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
   const [candidates, setCandidates] = useState([]);
@@ -18,6 +19,9 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
   
   // Trạng thái modal lịch sử
   const [timelineCandId, setTimelineCandId] = useState(null);
+  
+  // Trạng thái modal xem chi tiết
+  const [viewCand, setViewCand] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -231,6 +235,13 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                       </div>
                       
                       <div className="flex flex-col gap-2 min-w-[200px]">
+                        <button 
+                          onClick={() => setViewCand(c)}
+                          className="flex items-center justify-center gap-1 text-sm bg-blue-50 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-100 shadow-sm mb-1"
+                        >
+                          <Eye size={16} /> Xem Chi Tiết Hồ Sơ
+                        </button>
+                        
                         {c.status === 'head_approved' && (
                           <button onClick={() => updateStatus(c, 'admin_reviewing')} className="flex items-center justify-center gap-1 text-sm bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 shadow-sm">
                             <Search size={16} /> Bắt đầu rà soát
@@ -294,6 +305,10 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
 
       {timelineCandId && (
         <CandidateTimeline candidateId={timelineCandId} onClose={() => setTimelineCandId(null)} />
+      )}
+
+      {viewCand && (
+        <CandidateDetailsModal candidate={viewCand} onClose={() => setViewCand(null)} />
       )}
     </div>
   );

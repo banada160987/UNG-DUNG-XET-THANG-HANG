@@ -4,12 +4,14 @@ import { checkEligibility } from '../utils/validation';
 import { StatusBadge } from '../components/StatusBadge';
 import { logAction } from '../utils/logger';
 import { CandidateTimeline } from '../components/CandidateTimeline';
-import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History } from 'lucide-react';
+import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
+import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 
 export const Dashboard = ({ candidates, onRefresh }) => {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [timelineCandId, setTimelineCandId] = useState(null);
+  const [viewCand, setViewCand] = useState(null);
 
   const evaluated = useMemo(() => {
     return candidates.map(c => ({
@@ -201,6 +203,13 @@ export const Dashboard = ({ candidates, onRefresh }) => {
               
               {/* Vùng thao tác của Admin */}
               <div className="flex flex-col gap-2 min-w-[200px]">
+                <button 
+                  onClick={() => setViewCand(c)}
+                  className="flex items-center justify-center gap-1 text-sm bg-blue-50 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-100 shadow-sm mb-1"
+                >
+                  <Eye size={16} /> Xem Chi Tiết Hồ Sơ
+                </button>
+                
                 {c.status === 'head_approved' && (
                   <button onClick={() => updateStatus(c.id, 'admin_reviewing')} className="flex items-center justify-center gap-1 text-sm bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 shadow-sm">
                     <Search size={16} /> Bắt đầu rà soát
@@ -231,6 +240,10 @@ export const Dashboard = ({ candidates, onRefresh }) => {
 
       {timelineCandId && (
         <CandidateTimeline candidateId={timelineCandId} onClose={() => setTimelineCandId(null)} />
+      )}
+
+      {viewCand && (
+        <CandidateDetailsModal candidate={viewCand} onClose={() => setViewCand(null)} />
       )}
     </div>
   );

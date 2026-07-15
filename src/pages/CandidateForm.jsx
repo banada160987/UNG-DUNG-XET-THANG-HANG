@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { ACHIEVEMENT_LEVELS, TARGET_TITLES } from '../data/config';
 import { Save, X, Plus, Trash2, Send, Upload, Paperclip, AlertCircle } from 'lucide-react';
+import { DriveUploadButton } from '../components/DriveUploadButton';
 
 export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, fixedCccd, isReadOnly }) => {
   const [departments, setDepartments] = useState([]);
@@ -16,10 +17,10 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
     unit: '',
     currentTitle: '',
     targetTitle: 'Hạng II',
-    decisionRecruitment: { date: '', number: '', issuer: '' },
-    decisionProbation: { date: '', number: '', issuer: '' },
-    decisionAppointment: { date: '', number: '', issuer: '' },
-    decisionSalary: { date: '', number: '', issuer: '' },
+    decisionRecruitment: { date: '', number: '', issuer: '', link: '' },
+    decisionProbation: { date: '', number: '', issuer: '', link: '' },
+    decisionAppointment: { date: '', number: '', issuer: '', link: '' },
+    decisionSalary: { date: '', number: '', issuer: '', link: '' },
     degrees: [],
     resumeDoc: false,
     certIT: false,
@@ -68,7 +69,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
   const addDegree = () => {
     setFormData({
       ...formData,
-      degrees: [...formData.degrees, { level: 'Đại học', major: '', school: '', year: '', number: '' }]
+      degrees: [...formData.degrees, { level: 'Đại học', major: '', school: '', year: '', number: '', link: '' }]
     });
   };
 
@@ -87,7 +88,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
       ...formData,
       achievements: [
         ...formData.achievements,
-        { id: 'cstd_co_so', year: new Date().getFullYear(), type: 'cá nhân', decisionNo: '' }
+        { id: 'cstd_co_so', year: new Date().getFullYear(), type: 'cá nhân', decisionNo: '', link: '' }
       ]
     });
   };
@@ -159,6 +160,8 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
     }
   };
 
+  const filePrefix = formData.cccd ? `${formData.cccd}_${formData.fullName}` : "";
+
   return (
     <form className="space-y-8 pb-10">
       {formData.status === 'returned' && formData.feedback_message && (
@@ -212,10 +215,10 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
       <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <h3 className="text-lg font-semibold border-b pb-2 mb-4 text-slate-800">II. Thông tin công tác</h3>
         <div className="space-y-6">
-          <DecisionInputGroup title="Quyết định Tuyển dụng" type="decisionRecruitment" data={formData.decisionRecruitment} onChange={handleDecisionChange} disabled={isReadOnly} />
-          <DecisionInputGroup title="Quyết định Hết tập sự" type="decisionProbation" data={formData.decisionProbation} onChange={handleDecisionChange} disabled={isReadOnly} />
-          <DecisionInputGroup title="Quyết định Bổ nhiệm hạng" type="decisionAppointment" data={formData.decisionAppointment} onChange={handleDecisionChange} disabled={isReadOnly} />
-          <DecisionInputGroup title="Quyết định Nâng lương gần nhất" type="decisionSalary" data={formData.decisionSalary} onChange={handleDecisionChange} disabled={isReadOnly} />
+          <DecisionInputGroup title="Quyết định Tuyển dụng" type="decisionRecruitment" data={formData.decisionRecruitment} onChange={handleDecisionChange} disabled={isReadOnly} filePrefix={filePrefix} />
+          <DecisionInputGroup title="Quyết định Hết tập sự" type="decisionProbation" data={formData.decisionProbation} onChange={handleDecisionChange} disabled={isReadOnly} filePrefix={filePrefix} />
+          <DecisionInputGroup title="Quyết định Bổ nhiệm hạng" type="decisionAppointment" data={formData.decisionAppointment} onChange={handleDecisionChange} disabled={isReadOnly} filePrefix={filePrefix} />
+          <DecisionInputGroup title="Quyết định Nâng lương gần nhất" type="decisionSalary" data={formData.decisionSalary} onChange={handleDecisionChange} disabled={isReadOnly} filePrefix={filePrefix} />
         </div>
       </section>
 
@@ -261,9 +264,20 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                     <label className="text-xs font-medium text-slate-500 mb-1 block">Số hiệu</label>
                     <input disabled={isReadOnly} type="text" value={deg.number} onChange={(e) => updateDegree(index, 'number', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
                   </div>
+                </div>
+                <div className="col-span-1 md:col-span-6 flex items-center justify-between mt-2 pt-2 border-t border-slate-200 border-dashed">
+                  <div className="flex-1">
+                    <DriveUploadButton 
+                      disabled={isReadOnly} 
+                      currentLink={deg.link} 
+                      onUploadSuccess={(url) => updateDegree(index, 'link', url)} 
+                      compact={true} 
+                      filePrefix={filePrefix}
+                    />
+                  </div>
                   {!isReadOnly && (
-                    <button type="button" onClick={() => removeDegree(index)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg">
-                      <Trash2 size={18} />
+                    <button type="button" onClick={() => removeDegree(index)} className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg flex items-center gap-1 text-sm font-medium">
+                      <Trash2 size={16} /> Xóa
                     </button>
                   )}
                 </div>
@@ -329,11 +343,36 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                   <label className="text-xs font-medium text-slate-500 mb-1 block">Số Quyết định</label>
                   <input disabled={isReadOnly} type="text" value={ach.decisionNo} onChange={(e) => updateAchievement(index, 'decisionNo', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
                 </div>
-                {!isReadOnly && (
-                  <button type="button" onClick={() => removeAchievement(index)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg mt-4 md:mt-0">
-                    <Trash2 size={18} />
-                  </button>
-                )}
+                
+                <div className="w-full mt-2 pt-2 border-t border-slate-200 border-dashed flex justify-between items-center md:hidden">
+                  <DriveUploadButton 
+                    disabled={isReadOnly} 
+                    currentLink={ach.link} 
+                    onUploadSuccess={(url) => updateAchievement(index, 'link', url)} 
+                    compact={true} 
+                    filePrefix={filePrefix}
+                  />
+                  {!isReadOnly && (
+                    <button type="button" onClick={() => removeAchievement(index)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg">
+                      <Trash2 size={18} />
+                    </button>
+                  )}
+                </div>
+                
+                <div className="hidden md:flex flex-col gap-2 min-w-[250px] items-end pb-1">
+                  <DriveUploadButton 
+                    disabled={isReadOnly} 
+                    currentLink={ach.link} 
+                    onUploadSuccess={(url) => updateAchievement(index, 'link', url)} 
+                    compact={true} 
+                    filePrefix={filePrefix}
+                  />
+                  {!isReadOnly && (
+                    <button type="button" onClick={() => removeAchievement(index)} className="text-xs text-rose-500 hover:underline flex items-center gap-1">
+                      <Trash2 size={12} /> Xóa thành tích
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -400,9 +439,18 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
   );
 };
 
-const DecisionInputGroup = ({ title, type, data, onChange, disabled }) => (
+const DecisionInputGroup = ({ title, type, data, onChange, disabled, filePrefix }) => (
   <div className="flex flex-col gap-2">
-    <h4 className="font-medium text-sm text-slate-700">{title}</h4>
+    <div className="flex justify-between items-end">
+      <h4 className="font-medium text-sm text-slate-700">{title}</h4>
+      <DriveUploadButton 
+        disabled={disabled} 
+        currentLink={data.link} 
+        onUploadSuccess={(url) => onChange(type, 'link', url)} 
+        compact={true} 
+        filePrefix={filePrefix}
+      />
+    </div>
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
       <input disabled={disabled} type="text" placeholder="Số quyết định" value={data.number} onChange={e => onChange(type, 'number', e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500" />
       <input disabled={disabled} type="date" title="Ngày ký" value={data.date} onChange={e => onChange(type, 'date', e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500" />
