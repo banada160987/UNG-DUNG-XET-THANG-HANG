@@ -37,8 +37,8 @@ export const Login = ({ onLogin }) => {
     e.preventDefault();
     
     if (role === 'teacher') {
-      if (cccd.length < 9) {
-        alert('Vui lòng nhập số CCCD hợp lệ!');
+      if (cccd.length !== 12 || !/^\d{12}$/.test(cccd)) {
+        alert('Vui lòng nhập đúng 12 số CCCD!');
         return;
       }
       onLogin({ role: 'teacher', cccd });
@@ -242,6 +242,9 @@ export const Login = ({ onLogin }) => {
               Đăng nhập
             </button>
           </form>
+          <div className="mt-6 text-center text-sm text-slate-500 font-medium">
+            Bản quyền thuộc về trường THPT Cao Bá Quát
+          </div>
         </div>
       </div>
     </div>
