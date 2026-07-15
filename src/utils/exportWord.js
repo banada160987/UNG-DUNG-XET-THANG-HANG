@@ -90,18 +90,16 @@ export const exportCandidateToWord = async (candidate) => {
   const otherDocsString = otherDocs.join("\n");
 
   // Xử lý thành tích
-  const achMap = {};
-  achievements.forEach(a => {
-    const key = a.id;
-    achMap[key] = (achMap[key] || 0) + 1;
-  });
-  const achStrings = Object.entries(achMap).map(([k, v]) => {
-    let name = k;
-    const configAch = ACHIEVEMENT_LEVELS.find(a => a.id === k);
+  const achStrings = achievements.map(a => {
+    let name = a.id;
+    const configAch = ACHIEVEMENT_LEVELS.find(lvl => lvl.id === a.id);
     if (configAch) {
       name = configAch.name;
     }
-    return `0${v} ${name}`;
+    let suffix = "";
+    if (a.year) suffix += ` năm ${a.year}`;
+    if (a.decisionNo) suffix += ` số ${a.decisionNo}`;
+    return `01 Bản sao ${name}${suffix}`;
   }).join("\n");
 
   // Định dạng ngày sinh
