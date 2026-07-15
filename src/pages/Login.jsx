@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
-import { GraduationCap, User, Users, ShieldAlert } from 'lucide-react';
+import { GraduationCap, User, Users, ShieldAlert, Eye, EyeOff } from 'lucide-react';
 
 export const Login = ({ onLogin }) => {
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState('teacher'); // teacher | head | secretary | admin
   const [departments, setDepartments] = useState([]);
   
@@ -149,14 +150,23 @@ export const Login = ({ onLogin }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Mật khẩu duyệt</label>
-                  <input 
-                    type="password" 
-                    required 
-                    value={headPass} 
-                    onChange={e => setHeadPass(e.target.value)}
-                    placeholder="Nhập mật khẩu..." 
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  />
+                  <div className="relative">
+                    <input 
+                      type={showPassword ? "text" : "password"}
+                      required 
+                      value={headPass} 
+                      onChange={e => setHeadPass(e.target.value)}
+                      placeholder="Nhập mật khẩu..." 
+                      className="w-full px-3 py-2 pr-10 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
               </>
             )}
@@ -181,14 +191,23 @@ export const Login = ({ onLogin }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Mật khẩu</label>
-                  <input 
-                    type="password" 
-                    required 
-                    value={secPass} 
-                    onChange={e => setSecPass(e.target.value)}
-                    placeholder="Nhập mật khẩu..." 
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  />
+                  <div className="relative">
+                    <input 
+                      type={showPassword ? "text" : "password"}
+                      required 
+                      value={secPass} 
+                      onChange={e => setSecPass(e.target.value)}
+                      placeholder="Nhập mật khẩu..." 
+                      className="w-full px-3 py-2 pr-10 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
               </>
             )}
@@ -201,13 +220,20 @@ export const Login = ({ onLogin }) => {
                     <ShieldAlert size={18} />
                   </div>
                   <input 
-                    type="password" 
+                    type={showPassword ? "text" : "password"}
                     required 
                     value={adminPass} 
                     onChange={e => setAdminPass(e.target.value)}
                     placeholder="Mật khẩu Admin..." 
-                    className="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full pl-10 pr-10 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   />
+                  <button 
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
               </div>
             )}
