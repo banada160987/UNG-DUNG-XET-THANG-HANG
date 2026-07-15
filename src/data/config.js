@@ -22,7 +22,8 @@ export const ACHIEVEMENT_LEVELS = [
   { id: 'bk_bo_nganh', name: 'Bằng khen của Bộ, ban, ngành trung ương', score: 8 },
   { id: 'bk_tinh_uy_dotxuat', name: 'Bằng khen của BTV Tỉnh ủy (đột xuất, chuyên đề, hằng năm)', score: 9 },
   { id: 'bk_ubnd_tinh', name: 'Bằng khen của UBND tỉnh (công trạng, đột xuất, phong trào)', score: 10 },
-  { id: 'cstd_co_so', name: 'Danh hiệu Chiến sĩ thi đua cơ sở', score: 11 },
-  { id: 'gk_dang_uy_xa', name: 'Giấy khen của Ban Thường vụ Đảng uỷ xã, phường', score: 12 },
-  { id: 'gk_so_nganh_xa', name: 'Giấy khen của Thủ trưởng Sở, ban, ngành, UB MTTQ tỉnh, Chủ tịch UBND cấp xã', score: 13 }
+  { id: 'bk_ldld_tinhdoan', name: 'Bằng khen LĐLĐ, tỉnh Đoàn', score: 11 },
+  { id: 'cstd_co_so', name: 'Danh hiệu Chiến sĩ thi đua cơ sở', score: 12 },
+  { id: 'gk_dang_uy_xa', name: 'Giấy khen của Ban Thường vụ Đảng uỷ xã, phường', score: 13 },
+  { id: 'gk_so_nganh_xa', name: 'Giấy khen của Thủ trưởng Sở, ban, ngành, UB MTTQ tỉnh, Chủ tịch UBND cấp xã', score: 14 }
 ];

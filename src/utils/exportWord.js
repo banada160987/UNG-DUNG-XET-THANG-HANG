@@ -4,6 +4,7 @@ import {
 } from "docx";
 import { saveAs } from "file-saver";
 import { format } from "date-fns";
+import { ACHIEVEMENT_LEVELS } from "../data/config";
 
 const createText = (text, bold = false, italic = false, size = 26, color = "000000") => 
   new TextRun({ text: text || "", bold, italic, size, font: "Times New Roman", color });
@@ -71,10 +72,10 @@ export const exportCandidateToWord = async (candidate) => {
   });
   const achStrings = Object.entries(achMap).map(([k, v]) => {
     let name = k;
-    if(k === 'cstd_co_so') name = "CSTĐ cơ sở";
-    else if(k === 'cstd_cap_tinh') name = "CSTĐ cấp Tỉnh";
-    else if(k === 'bang_khen_tinh') name = "Bằng khen cấp Tỉnh";
-    else if(k === 'bang_khen_bo') name = "Bằng khen cấp Bộ";
+    const configAch = ACHIEVEMENT_LEVELS.find(a => a.id === k);
+    if (configAch) {
+      name = configAch.name;
+    }
     return `0${v} ${name}`;
   }).join("\n");
 

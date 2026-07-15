@@ -239,7 +239,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
           <Input label="Dân tộc" name="ethnicity" value={formData.ethnicity} onChange={handleChange} disabled={isReadOnly} />
           <Input label="SĐT (Có Zalo)" name="phone" value={formData.phone} onChange={handleChange} placeholder="09xxxxxxx" required disabled={isReadOnly} />
           
-          <Input label="Đơn vị công tác (Trường)" name="workplace" value={formData.workplace} onChange={handleChange} placeholder="Trường THCS..." required disabled={isReadOnly} />
+          <Input label="Đơn vị công tác (Trường)" name="workplace" value={formData.workplace} onChange={handleChange} placeholder="Trường THPT..." required disabled={isReadOnly} />
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-slate-700">Tổ chuyên môn <span className="text-rose-500">*</span></label>
@@ -450,7 +450,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                   <input 
                     disabled={isReadOnly}
                     type="text"
-                    placeholder="VD: Bằng khen của Công đoàn..."
+                    placeholder="VD: Giáo viên dạy giỏi..."
                     value={ach.id} 
                     onChange={(e) => updateOtherAchievement(index, 'id', e.target.value)}
                     className="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white disabled:bg-slate-100"
