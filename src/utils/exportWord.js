@@ -45,6 +45,7 @@ export const exportCandidateToWord = async (candidate) => {
     reviewDoc = false,
     certIT = false,
     certLanguage = false,
+    certEthnic = false,
     degrees = [],
     achievements = [],
     decisionRecruitment,
@@ -57,12 +58,36 @@ export const exportCandidateToWord = async (candidate) => {
   const degreeStrings = degrees.map(d => `01 Bằng ${d.level} ${d.major}`).join("\n");
   
   // Xử lý quyết định
+  const formatDecision = (name, obj) => {
+    if (!obj || !obj.number) return null;
+    let suffix = ` số ${obj.number}`;
+    if (obj.date) {
+      try {
+        const d = new Date(obj.date);
+        suffix += ` ngày ${format(d, 'dd/MM/yyyy')}`;
+      } catch (e) {
+        suffix += ` ngày ${obj.date}`;
+      }
+    }
+    return `01 Bản sao ${name}${suffix}`;
+  };
+
   const decisions = [];
-  if (decisionRecruitment?.number) decisions.push("01 Quyết định tuyển dụng");
-  if (decisionProbation?.number) decisions.push("01 Quyết định hết tập sự");
-  if (decisionAppointment?.number) decisions.push("01 Quyết định bổ nhiệm CDNN");
-  if (decisionSalary?.number) decisions.push("01 Quyết định nâng lương");
+  const recStr = formatDecision("Quyết định tuyển dụng", decisionRecruitment);
+  if (recStr) decisions.push(recStr);
+  const proStr = formatDecision("Quyết định hết tập sự", decisionProbation);
+  if (proStr) decisions.push(proStr);
+  const appStr = formatDecision("Quyết định bổ nhiệm chức danh nghề nghiệp", decisionAppointment);
+  if (appStr) decisions.push(appStr);
+  const salStr = formatDecision("Quyết định nâng lương gần nhất", decisionSalary);
+  if (salStr) decisions.push(salStr);
   const decisionStrings = decisions.join("\n");
+
+  const otherDocs = [];
+  if (certIT) otherDocs.push("01 Chứng chỉ Tin học");
+  if (certLanguage) otherDocs.push("01 Chứng chỉ Ngoại ngữ");
+  if (certEthnic) otherDocs.push("01 Chứng chỉ tiếng dân tộc thiểu số");
+  const otherDocsString = otherDocs.join("\n");
 
   // Xử lý thành tích
   const achMap = {};
@@ -177,7 +202,7 @@ export const exportCandidateToWord = async (candidate) => {
               createRow("7", "Minh chứng các thành tích đạt được trong hoạt động nghề nghiệp đã được cấp có thẩm quyền công nhận theo Đề án (để xét ưu tiên khi số lượng viên chức đăng ký nhiều hơn chỉ tiêu thăng hạng được phê duyệt).", achievements.length > 0 ? "X" : "", achievements.length === 0 ? "X" : "", achStrings),
               
               // 8
-              createRow("8", "Các giấy tờ khác có liên quan (ghi rõ)", "", "", "")
+              createRow("8", "Các giấy tờ khác có liên quan (ghi rõ)", otherDocs.length > 0 ? "X" : "", otherDocs.length === 0 ? "X" : "", otherDocsString)
             ]
           }),
           
