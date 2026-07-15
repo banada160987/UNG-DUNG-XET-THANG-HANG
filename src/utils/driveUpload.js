@@ -1,4 +1,4 @@
-export const GAS_URL = "https://script.google.com/macros/s/AKfycbzWAQleknkPbrX7Jd5w_SAdOIt6q_SnWn0jc7kRRDwahCoH2Do8hxkSmCrDrIlGGmv74g/exec";
+export const GAS_URL = "https://script.google.com/macros/s/AKfycby4j8dfQ8udO_zlXu3RiYZjnjoNieSTGl487Ob8Swd2GaZ-Y3iNa3VG7Ig9Cee35Qy4/exec";
 
 export const uploadToDrive = async (file, prefix = "") => {
   return new Promise((resolve, reject) => {
