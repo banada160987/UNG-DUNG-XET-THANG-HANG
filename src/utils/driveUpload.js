@@ -1,4 +1,4 @@
-export const GAS_URL = "https://script.google.com/macros/s/AKfycbxvEUcrMZR8QRodacuEz82MKhdBTqdTmpeTMOEIJRJAwQsYFKQRB4WFR2PBQNA98a-1/exec";
+export const GAS_URL = "https://script.google.com/macros/s/AKfycbx8sYGFreSMiCdufGEUkrMssJBXRS1QnQhm-YhJZFH0OjZRskDTZSQvwj4JIt1wzMeT/exec";
 
 export const uploadToDrive = async (file, prefix = "") => {
   return new Promise((resolve, reject) => {
@@ -13,10 +13,13 @@ export const uploadToDrive = async (file, prefix = "") => {
       const safePrefix = prefix ? `${prefix}_`.replace(/[^a-zA-Z0-9_\u00C0-\u1EF9 -]/g, '') : '';
       const finalFileName = `${safePrefix}${file.name}`;
       
+      const folderName = prefix ? prefix.replace(/[^a-zA-Z0-9_\u00C0-\u1EF9 -]/g, '') : '';
+      
       const payload = {
         name: finalFileName,
         mimeType: file.type,
-        data: base64Data
+        data: base64Data,
+        folderName: folderName
       };
       
       try {
