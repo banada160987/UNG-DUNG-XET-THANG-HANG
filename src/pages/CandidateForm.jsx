@@ -27,6 +27,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
       resumeDoc: false,
       certIT: false,
       certLanguage: false,
+      certEthnic: false,
       reviewDoc: false,
       achievements: [],
       otherAchievements: [],
@@ -344,6 +345,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
           <Checkbox disabled={isReadOnly} label="Đã có Bản nhận xét, đánh giá của thủ trưởng" name="reviewDoc" checked={formData.reviewDoc} onChange={handleChange} />
           <Checkbox disabled={isReadOnly} label="Tin học (Có chứng chỉ hoặc xác nhận)" name="certIT" checked={formData.certIT} onChange={handleChange} />
           <Checkbox disabled={isReadOnly} label="Ngoại ngữ (Có chứng chỉ hoặc xác nhận)" name="certLanguage" checked={formData.certLanguage} onChange={handleChange} />
+          <Checkbox disabled={isReadOnly} label="Chứng chỉ tiếng dân tộc thiểu số (Êđê,..)" name="certEthnic" checked={formData.certEthnic} onChange={handleChange} />
         </div>
       </section>
 
