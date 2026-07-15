@@ -5,7 +5,7 @@ import { StatusBadge } from '../components/StatusBadge';
 import { logAction } from '../utils/logger';
 import { CandidateTimeline } from '../components/CandidateTimeline';
 import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
-import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye } from 'lucide-react';
+import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye, Trash2 } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 
 export const Dashboard = ({ candidates, onRefresh }) => {
@@ -31,6 +31,17 @@ export const Dashboard = ({ candidates, onRefresh }) => {
       if(onRefresh) onRefresh();
     } else {
       alert('Lỗi cập nhật trạng thái!');
+    }
+  };
+
+  const handleDeleteCandidate = async (id, name) => {
+    if (window.confirm(`Bạn có chắc chắn muốn XÓA VĨNH VIỄN hồ sơ của giáo viên ${name} không?\nHành động này không thể hoàn tác!`)) {
+      const { error } = await supabase.from('candidates').delete().eq('id', id);
+      if (!error) {
+        if (onRefresh) onRefresh();
+      } else {
+        alert('Có lỗi xảy ra khi xóa hồ sơ!');
+      }
     }
   };
 
@@ -232,6 +243,13 @@ export const Dashboard = ({ candidates, onRefresh }) => {
                     Rà soát lại
                   </button>
                 )}
+                
+                <button 
+                  onClick={() => handleDeleteCandidate(c.id, c.fullName)}
+                  className="mt-2 text-xs text-rose-500 hover:text-rose-700 underline text-right flex items-center justify-end gap-1"
+                >
+                  <Trash2 size={12} /> Xóa hồ sơ
+                </button>
               </div>
             </div>
           )})}
