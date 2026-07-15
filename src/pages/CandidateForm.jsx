@@ -7,31 +7,53 @@ import { DriveUploadButton } from '../components/DriveUploadButton';
 export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, fixedCccd, isReadOnly }) => {
   const [departments, setDepartments] = useState([]);
   
-  const [formData, setFormData] = useState(initialData || {
-    cccd: fixedCccd || '',
-    fullName: '',
-    dob: '',
-    gender: 'Nam',
-    ethnicity: 'Kinh',
-    phone: '',
-    workplace: '',
-    unit: '',
-    currentTitle: '',
-    targetTitle: 'Hạng II',
-    decisionRecruitment: { date: '', number: '', issuer: '', link: '' },
-    decisionProbation: { date: '', number: '', issuer: '', link: '' },
-    decisionAppointment: { date: '', number: '', issuer: '', link: '' },
-    decisionSalary: { date: '', number: '', issuer: '', link: '' },
-    degrees: [],
-    resumeDoc: false,
-    certIT: false,
-    certLanguage: false,
-    reviewDoc: false,
-    achievements: [],
-    files: [],
-    status: 'draft',
-    feedback_message: ''
-  });
+  const getInitialState = () => {
+    const defaultData = {
+      cccd: fixedCccd || '',
+      fullName: '',
+      dob: '',
+      gender: 'Nam',
+      ethnicity: 'Kinh',
+      phone: '',
+      workplace: '',
+      unit: '',
+      currentTitle: '',
+      targetTitle: 'Hạng II',
+      decisionRecruitment: { date: '', number: '', issuer: '', link: '' },
+      decisionProbation: { date: '', number: '', issuer: '', link: '' },
+      decisionAppointment: { date: '', number: '', issuer: '', link: '' },
+      decisionSalary: { date: '', number: '', issuer: '', link: '' },
+      degrees: [],
+      resumeDoc: false,
+      certIT: false,
+      certLanguage: false,
+      reviewDoc: false,
+      achievements: [],
+      otherAchievements: [],
+      files: [],
+      status: 'draft',
+      feedback_message: ''
+    };
+
+    if (!initialData) return defaultData;
+
+    const predefinedIds = ACHIEVEMENT_LEVELS.map(l => l.id);
+    const achievements = [];
+    const otherAchievements = [];
+    (initialData.achievements || []).forEach(a => {
+      if (predefinedIds.includes(a.id)) achievements.push(a);
+      else otherAchievements.push(a);
+    });
+
+    return {
+      ...defaultData,
+      ...initialData,
+      achievements,
+      otherAchievements
+    };
+  };
+
+  const [formData, setFormData] = useState(getInitialState());
 
   const [uploading, setUploading] = useState(false);
 
@@ -104,6 +126,23 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
     setFormData({ ...formData, achievements: formData.achievements.filter((_, i) => i !== index) });
   };
 
+  const addOtherAchievement = () => {
+    setFormData({
+      ...formData,
+      otherAchievements: [...formData.otherAchievements, { id: '', year: new Date().getFullYear(), type: 'cá nhân', decisionNo: '', link: '' }]
+    });
+  };
+
+  const updateOtherAchievement = (index, field, value) => {
+    const newAchievements = [...formData.otherAchievements];
+    newAchievements[index][field] = value;
+    setFormData({ ...formData, otherAchievements: newAchievements });
+  };
+
+  const removeOtherAchievement = (index) => {
+    setFormData({ ...formData, otherAchievements: formData.otherAchievements.filter((_, i) => i !== index) });
+  };
+
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -149,15 +188,22 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
     }));
   };
 
+  const getSubmitData = () => {
+    const dataToSubmit = { ...formData };
+    dataToSubmit.achievements = [...formData.achievements, ...(formData.otherAchievements || [])];
+    delete dataToSubmit.otherAchievements;
+    return dataToSubmit;
+  };
+
   const handleSaveDraft = (e) => {
     e.preventDefault();
-    onSave({ ...formData }); 
+    onSave(getSubmitData()); 
   };
 
   const handleSubmitFinal = (e) => {
     e.preventDefault();
     if(confirm('Bạn có chắc chắn muốn nộp hồ sơ này cho Tổ trưởng? Bạn sẽ không thể sửa nếu chưa bị trả lại.')){
-      onSubmitToHead({ ...formData });
+      onSubmitToHead(getSubmitData());
     }
   };
 
@@ -372,6 +418,85 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                   />
                   {!isReadOnly && (
                     <button type="button" onClick={() => removeAchievement(index)} className="text-xs text-rose-500 hover:underline flex items-center gap-1">
+                      <Trash2 size={12} /> Xóa thành tích
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 5.5. Thành tích khác */}
+      <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mt-6">
+        <div className="flex justify-between items-center border-b pb-2 mb-4">
+          <h3 className="text-lg font-semibold text-slate-800">VIII. Các thành tích khác (Nếu có)</h3>
+          {!isReadOnly && (
+            <button type="button" onClick={addOtherAchievement} className="flex items-center gap-1 text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 font-medium">
+              <Plus size={16} /> Thêm thành tích
+            </button>
+          )}
+        </div>
+
+        {formData.otherAchievements.length === 0 ? (
+          <p className="text-slate-400 italic text-center py-4">Chưa khai báo thành tích khác.</p>
+        ) : (
+          <div className="space-y-4">
+            {formData.otherAchievements.map((ach, index) => (
+              <div key={index} className="flex flex-col md:flex-row gap-3 items-start md:items-end bg-slate-50 p-4 rounded-lg border border-slate-200">
+                <div className="flex-1 w-full">
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Tên thành tích</label>
+                  <input 
+                    disabled={isReadOnly}
+                    type="text"
+                    placeholder="VD: Bằng khen của Công đoàn..."
+                    value={ach.id} 
+                    onChange={(e) => updateOtherAchievement(index, 'id', e.target.value)}
+                    className="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white disabled:bg-slate-100"
+                  />
+                </div>
+                <div className="w-full md:w-24">
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Năm</label>
+                  <input disabled={isReadOnly} type="number" value={ach.year} onChange={(e) => updateOtherAchievement(index, 'year', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
+                </div>
+                <div className="w-full md:w-32">
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Cá nhân/Tập thể</label>
+                  <select disabled={isReadOnly} value={ach.type} onChange={(e) => updateOtherAchievement(index, 'type', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white disabled:bg-slate-100">
+                    <option value="cá nhân">Cá nhân</option>
+                    <option value="tập thể">Tập thể</option>
+                  </select>
+                </div>
+                <div className="w-full md:w-48">
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Số Quyết định</label>
+                  <input disabled={isReadOnly} type="text" value={ach.decisionNo} onChange={(e) => updateOtherAchievement(index, 'decisionNo', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
+                </div>
+                
+                <div className="w-full mt-2 pt-2 border-t border-slate-200 border-dashed flex justify-between items-center md:hidden">
+                  <DriveUploadButton 
+                    disabled={isReadOnly} 
+                    currentLink={ach.link} 
+                    onUploadSuccess={(url) => updateOtherAchievement(index, 'link', url)} 
+                    compact={true} 
+                    filePrefix={filePrefix}
+                  />
+                  {!isReadOnly && (
+                    <button type="button" onClick={() => removeOtherAchievement(index)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg">
+                      <Trash2 size={18} />
+                    </button>
+                  )}
+                </div>
+                
+                <div className="hidden md:flex flex-col gap-2 min-w-[250px] items-end pb-1">
+                  <DriveUploadButton 
+                    disabled={isReadOnly} 
+                    currentLink={ach.link} 
+                    onUploadSuccess={(url) => updateOtherAchievement(index, 'link', url)} 
+                    compact={true} 
+                    filePrefix={filePrefix}
+                  />
+                  {!isReadOnly && (
+                    <button type="button" onClick={() => removeOtherAchievement(index)} className="text-xs text-rose-500 hover:underline flex items-center gap-1">
                       <Trash2 size={12} /> Xóa thành tích
                     </button>
                   )}
