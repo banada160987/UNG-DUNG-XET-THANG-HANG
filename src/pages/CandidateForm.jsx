@@ -14,6 +14,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
     gender: 'Nam',
     ethnicity: 'Kinh',
     phone: '',
+    workplace: '',
     unit: '',
     currentTitle: '',
     targetTitle: 'Hạng II',
@@ -192,6 +193,8 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
           <Input label="Dân tộc" name="ethnicity" value={formData.ethnicity} onChange={handleChange} disabled={isReadOnly} />
           <Input label="SĐT (Có Zalo)" name="phone" value={formData.phone} onChange={handleChange} placeholder="09xxxxxxx" required disabled={isReadOnly} />
           
+          <Input label="Đơn vị công tác (Trường)" name="workplace" value={formData.workplace} onChange={handleChange} placeholder="Trường THCS..." required disabled={isReadOnly} />
+
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-slate-700">Tổ chuyên môn <span className="text-rose-500">*</span></label>
             <select name="unit" value={formData.unit} onChange={handleChange} disabled={isReadOnly} className="border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white disabled:bg-slate-100 disabled:text-slate-500">

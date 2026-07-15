@@ -37,6 +37,7 @@ export const exportCandidateToWord = async (candidate) => {
     fullName = "",
     dob = "",
     unit = "",
+    workplace = "",
     currentTitle = "",
     targetTitle = "",
     resumeDoc = false,
@@ -116,7 +117,7 @@ export const exportCandidateToWord = async (candidate) => {
           createPara([createText("2. Ngày sinh: ", true), createText(dobStr)], AlignmentType.LEFT),
           createPara([createText("3. Hạng, chức danh nghề nghiệp hiện giữ: ", true), createText(currentTitle)], AlignmentType.LEFT),
           createPara([createText("4. Hạng, chức danh nghề nghiệp đăng ký thăng hạng: ", true), createText(targetTitle)], AlignmentType.LEFT),
-          createPara([createText("5. Trường: ", true), createText(unit)], AlignmentType.LEFT),
+          createPara([createText("5. Trường: ", true), createText(workplace)], AlignmentType.LEFT),
           createPara([createText("6. Địa chỉ: ", true), createText("................................................")], AlignmentType.LEFT),
           
           createPara([createText("7. Tài liệu kèm theo", true)], AlignmentType.LEFT),
