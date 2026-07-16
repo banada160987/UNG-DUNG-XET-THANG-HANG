@@ -7,7 +7,7 @@ import { StatusBadge } from '../components/StatusBadge';
 import { CandidateTimeline } from '../components/CandidateTimeline';
 import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
 import { CompareModal } from '../components/CompareModal';
-import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle, Send, History, Eye, Scale } from 'lucide-react';
+import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle, Send, History, Eye, Scale, Users, FileText, CheckSquare } from 'lucide-react';
 
 export const HeadDashboard = ({ department, onLogout }) => {
   const [candidates, setCandidates] = useState([]);
@@ -16,6 +16,8 @@ export const HeadDashboard = ({ department, onLogout }) => {
   const [sortByScore, setSortByScore] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState('all');
   
   // Trạng thái modal từ chối
   const [rejectingCand, setRejectingCand] = useState(null);
@@ -90,6 +92,22 @@ export const HeadDashboard = ({ department, onLogout }) => {
     score: calculateTotalScore(c)
   }));
   
+  // Bảng thống kê
+  const totalCount = displayCandidates.length;
+  const waitingCount = displayCandidates.filter(c => c.status === 'submitted').length;
+  const rejectedCount = displayCandidates.filter(c => c.status === 'head_rejected').length;
+  const forwardCount = displayCandidates.filter(c => !['submitted', 'head_rejected'].includes(c.status)).length;
+  const progressPercent = totalCount === 0 ? 0 : Math.round((forwardCount / totalCount) * 100);
+
+  if (selectedFilter === 'waiting') displayCandidates = displayCandidates.filter(c => c.status === 'submitted');
+  if (selectedFilter === 'rejected') displayCandidates = displayCandidates.filter(c => c.status === 'head_rejected');
+  if (selectedFilter === 'forwarded') displayCandidates = displayCandidates.filter(c => !['submitted', 'head_rejected'].includes(c.status));
+
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    displayCandidates = displayCandidates.filter(c => c.fullName.toLowerCase().includes(q) || c.cccd.includes(q));
+  }
+
   if (sortByScore) {
     displayCandidates = [...displayCandidates].sort((a, b) => b.score - a.score);
   }
@@ -105,7 +123,23 @@ export const HeadDashboard = ({ department, onLogout }) => {
     return candidates.filter(c => selectedForCompare.includes(c.id));
   };
 
-  return (
+  const handleBulkApprove = async () => {
+    const candsToApprove = candidates.filter(c => selectedForCompare.includes(c.id) && c.status === 'submitted');
+    if (candsToApprove.length === 0) {
+      alert("Không có hồ sơ nào hợp lệ để duyệt trong các hồ sơ đã chọn (chỉ duyệt hồ sơ đang 'Chờ xử lý').");
+      return;
+    }
+    if (!confirm(`Bạn có chắc muốn duyệt hàng loạt ${candsToApprove.length} hồ sơ?`)) return;
+    
+    for (const c of candsToApprove) {
+      const { error } = await supabase.from('candidates').update({ status: 'head_approved' }).eq('id', c.id);
+      if (!error) await logAction(c.id, 'head', `Tổ trưởng ${department}`, 'XÁC NHẬN HỢP LỆ (Duyệt gộp)');
+    }
+    setSelectedForCompare([]);
+    loadData();
+  };
+
+    return (
     <div className="min-h-screen bg-slate-100 pb-10">
       <header className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
         <h2 className="text-xl font-bold text-slate-800">
@@ -119,147 +153,182 @@ export const HeadDashboard = ({ department, onLogout }) => {
       <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
         {!activeBatchId ? (
           <div className="text-center p-8 text-slate-500 bg-white rounded-lg border">Chưa có đợt xét nào đang mở.</div>
-        ) : displayCandidates.length === 0 ? (
+        ) : displayCandidates.length === 0 && selectedFilter === 'all' && !searchQuery ? (
           <div className="text-center p-12 text-slate-500 bg-white rounded-lg border flex flex-col items-center">
             <Search size={48} className="text-slate-300 mb-4" />
             <p className="text-lg font-medium">Chưa có giáo viên nào nộp hồ sơ.</p>
-            <p className="text-sm mt-1">Hồ sơ đã nộp của giáo viên thuộc tổ {department} sẽ hiện ở đây.</p>
+            <p className="text-sm mt-1">Hồ sơ đã nộp của giáo viên thuộc Tổ {department} sẽ hiện ở đây.</p>
           </div>
         ) : (
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-            <h3 className="font-semibold text-slate-800">Danh sách Giáo viên đã nộp</h3>
-            <button 
-              onClick={() => setSortByScore(!sortByScore)}
-              className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${sortByScore ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}
-            >
-              {sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
-            </button>
-            {selectedForCompare.length >= 2 && (
-              <button
-                onClick={() => setShowCompare(true)}
-                className="ml-2 px-3 py-1.5 text-sm font-medium rounded-lg border bg-blue-600 text-white border-blue-600 hover:bg-blue-700 flex items-center gap-1 shadow-sm"
-              >
-                <Scale size={16} /> Bàn cân đối chiếu ({selectedForCompare.length})
-              </button>
-            )}
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-sm text-slate-600 font-medium">
-                  <th className="p-4 w-12 text-center">So sánh</th>
-                  <th className="p-4">Họ tên / CCCD</th>
-                  <th className="p-4">Tự động quét ĐK</th>
-                  <th className="p-4">Trạng thái</th>
-                  <th className="p-4 text-right">Thao tác của Tổ trưởng</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {displayCandidates.map(c => {
-                  const eligibility = checkEligibility(c);
-                  // Tổ trưởng chỉ được thao tác nếu trạng thái là đã gửi Tổ trưởng, đã bổ sung, hoặc trả lại
-                  const canAct = ['submitted_to_head', 'resubmitted', 'head_rejected'].includes(c.status);
-                  
-                  return (
-                    <tr key={c.id} className="hover:bg-slate-50/50">
-                      <td className="p-4 text-center">
-                        <input 
-                          type="checkbox"
-                          className="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer"
-                          checked={selectedForCompare.includes(c.id)}
-                          onChange={() => handleToggleCompare(c.id)}
-                        />
-                      </td>
-                      <td className="p-4">
-                        <p className="font-semibold text-slate-800">{c.fullName}</p>
-                        <p className="text-xs text-slate-500">CCCD: {c.cccd}</p>
-                        <div className="mt-1">
-                          <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Điểm: {c.score}</span>
-                        </div>
-                      </td>
-                      <td className="p-4 align-top">
-                        {eligibility.isValid ? (
-                          <span className="inline-flex text-xs text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded">Hệ thống báo: Đủ ĐK</span>
-                        ) : (
-                          <div className="text-xs text-rose-600 bg-rose-50 border border-rose-100 p-2 rounded">
-                            <span className="font-semibold block mb-1">Hệ thống phát hiện thiếu:</span>
-                            <ul className="list-disc pl-4 space-y-0.5">
-                              {eligibility.missing.map((m, i) => <li key={i}>{m}</li>)}
-                            </ul>
-                          </div>
-                        )}
-                      </td>
-                      <td className="p-4 align-top">
-                        <StatusBadge status={c.status} />
-                        {c.phone && (
-                          <button 
-                            onClick={() => {
-                              const missingDocs = c.eligibility && !c.eligibility.isValid ? c.eligibility.missing.map(m => `- ${m}`).join('\n') : '';
-                              const msg = missingDocs 
-                                ? `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô trên hệ thống đang thiếu các thông tin/giấy tờ sau:\n${missingDocs}\n\nThầy/cô vui lòng bổ sung sớm nhé!`
-                                : `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô đã được tiếp nhận.`;
-                              navigator.clipboard.writeText(msg).then(() => {
-                                alert("Đã copy sẵn tin nhắn báo thiếu hồ sơ!\nBạn chỉ cần ấn Ctrl+V (Dán) vào khung chat Zalo nhé.");
-                                window.location.href = `zalo://conversation?phone=${c.phone}`;
-                              });
-                            }}
-                            className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded border border-blue-200 hover:bg-blue-100 transition-colors mt-1"
-                          >
-                            <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M21.2 5.54C20.66 4.3 19.8 3.2 18.66 2.45C17.06 1.4 14.86 0.7 12 0.7C9.14 0.7 6.94 1.4 5.34 2.45C4.2 3.2 3.34 4.3 2.8 5.54C2.26 6.8 2 8.18 2 9.7C2 11.22 2.26 12.6 2.8 13.86C3.34 15.1 4.2 16.2 5.34 16.95C6.38 17.65 7.6 18.15 8.95 18.42C8.86 18.73 8.7 19.12 8.44 19.55C8.04 20.24 7.54 20.9 7 21.46L6.82 21.65C6.73 21.75 6.64 21.86 6.55 21.98C6.32 22.25 6.42 22.65 6.72 22.78C6.88 22.84 7.05 22.85 7.22 22.78C9.56 22 11.4 20.88 12.86 19.62C14 19.53 15.1 19.26 16.1 18.84C18.25 17.9 19.98 16.42 21.1 14.48C21.7 13.4 22 12.24 22 10.98C22 9.15 21.7 7.34 21.2 5.54Z"/></svg>
-                            Zalo: {c.phone}
-                          </button>
-                        )}
-                      </td>
-                      <td className="p-4 text-right space-x-2">
-                        {canAct ? (
-                          <>
-                            <button 
-                              onClick={() => setViewCand(c)}
-                              className="inline-flex items-center gap-1 text-sm bg-blue-100 text-blue-700 px-3 py-1.5 rounded hover:bg-blue-200 shadow-sm mr-2"
-                              title="Xem chi tiết hồ sơ & minh chứng"
-                            >
-                              <Eye size={16} /> Xem
-                            </button>
-                            <button 
-                              onClick={() => updateStatus(c, 'head_approved')}
-                              className="inline-flex items-center gap-1 text-sm bg-emerald-600 text-white px-3 py-1.5 rounded hover:bg-emerald-700 shadow-sm"
-                            >
-                              <UserCheck size={16} /> Xác nhận
-                            </button>
-                            <button 
-                              onClick={() => setRejectingCand(c)}
-                              disabled={c.status === 'head_rejected'}
-                              className="inline-flex items-center gap-1 text-sm bg-white border border-rose-300 text-rose-600 px-3 py-1.5 rounded hover:bg-rose-50 shadow-sm disabled:opacity-50"
-                            >
-                              <XCircle size={16} /> YC Bổ sung
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button 
-                              onClick={() => setViewCand(c)}
-                              className="inline-flex items-center gap-1 text-sm bg-slate-100 text-slate-600 px-3 py-1.5 rounded hover:bg-slate-200 mr-2 shadow-sm"
-                            >
-                              <Eye size={16} /> Xem
-                            </button>
-                            <span className="text-xs text-slate-400 italic">Đã chuyển cấp trên</span>
-                          </>
-                        )}
-                        <button 
-                          onClick={() => setTimelineCandId(c.id)}
-                          className="inline-flex items-center gap-1 text-sm bg-slate-100 text-slate-600 px-2 py-1.5 rounded hover:bg-slate-200 ml-2 shadow-sm"
-                          title="Xem lịch sử thao tác"
-                        >
-                          <History size={16} />
-                        </button>
-                      </td>
+          <div className="space-y-6">
+            {/* Thống kê */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <StatCard 
+                title="Tổng hồ sơ" 
+                value={totalCount} 
+                icon={<Users size={20} className="text-blue-600" />} 
+                bgColor="bg-blue-100" 
+                active={selectedFilter === 'all'}
+                onClick={() => setSelectedFilter('all')}
+              />
+              <StatCard 
+                title="Chờ duyệt" 
+                value={waitingCount} 
+                icon={<FileText size={20} className="text-amber-600" />} 
+                bgColor="bg-amber-100" 
+                active={selectedFilter === 'waiting'}
+                onClick={() => setSelectedFilter('waiting')}
+              />
+              <StatCard 
+                title="Yêu cầu bổ sung" 
+                value={rejectedCount} 
+                icon={<AlertTriangle size={20} className="text-rose-600" />} 
+                bgColor="bg-rose-100" 
+                active={selectedFilter === 'rejected'}
+                onClick={() => setSelectedFilter('rejected')}
+              />
+              <StatCard 
+                title="Đã duyệt & Chuyển" 
+                value={forwardCount} 
+                icon={<CheckSquare size={20} className="text-emerald-600" />} 
+                bgColor="bg-emerald-100" 
+                active={selectedFilter === 'forwarded'}
+                onClick={() => setSelectedFilter('forwarded')}
+              />
+            </div>
+
+            {/* Tiến độ */}
+            <div className="bg-white p-4 rounded-xl border border-slate-200 flex items-center gap-4 shadow-sm">
+              <div className="flex-1">
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm font-medium text-slate-700">Tiến độ duyệt hồ sơ của Tổ</span>
+                  <span className="text-sm font-bold text-blue-600">{progressPercent}%</span>
+                </div>
+                <div className="w-full bg-slate-100 rounded-full h-2.5">
+                  <div className="bg-blue-600 h-2.5 rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }}></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="p-4 border-b border-slate-200 bg-slate-50 flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div className="relative w-full md:w-64">
+                  <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input 
+                    type="text" 
+                    placeholder="Tìm tên hoặc CCCD..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 pr-4 py-2 w-full border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button 
+                    onClick={() => setSortByScore(!sortByScore)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${sortByScore ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}
+                  >
+                    {sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
+                  </button>
+                  {selectedForCompare.length >= 1 && (
+                    <button
+                      onClick={handleBulkApprove}
+                      className="px-3 py-1.5 text-sm font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 flex items-center gap-1 shadow-sm"
+                    >
+                      <CheckCircle size={16} /> Duyệt ({selectedForCompare.length})
+                    </button>
+                  )}
+                  {selectedForCompare.length >= 2 && (
+                    <button
+                      onClick={() => setShowCompare(true)}
+                      className="px-3 py-1.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-1 shadow-sm"
+                    >
+                      <Scale size={16} /> Bàn cân ({selectedForCompare.length})
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-sm text-slate-600 font-medium">
+                      <th className="p-4 w-12 text-center">So sánh</th>
+                      <th className="p-4">Họ tên / CCCD</th>
+                      <th className="p-4">Tự động quét ĐK</th>
+                      <th className="p-4">Trạng thái</th>
+                      <th className="p-4 text-right">Thao tác</th>
                     </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {displayCandidates.map(c => {
+                      const eligibility = checkEligibility(c);
+                      const canAct = ['submitted_to_head', 'resubmitted', 'head_rejected'].includes(c.status);
+                      
+                      return (
+                        <tr key={c.id} className="hover:bg-slate-50/50">
+                          <td className="p-4 text-center">
+                            <input 
+                              type="checkbox"
+                              className="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer"
+                              checked={selectedForCompare.includes(c.id)}
+                              onChange={() => handleToggleCompare(c.id)}
+                            />
+                          </td>
+                          <td className="p-4">
+                            <p className="font-semibold text-slate-800">{c.fullName}</p>
+                            <p className="text-xs text-slate-500">CCCD: {c.cccd}</p>
+                            <div className="mt-1">
+                              <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Điểm: {c.score}</span>
+                            </div>
+                          </td>
+                          <td className="p-4 align-top">
+                            <StatusBadge status={eligibility.isEligible ? 'eligible' : 'ineligible'} />
+                          </td>
+                          <td className="p-4 align-top">
+                            <div className="flex flex-col gap-2 items-start">
+                              <StatusBadge status={c.status} />
+                              {c.phone && (
+                                <a 
+                                  href={`https://zalo.me/${c.phone}`} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full border border-blue-200 hover:bg-blue-100 transition-colors"
+                                >
+                                  <div className="w-3 h-3 rounded-full bg-blue-500 text-white flex items-center justify-center text-[8px] font-bold">Z</div>
+                                  Zalo: {c.phone}
+                                </a>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4 align-middle">
+                            <div className="flex gap-1 justify-end items-center">
+                              <button onClick={() => setViewCand(c)} title="Xem chi tiết" className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-200">
+                                <Eye size={16} />
+                              </button>
+                              
+                              {canAct ? (
+                                <>
+                                  <button onClick={() => updateStatus(c, 'head_approved')} title="Xác nhận đủ điều kiện" className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors border border-transparent hover:border-emerald-200">
+                                    <CheckCircle size={16} />
+                                  </button>
+                                  <button onClick={() => setRejectingCand(c)} title="Yêu cầu bổ sung" className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-200">
+                                    <AlertTriangle size={16} />
+                                  </button>
+                                </>
+                              ) : (
+                                <span className="text-xs text-slate-400 italic px-2">Đã xử lý</span>
+                              )}
+                              <button onClick={() => setTimelineCandId(c.id)} title="Lịch sử hồ sơ" className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                                <History size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -317,3 +386,22 @@ export const HeadDashboard = ({ department, onLogout }) => {
     </div>
   );
 };
+
+
+const StatCard = ({ title, value, icon, bgColor, active, onClick, pulse }) => (
+  <div 
+    onClick={onClick}
+    className={`p-4 rounded-xl border cursor-pointer transition-all ${
+      active ? 'border-blue-400 shadow-md ring-2 ring-blue-50' : 'border-slate-200 shadow-sm hover:border-slate-300 bg-white'
+    } flex items-center gap-4 relative overflow-hidden`}
+  >
+    {active && <div className="absolute inset-0 bg-blue-50/30"></div>}
+    <div className={`p-3 rounded-full ${bgColor} relative z-10 ${pulse ? 'animate-pulse' : ''}`}>
+      {icon}
+    </div>
+    <div className="relative z-10">
+      <p className="text-sm font-medium text-slate-500 mb-0.5">{title}</p>
+      <p className="text-2xl font-bold text-slate-800">{value}</p>
+    </div>
+  </div>
+);
