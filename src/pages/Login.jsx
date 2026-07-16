@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { GraduationCap, User, Users, ShieldAlert, Eye, EyeOff } from 'lucide-react';
+import { showAlert } from '../utils/alert';
 
 export const Login = ({ onLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -38,14 +39,14 @@ export const Login = ({ onLogin }) => {
     
     if (role === 'teacher') {
       if (cccd.length !== 12 || !/^\d{12}$/.test(cccd)) {
-        alert('Vui lòng nhập đúng 12 số CCCD!');
+        showAlert('Thông báo', 'Vui lòng nhập đúng 12 số CCCD!');
         return;
       }
       onLogin({ role: 'teacher', cccd });
     } 
     else if (role === 'head') {
       if (headPass !== import.meta.env.VITE_HEAD_PASS) {
-        alert('Sai mật khẩu Tổ trưởng!');
+        showAlert('Thông báo', 'Sai mật khẩu Tổ trưởng!');
         return;
       }
       onLogin({ role: 'head', department: selectedDept });
@@ -56,12 +57,12 @@ export const Login = ({ onLogin }) => {
       if (data && data.length > 0) {
         onLogin({ role: 'secretary', info: data[0] });
       } else {
-        alert('Sai tên đăng nhập hoặc mật khẩu Thư ký!');
+        showAlert('Thông báo', 'Sai tên đăng nhập hoặc mật khẩu Thư ký!');
       }
     }
     else if (role === 'admin') {
       if (adminPass !== import.meta.env.VITE_ADMIN_PASS) {
-        alert('Sai mật khẩu Quản trị!');
+        showAlert('Thông báo', 'Sai mật khẩu Quản trị!');
         return;
       }
       onLogin({ role: 'admin' });

@@ -5,6 +5,7 @@ import { rankCandidates } from '../utils/ranking';
 import { StatusBadge } from '../components/StatusBadge';
 import { Download, Calculator, CheckCircle, FileText } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { showAlert, showConfirm } from '../utils/alert';
 
 export const CandidateList = ({ candidates, onRefresh }) => {
   const [rankedList, setRankedList] = useState([]);
@@ -40,7 +41,7 @@ export const CandidateList = ({ candidates, onRefresh }) => {
 
   const finalizeList = async () => {
     if (!hasCalculated) {
-      alert('Vui lòng tính thứ tự ưu tiên trước khi chốt danh sách!');
+      showAlert('Thông báo', 'Vui lòng tính thứ tự ưu tiên trước khi chốt danh sách!');
       return;
     }
     if (!confirm('Bạn có chắc chắn muốn chốt danh sách trình Hiệu trưởng? Hồ sơ sẽ bị khóa ở trạng thái cuối cùng.')) return;
@@ -49,7 +50,7 @@ export const CandidateList = ({ candidates, onRefresh }) => {
     if(toUpdate.length > 0) {
       await supabase.from('candidates').update({ status: 'finalized' }).in('id', toUpdate);
       if(onRefresh) onRefresh();
-      alert('Đã chốt danh sách trình Hiệu trưởng thành công!');
+      showAlert('Thông báo', 'Đã chốt danh sách trình Hiệu trưởng thành công!');
     }
   };
 
@@ -77,7 +78,7 @@ export const CandidateList = ({ candidates, onRefresh }) => {
 
   const exportRanked = () => {
     if (!hasCalculated) {
-      alert('Vui lòng tính thứ tự ưu tiên trước khi xuất báo cáo!');
+      showAlert('Thông báo', 'Vui lòng tính thứ tự ưu tiên trước khi xuất báo cáo!');
       return;
     }
     const data = rankedList

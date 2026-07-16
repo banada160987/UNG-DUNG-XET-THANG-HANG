@@ -10,6 +10,7 @@ export const STATUS_CONFIG = {
   'admin_reviewing': { label: 'Tổ rà soát đang kiểm tra', color: 'bg-blue-100 text-blue-800 border-blue-300', icon: Search },
   'admin_approved': { label: 'Đủ điều kiện', color: 'bg-emerald-100 text-emerald-800 border-emerald-300', icon: CheckCircle },
   'admin_rejected': { label: 'Không đủ điều kiện', color: 'bg-rose-100 text-rose-800 border-rose-300', icon: XCircle },
+  'returned': { label: 'Yêu cầu bổ sung (Trường)', color: 'bg-red-100 text-red-800 border-red-300', icon: AlertCircle },
   'ranked': { label: 'Đã xếp thứ tự ưu tiên', color: 'bg-amber-100 text-amber-800 border-amber-300', icon: Trophy },
   'finalized': { label: 'Đã đưa vào danh sách trình', color: 'bg-slate-100 text-slate-800 border-slate-300', icon: FileText },
   'eligible': { label: 'Hợp lệ', color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle },

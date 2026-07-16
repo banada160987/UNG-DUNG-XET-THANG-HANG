@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { Plus, Check, Save, Edit2, Trash2 } from 'lucide-react';
+import { showAlert, showConfirm } from '../utils/alert';
 
 export const BatchManager = ({ activeBatchId, onSelectBatch }) => {
   const [batches, setBatches] = useState([]);
@@ -33,7 +34,7 @@ export const BatchManager = ({ activeBatchId, onSelectBatch }) => {
         setNewBatch({ name: '', type: 'III -> II', quota: 1, deadline: '' });
         fetchBatches();
       } else {
-        alert("Có lỗi khi cập nhật!");
+        showAlert('Thông báo', "Có lỗi khi cập nhật!");
       }
     } else {
       // Tạo mới
@@ -44,7 +45,7 @@ export const BatchManager = ({ activeBatchId, onSelectBatch }) => {
         fetchBatches();
         onSelectBatch(data[0].id);
       } else {
-        alert("Có lỗi khi tạo mới!");
+        showAlert('Thông báo', "Có lỗi khi tạo mới!");
       }
     }
   };
@@ -63,7 +64,7 @@ export const BatchManager = ({ activeBatchId, onSelectBatch }) => {
         fetchBatches();
         if (activeBatchId === b.id) onSelectBatch(null);
       } else {
-        alert("Lỗi khi xóa đợt xét");
+        showAlert('Thông báo', "Lỗi khi xóa đợt xét");
       }
     }
   };

@@ -11,6 +11,7 @@ import { SettingsModal } from '../components/SettingsModal';
 import { useSettings } from '../contexts/SettingsContext';
 import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye, Trash2, Scale, Settings } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
+import { showAlert, showConfirm, showPrompt } from '../utils/alert';
 
 export const Dashboard = ({ candidates, onRefresh }) => {
   const [selectedFilter, setSelectedFilter] = useState('all');
@@ -41,19 +42,19 @@ export const Dashboard = ({ candidates, onRefresh }) => {
       await logAction(id, 'admin', 'Ban Giám Hiệu', action, '');
       if(onRefresh) onRefresh();
     } else {
-      alert('Lỗi cập nhật trạng thái!');
+      showAlert('Thông báo', 'Lỗi cập nhật trạng thái!');
     }
   };
 
   const handleReject = async (id, message) => {
-    const msg = message || prompt("Nhập lý do từ chối (báo cho giáo viên):");
+    const msg = message || await showPrompt('Lý do từ chối', "Nhập lý do báo cho giáo viên...", "");
     if (msg === null) return;
     const { error } = await supabase.from('candidates').update({ status: 'returned', feedback_message: msg }).eq('id', id);
     if (!error) {
       await logAction(id, 'admin', 'Ban Giám Hiệu', 'TRẢ LẠI HỒ SƠ', msg);
       if (onRefresh) onRefresh();
     } else {
-      alert('Lỗi cập nhật trạng thái!');
+      showAlert('Thông báo', 'Lỗi cập nhật trạng thái!');
     }
   };
 
@@ -63,7 +64,7 @@ export const Dashboard = ({ candidates, onRefresh }) => {
       if (!error) {
         if (onRefresh) onRefresh();
       } else {
-        alert('Có lỗi xảy ra khi xóa hồ sơ!');
+        showAlert('Thông báo', 'Có lỗi xảy ra khi xóa hồ sơ!');
       }
     }
   };
@@ -219,6 +220,14 @@ export const Dashboard = ({ candidates, onRefresh }) => {
             >
               {sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
             </button>
+            {selectedForCompare.length >= 2 && (
+              <button
+                onClick={() => setShowCompare(true)}
+                className="px-3 py-1.5 text-sm font-medium rounded-lg border bg-blue-600 text-white border-blue-600 hover:bg-blue-700 flex items-center gap-1 shadow-sm transition-colors"
+              >
+                <Scale size={16} /> Bàn cân đối chiếu ({selectedForCompare.length})
+              </button>
+            )}
           </div>
         </div>
         <div className="divide-y divide-slate-100 max-h-[600px] overflow-y-auto">
@@ -251,7 +260,7 @@ export const Dashboard = ({ candidates, onRefresh }) => {
                           ? `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô trên hệ thống đang thiếu các thông tin/giấy tờ sau:\n${missingDocs}\n\nThầy/cô vui lòng bổ sung sớm nhé!`
                           : `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô đã được tiếp nhận.`;
                         navigator.clipboard.writeText(msg).then(() => {
-                          alert("Đã copy sẵn tin nhắn báo thiếu hồ sơ!\nBạn chỉ cần ấn Ctrl+V (Dán) vào khung chat Zalo nhé.");
+                          showAlert('Thông báo', "Đã copy sẵn tin nhắn báo thiếu hồ sơ!\nBạn chỉ cần ấn Ctrl+V (Dán) vào khung chat Zalo nhé.");
                           window.location.href = `zalo://conversation?phone=${c.phone}`;
                         });
                       }}
@@ -372,3 +381,6 @@ const StatCard = ({ title, value, icon, bgColor, active, onClick, pulse }) => (
     </div>
   </div>
 );
+
+
+

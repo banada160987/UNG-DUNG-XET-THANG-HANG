@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
 import { XCircle, Check, Trash2 } from 'lucide-react';
+import { showAlert } from '../utils/alert';
 
 export const SignatureModal = ({ onClose, onSave }) => {
   const sigCanvas = useRef({});
@@ -11,7 +12,7 @@ export const SignatureModal = ({ onClose, onSave }) => {
 
   const save = () => {
     if (sigCanvas.current.isEmpty()) {
-      alert("Vui lòng ký trước khi lưu.");
+      showAlert('Thông báo', "Vui lòng ký trước khi lưu.");
       return;
     }
     const dataUrl = sigCanvas.current.getTrimmedCanvas().toDataURL('image/png');

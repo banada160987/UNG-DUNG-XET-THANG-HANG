@@ -5,6 +5,7 @@ import { StatusBadge } from '../components/StatusBadge';
 import { AlertCircle, FileCheck, Search, Download, PenTool } from 'lucide-react';
 import { exportCandidateToWord } from '../utils/exportWord';
 import { SignatureModal } from '../components/SignatureModal';
+import { showAlert } from '../utils/alert';
 
 export const TeacherDashboard = ({ cccd, onLogout }) => {
   const [candidate, setCandidate] = useState(null);
@@ -22,7 +23,7 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
     const { data: batches } = await supabase.from('batches').select('id, name').eq('isActive', true).order('created_at', { ascending: false }).limit(1);
     
     if (!batches || batches.length === 0) {
-      alert("Hiện tại không có đợt xét nào đang mở.");
+      showAlert('Thông báo', "Hiện tại không có đợt xét nào đang mở.");
       setLoading(false);
       return;
     }
@@ -45,15 +46,15 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
     
     if (candidate && candidate.id) {
       const { error } = await supabase.from('candidates').update(payload).eq('id', candidate.id);
-      if (error) alert('Lỗi cập nhật');
+      if (error) showAlert('Thông báo', 'Lỗi cập nhật');
     } else {
       const { error } = await supabase.from('candidates').insert([payload]);
-      if (error) alert('Lỗi nộp hồ sơ');
+      if (error) showAlert('Thông báo', 'Lỗi nộp hồ sơ');
     }
     
     await loadData();
-    if(newStatus === 'draft') alert('Đã lưu nháp thành công!');
-    else alert('Đã nộp hồ sơ cho Tổ trưởng!');
+    if(newStatus === 'draft') showAlert('Thông báo', 'Đã lưu nháp thành công!');
+    else showAlert('Thông báo', 'Đã nộp hồ sơ cho Tổ trưởng!');
   };
 
   const handleSaveDraft = async (formData) => {

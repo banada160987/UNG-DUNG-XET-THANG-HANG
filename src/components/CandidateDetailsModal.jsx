@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { XCircle, FileText, Download, MessageSquareWarning } from 'lucide-react';
 import { CandidateForm } from '../pages/CandidateForm';
 import { exportCandidateToWord } from '../utils/exportWord';
+import { showPrompt } from '../utils/alert';
 
 export const CandidateDetailsModal = ({ candidate, onClose, onReject }) => {
   const [fieldComments, setFieldComments] = useState({});
@@ -18,8 +19,8 @@ export const CandidateDetailsModal = ({ candidate, onClose, onReject }) => {
     });
   };
 
-  const handleRejectClick = () => {
-    const generalMsg = prompt("Nhập nhận xét chung (tùy chọn):", "");
+  const handleRejectClick = async () => {
+    const generalMsg = await showPrompt("Nhập nhận xét chung (tùy chọn):", "Nhập nhận xét...", "");
     if (generalMsg === null && Object.keys(fieldComments).length === 0) return; // Cancel
     
     const feedbackObj = {

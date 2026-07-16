@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { Plus, Trash2 } from 'lucide-react';
+import { showAlert, showConfirm } from '../utils/alert';
 
 export const DepartmentManager = () => {
   const [departments, setDepartments] = useState([]);
@@ -21,7 +22,7 @@ export const DepartmentManager = () => {
     
     const { error } = await supabase.from('departments').insert([{ name: newName.trim() }]);
     if (error) {
-      alert('Lỗi thêm Tổ (Có thể bị trùng tên)');
+      showAlert('Thông báo', 'Lỗi thêm Tổ (Có thể bị trùng tên)');
     } else {
       setNewName('');
       fetchDepts();

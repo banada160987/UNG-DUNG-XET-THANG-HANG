@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { Plus, Trash2, Edit } from 'lucide-react';
+import { showAlert, showConfirm } from '../utils/alert';
 
 export const SecretaryManager = () => {
   const [secretaries, setSecretaries] = useState([]);
@@ -40,11 +41,11 @@ export const SecretaryManager = () => {
   const addSecretary = async (e) => {
     e.preventDefault();
     if (!newSec.username.trim() || !newSec.password.trim()) {
-      alert("Vui lòng nhập Tên đăng nhập và Mật khẩu!");
+      showAlert('Thông báo', "Vui lòng nhập Tên đăng nhập và Mật khẩu!");
       return;
     }
     if (newSec.selectedDepts.length === 0) {
-      alert("Vui lòng chọn ít nhất 1 Tổ chuyên môn!");
+      showAlert('Thông báo', "Vui lòng chọn ít nhất 1 Tổ chuyên môn!");
       return;
     }
 
@@ -55,7 +56,7 @@ export const SecretaryManager = () => {
     }]);
 
     if (error) {
-      alert("Lỗi: " + error.message);
+      showAlert('Thông báo', "Lỗi: " + error.message);
     } else {
       setNewSec({ username: '', password: '', selectedDepts: [] });
       loadData();
@@ -65,7 +66,7 @@ export const SecretaryManager = () => {
   const deleteSecretary = async (id) => {
     if(!confirm("Bạn có chắc chắn muốn xóa Thư ký này?")) return;
     const { error } = await supabase.from('secretaries').delete().eq('id', id);
-    if (error) alert("Lỗi xóa");
+    if (error) showAlert('Thông báo', "Lỗi xóa");
     else loadData();
   };
 

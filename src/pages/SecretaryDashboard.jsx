@@ -9,6 +9,7 @@ import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
 import { CompareModal } from '../components/CompareModal';
 import { useSettings } from '../contexts/SettingsContext';
 import { Users, FileText, CheckSquare, Search, ThumbsUp, ThumbsDown, LogOut, XCircle, Send, History, Eye, Scale } from 'lucide-react';
+import { showAlert } from '../utils/alert';
 
 export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
   const [candidates, setCandidates] = useState([]);
@@ -73,13 +74,13 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
       await logAction(c.id, 'secretary', `Thư ký ${secretaryInfo.username}`, action, feedbackMsg);
       loadData();
     } else {
-      alert('Lỗi cập nhật trạng thái!');
+      showAlert('Thông báo', 'Lỗi cập nhật trạng thái!');
     }
   };
 
   const handleRejectSubmit = async (withZalo) => {
     if (!feedback.trim()) {
-      alert("Vui lòng nhập lý do!");
+      showAlert('Thông báo', "Vui lòng nhập lý do!");
       return;
     }
     
@@ -89,7 +90,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
       const msg = `Chào thầy/cô, hồ sơ thăng hạng của thầy/cô cần bổ sung: ${feedback}. Thầy/cô vui lòng lên hệ thống cập nhật nhé!`;
       window.open(`https://zalo.me/${rejectingCand.phone}?text=${encodeURIComponent(msg)}`, '_blank');
     } else if (withZalo) {
-      alert("Giáo viên này chưa cập nhật Số điện thoại Zalo.");
+      showAlert('Thông báo', "Giáo viên này chưa cập nhật Số điện thoại Zalo.");
     }
     
     setRejectingCand(null);
@@ -266,7 +267,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                                   ? `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô trên hệ thống đang thiếu các thông tin/giấy tờ sau:\n${missingDocs}\n\nThầy/cô vui lòng bổ sung sớm nhé!`
                                   : `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô đã được tiếp nhận.`;
                                 navigator.clipboard.writeText(msg).then(() => {
-                                  alert("Đã copy sẵn tin nhắn báo thiếu hồ sơ!\nBạn chỉ cần ấn Ctrl+V (Dán) vào khung chat Zalo nhé.");
+                                  showAlert('Thông báo', "Đã copy sẵn tin nhắn báo thiếu hồ sơ!\nBạn chỉ cần ấn Ctrl+V (Dán) vào khung chat Zalo nhé.");
                                   window.location.href = `zalo://conversation?phone=${c.phone}`;
                                 });
                               }}

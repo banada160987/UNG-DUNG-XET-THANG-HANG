@@ -9,6 +9,7 @@ import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
 import { CompareModal } from '../components/CompareModal';
 import { useSettings } from '../contexts/SettingsContext';
 import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle, Send, History, Eye, Scale, Users, FileText, CheckSquare } from 'lucide-react';
+import { showAlert, showConfirm } from '../utils/alert';
 
 export const HeadDashboard = ({ department, onLogout }) => {
   const [candidates, setCandidates] = useState([]);
@@ -66,13 +67,13 @@ export const HeadDashboard = ({ department, onLogout }) => {
       await logAction(c.id, 'head', `Tổ trưởng ${department}`, action, feedbackMsg);
       loadData();
     } else {
-      alert('Lỗi cập nhật trạng thái');
+      showAlert('Thông báo', 'Lỗi cập nhật trạng thái');
     }
   };
 
   const handleRejectSubmit = async (withZalo) => {
     if (!feedback.trim()) {
-      alert("Vui lòng nhập lý do!");
+      showAlert('Thông báo', "Vui lòng nhập lý do!");
       return;
     }
     
@@ -82,7 +83,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
       const msg = `Chào thầy/cô, hồ sơ thăng hạng của thầy/cô cần bổ sung: ${feedback}. Thầy/cô vui lòng lên hệ thống cập nhật nhé!`;
       window.open(`https://zalo.me/${rejectingCand.phone}?text=${encodeURIComponent(msg)}`, '_blank');
     } else if (withZalo) {
-      alert("Giáo viên này chưa cập nhật Số điện thoại Zalo.");
+      showAlert('Thông báo', "Giáo viên này chưa cập nhật Số điện thoại Zalo.");
     }
     
     setRejectingCand(null);
@@ -129,7 +130,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
   const handleBulkApprove = async () => {
     const candsToApprove = candidates.filter(c => selectedForCompare.includes(c.id) && c.status === 'submitted');
     if (candsToApprove.length === 0) {
-      alert("Không có hồ sơ nào hợp lệ để duyệt trong các hồ sơ đã chọn (chỉ duyệt hồ sơ đang 'Chờ xử lý').");
+      showAlert('Thông báo', "Không có hồ sơ nào hợp lệ để duyệt trong các hồ sơ đã chọn (chỉ duyệt hồ sơ đang 'Chờ xử lý').");
       return;
     }
     if (!confirm(`Bạn có chắc muốn duyệt hàng loạt ${candsToApprove.length} hồ sơ?`)) return;

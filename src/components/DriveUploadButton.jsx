@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Upload, Paperclip, Loader2 } from 'lucide-react';
 import { uploadToDrive } from '../utils/driveUpload';
+import { showAlert } from '../utils/alert';
 
 export const DriveUploadButton = ({ onUploadSuccess, currentLink, disabled, compact = false, filePrefix = "" }) => {
   const [uploading, setUploading] = useState(false);
@@ -11,7 +12,7 @@ export const DriveUploadButton = ({ onUploadSuccess, currentLink, disabled, comp
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("File quá lớn! Vui lòng chọn file dưới 5MB.");
+      showAlert('Thông báo', "File quá lớn! Vui lòng chọn file dưới 5MB.");
       return;
     }
 
@@ -22,7 +23,7 @@ export const DriveUploadButton = ({ onUploadSuccess, currentLink, disabled, comp
       onUploadSuccess(link);
     } catch (err) {
       setError(err.message || "Lỗi tải file");
-      alert("Lỗi khi tải file lên Drive: " + (err.message || "Không xác định"));
+      showAlert('Thông báo', "Lỗi khi tải file lên Drive: " + (err.message || "Không xác định"));
     } finally {
       setUploading(false);
       e.target.value = ''; // Reset input

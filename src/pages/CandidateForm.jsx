@@ -4,6 +4,7 @@ import { ACHIEVEMENT_LEVELS, TARGET_TITLES } from '../data/config';
 import { Save, X, Plus, Trash2, Send, Upload, Paperclip, AlertCircle, ScanText, Loader2, MessageSquarePlus } from 'lucide-react';
 import { DriveUploadButton } from '../components/DriveUploadButton';
 import { performOCR } from '../utils/ocr';
+import { showPrompt } from '../utils/alert';
 
 export const CommentContext = createContext({});
 
@@ -154,7 +155,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("File quá lớn! Vui lòng chọn file dưới 5MB.");
+      showAlert('Thông báo', "File quá lớn! Vui lòng chọn file dưới 5MB.");
       return;
     }
 
@@ -166,7 +167,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
     const { error } = await supabase.storage.from('evidence_files').upload(filePath, file);
     
     if (error) {
-      alert("Lỗi tải file: " + error.message);
+      showAlert('Thông báo', "Lỗi tải file: " + error.message);
     } else {
       const { data } = supabase.storage.from('evidence_files').getPublicUrl(filePath);
       if (data) {
@@ -227,16 +228,16 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
       });
       
       if (Object.keys(data).length === 0) {
-        alert("Không nhận diện được thông tin. Vui lòng thử ảnh rõ nét hơn.");
+        showAlert('Thông báo', "Không nhận diện được thông tin. Vui lòng thử ảnh rõ nét hơn.");
       } else {
         setFormData(prev => ({
           ...prev,
           ...data
         }));
-        alert(`Đã nhận diện thành công:\nCCCD: ${data.cccd || 'Không tìm thấy'}\nHọ Tên: ${data.fullName || 'Không tìm thấy'}\nNgày Sinh: ${data.dob || 'Không tìm thấy'}`);
+        showAlert('Thông báo', `Đã nhận diện thành công:\nCCCD: ${data.cccd || 'Không tìm thấy'}\nHọ Tên: ${data.fullName || 'Không tìm thấy'}\nNgày Sinh: ${data.dob || 'Không tìm thấy'}`);
       }
     } catch (error) {
-      alert("Có lỗi xảy ra khi quét OCR. Vui lòng nhập tay.");
+      showAlert('Thông báo', "Có lỗi xảy ra khi quét OCR. Vui lòng nhập tay.");
     } finally {
       setOcrLoading(false);
       e.target.value = null; // reset input
@@ -625,9 +626,9 @@ export const Input = ({ label, ...props }) => {
         {mode === 'review' && (
           <button 
             type="button" 
-            onClick={() => {
+            onClick={async () => {
               const current = fields[props.name] || '';
-              const cmt = prompt(`Nhập nhận xét cho [${label}]:`, current);
+              const cmt = await showPrompt(`Nhập nhận xét cho [${label}]:`, "Nhập nhận xét...", current);
               if (cmt !== null) onCommentChange(props.name, cmt);
             }}
             className="text-slate-400 hover:text-blue-500 transition-colors"
@@ -660,9 +661,9 @@ export const Checkbox = ({ label, name, checked, onChange, disabled }) => {
         {mode === 'review' && (
           <button 
             type="button" 
-            onClick={() => {
+            onClick={async () => {
               const current = fields[name] || '';
-              const cmt = prompt(`Nhập nhận xét cho [${label}]:`, current);
+              const cmt = await showPrompt(`Nhập nhận xét cho [${label}]:`, "Nhập nhận xét...", current);
               if (cmt !== null) onCommentChange(name, cmt);
             }}
             className="text-slate-400 hover:text-blue-500 transition-colors"
