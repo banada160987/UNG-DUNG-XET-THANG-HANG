@@ -1,5 +1,8 @@
 import React from 'react';
 import { XCircle, Award, Calendar, CheckSquare, FileText, User } from 'lucide-react';
+import { StatusBadge } from './StatusBadge';
+import { calculateTotalScore } from '../utils/ranking';
+import { ACHIEVEMENT_LEVELS } from '../data/config';
 
 export const CompareModal = ({ candidates, onClose }) => {
   if (!candidates || candidates.length < 2) return null;
@@ -26,7 +29,7 @@ export const CompareModal = ({ candidates, onClose }) => {
                   <p className="text-sm text-slate-500">{c.unit}</p>
                   <p className="text-xs text-slate-400 mt-1">Đăng ký: {c.targetTitle}</p>
                   <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-700 font-bold rounded-lg border border-amber-200">
-                    <Award size={18} /> Điểm tổng: {c.score || 0}
+                    <Award size={18} /> Điểm tổng: {c.score ?? calculateTotalScore(c)}
                   </div>
                 </div>
 
@@ -46,10 +49,18 @@ export const CompareModal = ({ candidates, onClose }) => {
                       <Award size={16} className="text-slate-400" /> Thành tích nổi bật
                     </h5>
                     <div className="bg-slate-50 p-3 rounded-lg text-sm max-h-48 overflow-y-auto">
-                      {c.achievements && c.achievements.length > 0 ? (
+                      {(c.achievements?.length > 0 || c.otherAchievements?.length > 0) ? (
                         <ul className="list-disc pl-4 space-y-1">
-                          {c.achievements.map((ach, i) => (
-                            <li key={i}>{ach.name}</li>
+                          {c.achievements?.map((ach, i) => (
+                            <li key={`ach-${i}`}>
+                              {ACHIEVEMENT_LEVELS.find(l => l.id === ach.id)?.name || ach.id}
+                              {ach.year && ` (${ach.year})`}
+                            </li>
+                          ))}
+                          {c.otherAchievements?.map((ach, i) => (
+                            <li key={`other-${i}`}>
+                              {ach.id} {ach.year && ` (${ach.year})`}
+                            </li>
                           ))}
                         </ul>
                       ) : (
@@ -63,7 +74,7 @@ export const CompareModal = ({ candidates, onClose }) => {
                       <CheckSquare size={16} className="text-slate-400" /> Trạng thái hồ sơ
                     </h5>
                     <div className="bg-slate-50 p-3 rounded-lg text-sm flex flex-col gap-2">
-                      <span className="font-medium text-slate-700">{c.status}</span>
+                      <StatusBadge status={c.status} />
                       {c.eligibility && c.eligibility.isValid ? (
                         <span className="text-emerald-600">Đủ điều kiện ban đầu</span>
                       ) : (
