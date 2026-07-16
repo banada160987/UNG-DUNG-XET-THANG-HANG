@@ -1,10 +1,11 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { ACHIEVEMENT_LEVELS, TARGET_TITLES } from '../data/config';
-import { Save, X, Plus, Trash2, Send, Upload, Paperclip, AlertCircle, ScanText, Loader2, MessageSquarePlus } from 'lucide-react';
+import { Save, X, Plus, Trash2, Send, Upload, Paperclip, AlertCircle, ScanText, Loader2, MessageSquarePlus, Download } from 'lucide-react';
 import { DriveUploadButton } from '../components/DriveUploadButton';
 import { performOCR } from '../utils/ocr';
 import { showPrompt } from '../utils/alert';
+import { downloadAllEvidenceAsZip } from '../utils/downloadEvidence';
 
 export const CommentContext = createContext({});
 
@@ -274,18 +275,29 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
       <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-2 mb-4 gap-2">
           <h3 className="text-lg font-semibold text-slate-800">I. Thông tin cá nhân</h3>
-          {!isReadOnly && (
-            <div>
-              <input type="file" id="ocr-upload" accept="image/*" className="hidden" onChange={handleOcrUpload} />
-              <label 
-                htmlFor="ocr-upload" 
-                className={`inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors cursor-pointer ${ocrLoading ? 'bg-slate-100 text-slate-400 border-slate-200 pointer-events-none' : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'}`}
+          <div className="flex items-center gap-2 flex-wrap">
+            {initialData && (
+              <button 
+                type="button" 
+                onClick={() => downloadAllEvidenceAsZip(formData)}
+                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 transition-colors"
               >
-                {ocrLoading ? <Loader2 size={16} className="animate-spin" /> : <ScanText size={16} />}
-                {ocrLoading ? `Đang nhận diện... ${ocrProgress}%` : 'Quét ảnh tự động điền (AI)'}
-              </label>
-            </div>
-          )}
+                <Download size={16} /> Tải minh chứng (ZIP)
+              </button>
+            )}
+            {!isReadOnly && (
+              <div>
+                <input type="file" id="ocr-upload" accept="image/*" className="hidden" onChange={handleOcrUpload} />
+                <label 
+                  htmlFor="ocr-upload" 
+                  className={`inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors cursor-pointer ${ocrLoading ? 'bg-slate-100 text-slate-400 border-slate-200 pointer-events-none' : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'}`}
+                >
+                  {ocrLoading ? <Loader2 size={16} className="animate-spin" /> : <ScanText size={16} />}
+                  {ocrLoading ? `Đang nhận diện... ${ocrProgress}%` : 'Quét ảnh điền tự động'}
+                </label>
+              </div>
+            )}
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input label="Số CCCD" name="cccd" value={formData.cccd} onChange={handleChange} required disabled={!!fixedCccd || isReadOnly} />
