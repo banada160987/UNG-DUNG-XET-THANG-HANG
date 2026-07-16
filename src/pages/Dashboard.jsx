@@ -406,7 +406,7 @@ export const Dashboard = ({ candidates, onRefresh }) => {
         />
       )}
       {showSettings && (
-        <SettingsModal onClose={() => setShowSettings(false)} />
+        <SettingsModal isOpen={true} onClose={() => setShowSettings(false)} />
       )}
     </div>
   );
