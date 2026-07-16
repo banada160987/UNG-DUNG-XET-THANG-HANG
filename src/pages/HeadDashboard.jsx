@@ -294,9 +294,11 @@ export const HeadDashboard = ({ department, onLogout }) => {
                           <td className="p-4">
                             <p className="font-semibold text-slate-800">{c.fullName}</p>
                             <p className="text-xs text-slate-500">CCCD: {c.cccd}</p>
-                            <div className="mt-1">
-                              <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Điểm: {c.score}</span>
-                            </div>
+                            {settings?.use_scoring !== false && (
+                              <div className="mt-1">
+                                <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Điểm: {c.score}</span>
+                              </div>
+                            )}
                           </td>
                           <td className="p-4 align-top">
                             <StatusBadge status={eligibility.isValid ? 'eligible' : 'ineligible'} />

@@ -68,7 +68,7 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
 
   if (loading) return <div className="p-8 text-center">Đang tải dữ liệu...</div>;
 
-  const isReadOnly = candidate && !['draft', 'head_rejected', 'returned'].includes(candidate.status);
+  const isReadOnly = candidate && !['draft', 'head_rejected', 'returned', 'admin_rejected'].includes(candidate.status);
 
   return (
     <div className="min-h-screen bg-slate-100 pb-10">
@@ -123,6 +123,16 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
                 <div>
                   <p className="font-bold">Yêu cầu bổ sung hồ sơ</p>
                   <p className="text-sm mt-1">Tổ trưởng đã xem qua và yêu cầu bạn cập nhật lại thông tin. Vui lòng sửa lại các mục bị thiếu và nhấn nút "Nộp cho Tổ trưởng" để gửi lại.</p>
+                </div>
+              </div>
+            )}
+
+            {candidate?.status === 'admin_rejected' && (
+              <div className="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-lg mb-6 flex items-start gap-3 shadow-sm">
+                <AlertCircle className="shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold">Hồ sơ không đủ điều kiện (Bị từ chối)</p>
+                  <p className="text-sm mt-1">Ban Giám Hiệu đã rà soát và xác định hồ sơ của bạn chưa đủ điều kiện. Tuy nhiên, nếu bạn có bổ sung thông tin hoặc minh chứng mới, bạn có thể chỉnh sửa và nộp lại.</p>
                 </div>
               </div>
             )}
