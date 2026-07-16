@@ -92,7 +92,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
   };
 
   // Tổ trưởng chỉ thấy hồ sơ nếu trạng thái KHÁC 'draft'
-  let displayCandidates = candidates.filter(c => c.status !== 'draft').map(c => ({
+  let displayCandidates = candidates.filter(c => c.status && c.status !== 'draft').map(c => ({
     ...c,
     score: calculateTotalScore(c, settings)
   }));
