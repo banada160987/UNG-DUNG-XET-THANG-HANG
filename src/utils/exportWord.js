@@ -1,6 +1,6 @@
 import { 
   Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, 
-  WidthType, BorderStyle, AlignmentType, VerticalAlign
+  WidthType, BorderStyle, AlignmentType, VerticalAlign, ImageRun
 } from "docx";
 import { saveAs } from "file-saver";
 import { format } from "date-fns";
@@ -33,7 +33,7 @@ const createRow = (col1, col2, col3, col4, col5, bold = false) => {
   });
 };
 
-export const exportCandidateToWord = async (candidate) => {
+export const exportCandidateToWord = async (candidate, signatureDataUrl = null) => {
   const {
     fullName = "",
     dob = "",
@@ -224,7 +224,17 @@ export const exportCandidateToWord = async (candidate) => {
                     width: { size: 50, type: WidthType.PERCENTAGE },
                     children: [
                       createPara([createText("Xác nhận", true)], AlignmentType.CENTER),
-                      createPara([], AlignmentType.CENTER, { before: 800 }),
+                      ...(signatureDataUrl ? [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          children: [
+                            new ImageRun({
+                              data: Uint8Array.from(atob(signatureDataUrl.split(',')[1]), c => c.charCodeAt(0)),
+                              transformation: { width: 150, height: 80 }
+                            })
+                          ]
+                        })
+                      ] : [createPara([], AlignmentType.CENTER, { before: 800 })]),
                       createPara([createText(fullName, true)], AlignmentType.CENTER),
                     ]
                   })

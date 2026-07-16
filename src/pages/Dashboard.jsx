@@ -1,22 +1,28 @@
 import React, { useState, useMemo } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { checkEligibility } from '../utils/validation';
+import { calculateTotalScore } from '../utils/ranking';
 import { StatusBadge } from '../components/StatusBadge';
 import { logAction } from '../utils/logger';
 import { CandidateTimeline } from '../components/CandidateTimeline';
 import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
-import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye, Trash2 } from 'lucide-react';
+import { CompareModal } from '../components/CompareModal';
+import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye, Trash2, Scale } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 
 export const Dashboard = ({ candidates, onRefresh }) => {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [timelineCandId, setTimelineCandId] = useState(null);
   const [viewCand, setViewCand] = useState(null);
+  const [sortByScore, setSortByScore] = useState(false);
+  const [selectedForCompare, setSelectedForCompare] = useState([]);
+  const [showCompare, setShowCompare] = useState(false);
 
   const evaluated = useMemo(() => {
     return candidates.map(c => ({
       ...c,
-      eligibility: checkEligibility(c)
+      eligibility: checkEligibility(c),
+      score: calculateTotalScore(c)
     }));
   }, [candidates]);
 
@@ -29,6 +35,18 @@ export const Dashboard = ({ candidates, onRefresh }) => {
     if (!error) {
       await logAction(id, 'admin', 'Ban Giám Hiệu', action, '');
       if(onRefresh) onRefresh();
+    } else {
+      alert('Lỗi cập nhật trạng thái!');
+    }
+  };
+
+  const handleReject = async (id, message) => {
+    const msg = message || prompt("Nhập lý do từ chối (báo cho giáo viên):");
+    if (msg === null) return;
+    const { error } = await supabase.from('candidates').update({ status: 'returned', feedback_message: msg }).eq('id', id);
+    if (!error) {
+      await logAction(id, 'admin', 'Ban Giám Hiệu', 'TRẢ LẠI HỒ SƠ', msg);
+      if (onRefresh) onRefresh();
     } else {
       alert('Lỗi cập nhật trạng thái!');
     }
@@ -51,12 +69,27 @@ export const Dashboard = ({ candidates, onRefresh }) => {
   const reviewingCount = evaluated.filter(c => c.status === 'admin_reviewing').length;
   const adminFinishedCount = evaluated.filter(c => ['admin_approved', 'admin_rejected', 'ranked', 'finalized'].includes(c.status)).length;
 
-  const displayList = evaluated.filter(c => {
+  let displayList = evaluated.filter(c => {
     if (selectedFilter === 'waiting') return c.status === 'head_approved';
     if (selectedFilter === 'reviewing') return c.status === 'admin_reviewing';
     if (selectedFilter === 'finished') return ['admin_approved', 'returned', 'ranked', 'finalized'].includes(c.status);
     return true; 
   });
+
+  if (sortByScore) {
+    displayList = [...displayList].sort((a, b) => b.score - a.score);
+  }
+
+  const handleToggleCompare = (candidateId) => {
+    setSelectedForCompare(prev => {
+      if (prev.includes(candidateId)) return prev.filter(id => id !== candidateId);
+      return [...prev, candidateId];
+    });
+  };
+
+  const getCompareCandidates = () => {
+    return candidates.filter(c => selectedForCompare.includes(c.id));
+  };
 
   // Dữ liệu Biểu đồ tròn
   const pieData = [
@@ -174,6 +207,22 @@ export const Dashboard = ({ candidates, onRefresh }) => {
             <FileText size={18} className="text-slate-500" />
             Danh sách rà soát cấp Trường
           </h3>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => setSortByScore(!sortByScore)}
+              className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${sortByScore ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}
+            >
+              {sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
+            </button>
+            {selectedForCompare.length >= 2 && (
+              <button
+                onClick={() => setShowCompare(true)}
+                className="px-3 py-1.5 text-sm font-medium rounded-lg border bg-blue-600 text-white border-blue-600 hover:bg-blue-700 flex items-center gap-1 shadow-sm"
+              >
+                <Scale size={16} /> Bàn cân đối chiếu ({selectedForCompare.length})
+              </button>
+            )}
+          </div>
         </div>
         <div className="divide-y divide-slate-100 max-h-[600px] overflow-y-auto">
           {displayList.length === 0 ? (
@@ -183,9 +232,19 @@ export const Dashboard = ({ candidates, onRefresh }) => {
             
             return (
             <div key={c.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50 transition-colors">
-              <div>
-                <p className="font-semibold text-slate-800 text-lg">{c.fullName} <span className="text-sm font-normal text-slate-500">({c.cccd})</span></p>
+              <div className="flex gap-3">
+                <div className="pt-1">
+                  <input 
+                    type="checkbox"
+                    className="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer"
+                    checked={selectedForCompare.includes(c.id)}
+                    onChange={() => handleToggleCompare(c.id)}
+                  />
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-800 text-lg">{c.fullName} <span className="text-sm font-normal text-slate-500">({c.cccd})</span></p>
                 <div className="flex flex-wrap items-center gap-2 mt-1 mb-2">
+                  <span className="text-sm font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Điểm: {c.score}</span>
                   <span className="text-sm text-slate-600 font-medium">{c.unit}</span>
                   <StatusBadge status={c.status} />
                   {c.phone && (
@@ -269,6 +328,7 @@ export const Dashboard = ({ candidates, onRefresh }) => {
                   <Trash2 size={12} /> Xóa hồ sơ
                 </button>
               </div>
+              </div>
             </div>
           )})}
         </div>
@@ -279,7 +339,21 @@ export const Dashboard = ({ candidates, onRefresh }) => {
       )}
 
       {viewCand && (
-        <CandidateDetailsModal candidate={viewCand} onClose={() => setViewCand(null)} />
+        <CandidateDetailsModal 
+          candidate={viewCand} 
+          onClose={() => setViewCand(null)} 
+          onReject={(candidate, msg) => {
+            handleReject(candidate.id, msg);
+            setViewCand(null);
+          }}
+        />
+      )}
+
+      {showCompare && (
+        <CompareModal 
+          candidates={getCompareCandidates()} 
+          onClose={() => setShowCompare(false)} 
+        />
       )}
     </div>
   );

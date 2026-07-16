@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { CandidateForm } from './CandidateForm';
 import { StatusBadge } from '../components/StatusBadge';
-import { AlertCircle, FileCheck, Search, Download } from 'lucide-react';
+import { AlertCircle, FileCheck, Search, Download, PenTool } from 'lucide-react';
 import { exportCandidateToWord } from '../utils/exportWord';
+import { SignatureModal } from '../components/SignatureModal';
 
 export const TeacherDashboard = ({ cccd, onLogout }) => {
   const [candidate, setCandidate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeBatchId, setActiveBatchId] = useState(null);
+  const [showSignature, setShowSignature] = useState(false);
+  const [signature, setSignature] = useState(localStorage.getItem(`signature_${cccd}`) || null);
 
   useEffect(() => {
     loadData();
@@ -77,14 +80,24 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
         </div>
         <div className="flex items-center gap-4">
           {candidate && (
-            <button 
-              onClick={() => exportCandidateToWord(candidate)} 
-              className="flex items-center gap-2 text-sm bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 shadow-sm font-medium"
-              title="Tải Danh mục hồ sơ bản Word"
-            >
-              <Download size={16} />
-              Xuất Bìa & Danh Mục
-            </button>
+            <>
+              <button 
+                onClick={() => setShowSignature(true)}
+                className={`flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg shadow-sm font-medium border ${signature ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-white text-slate-700 border-slate-300'}`}
+                title="Tạo chữ ký điện tử"
+              >
+                <PenTool size={16} />
+                {signature ? 'Đã có chữ ký' : 'Tạo chữ ký'}
+              </button>
+              <button 
+                onClick={() => exportCandidateToWord(candidate, signature)} 
+                className="flex items-center gap-2 text-sm bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 shadow-sm font-medium"
+                title="Tải Danh mục hồ sơ bản Word"
+              >
+                <Download size={16} />
+                Xuất Bìa & Danh Mục
+              </button>
+            </>
           )}
           <span className="text-sm font-medium text-slate-600">CCCD: {cccd}</span>
           <button onClick={onLogout} className="text-sm text-rose-600 hover:bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-200 font-medium">
@@ -146,6 +159,16 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
           </>
         )}
       </div>
+
+      {showSignature && (
+        <SignatureModal 
+          onClose={() => setShowSignature(false)} 
+          onSave={(dataUrl) => {
+            setSignature(dataUrl);
+            localStorage.setItem(`signature_${cccd}`, dataUrl);
+          }} 
+        />
+      )}
     </div>
   );
 };

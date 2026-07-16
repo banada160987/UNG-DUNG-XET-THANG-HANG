@@ -5,6 +5,40 @@ const getAchievementScore = (achievementId) => {
   return ach ? ach.score : 999;
 };
 
+export const calculateTotalScore = (candidate) => {
+  let score = 0;
+  
+  // 1. Thâm niên (1 điểm mỗi năm từ ngày tuyển dụng/hết tập sự)
+  const dateRec = candidate.decisionRecruitment?.date || candidate.decisionProbation?.date;
+  if (dateRec) {
+    const probDate = new Date(dateRec);
+    const now = new Date();
+    const diffTime = Math.abs(now - probDate);
+    const diffYears = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 365));
+    score += diffYears;
+  }
+  
+  // 2. Thành tích (Điểm càng cao tương ứng với rank càng thấp trong config)
+  if (candidate.achievements && Array.isArray(candidate.achievements)) {
+    candidate.achievements.forEach(a => {
+      const configScore = getAchievementScore(a.id);
+      if (configScore === 1) score += 20;       // Huân chương
+      else if (configScore <= 3) score += 15;   // Giải thưởng NN, danh hiệu
+      else if (configScore <= 6) score += 10;   // CSTĐ toàn quốc/tỉnh, BK thủ tướng
+      else if (configScore <= 10) score += 5;   // Bằng khen Tỉnh ủy, UBND
+      else if (configScore <= 12) score += 3;   // CSTĐ cơ sở, LĐLĐ
+      else score += 1;                          // Giấy khen
+    });
+  }
+
+  // 3. Điểm cộng ưu tiên
+  if (candidate.gender === 'Nữ') score += 0.5;
+  const isMinority = candidate.ethnicity && candidate.ethnicity.toLowerCase() !== 'kinh';
+  if (isMinority) score += 0.5;
+
+  return score;
+};
+
 export const evaluateAchievements = (achievements) => {
   if (!achievements || achievements.length === 0) {
     return {

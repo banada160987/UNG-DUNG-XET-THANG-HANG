@@ -1,17 +1,22 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { checkEligibility } from '../utils/validation';
+import { calculateTotalScore } from '../utils/ranking';
 import { logAction } from '../utils/logger';
 import { StatusBadge } from '../components/StatusBadge';
 import { CandidateTimeline } from '../components/CandidateTimeline';
 import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
-import { Users, FileText, CheckSquare, Search, ThumbsUp, ThumbsDown, LogOut, XCircle, Send, History, Eye } from 'lucide-react';
+import { CompareModal } from '../components/CompareModal';
+import { Users, FileText, CheckSquare, Search, ThumbsUp, ThumbsDown, LogOut, XCircle, Send, History, Eye, Scale } from 'lucide-react';
 
 export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeBatchId, setActiveBatchId] = useState(null);
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [sortByScore, setSortByScore] = useState(false);
+  const [selectedForCompare, setSelectedForCompare] = useState([]);
+  const [showCompare, setShowCompare] = useState(false);
 
   // Trạng thái modal từ chối
   const [rejectingCand, setRejectingCand] = useState(null);
@@ -91,7 +96,8 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
   const evaluated = useMemo(() => {
     return candidates.map(c => ({
       ...c,
-      eligibility: checkEligibility(c)
+      eligibility: checkEligibility(c),
+      score: calculateTotalScore(c)
     }));
   }, [candidates]);
 
@@ -101,12 +107,27 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
   const reviewingCount = evaluated.filter(c => c.status === 'admin_reviewing').length;
   const adminFinishedCount = evaluated.filter(c => ['admin_approved', 'returned', 'ranked', 'finalized'].includes(c.status)).length;
 
-  const displayList = evaluated.filter(c => {
+  let displayList = evaluated.filter(c => {
     if (selectedFilter === 'waiting') return c.status === 'head_approved';
     if (selectedFilter === 'reviewing') return c.status === 'admin_reviewing';
     if (selectedFilter === 'finished') return ['admin_approved', 'returned', 'ranked', 'finalized'].includes(c.status);
     return true; 
   });
+
+  if (sortByScore) {
+    displayList = [...displayList].sort((a, b) => b.score - a.score);
+  }
+
+  const handleToggleCompare = (candidateId) => {
+    setSelectedForCompare(prev => {
+      if (prev.includes(candidateId)) return prev.filter(id => id !== candidateId);
+      return [...prev, candidateId];
+    });
+  };
+
+  const getCompareCandidates = () => {
+    return candidates.filter(c => selectedForCompare.includes(c.id));
+  };
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row pb-10">
@@ -196,18 +217,42 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                     <FileText size={18} className="text-slate-500" />
                     Danh sách được phân công rà soát
                   </h3>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setSortByScore(!sortByScore)}
+                      className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${sortByScore ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}
+                    >
+                      {sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
+                    </button>
+                    {selectedForCompare.length >= 2 && (
+                      <button
+                        onClick={() => setShowCompare(true)}
+                        className="px-3 py-1.5 text-sm font-medium rounded-lg border bg-blue-600 text-white border-blue-600 hover:bg-blue-700 flex items-center gap-1 shadow-sm"
+                      >
+                        <Scale size={16} /> Bàn cân đối chiếu ({selectedForCompare.length})
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="divide-y divide-slate-100 max-h-[600px] overflow-y-auto">
                   {displayList.length === 0 ? (
                     <p className="text-center p-8 text-slate-400">Không có dữ liệu phù hợp.</p>
                   ) : displayList.map(c => {
-                    const adminCanAct = ['head_approved', 'admin_reviewing'].includes(c.status);
-                    
                     return (
                     <div key={c.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50 transition-colors">
-                      <div>
-                        <p className="font-semibold text-slate-800 text-lg">{c.fullName} <span className="text-sm font-normal text-slate-500">({c.cccd})</span></p>
+                      <div className="flex gap-3">
+                        <div className="pt-1">
+                          <input 
+                            type="checkbox"
+                            className="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer"
+                            checked={selectedForCompare.includes(c.id)}
+                            onChange={() => handleToggleCompare(c.id)}
+                          />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-slate-800 text-lg">{c.fullName} <span className="text-sm font-normal text-slate-500">({c.cccd})</span></p>
                         <div className="flex flex-wrap items-center gap-2 mt-1 mb-2">
+                          <span className="text-sm font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Điểm: {c.score}</span>
                           <span className="text-sm text-slate-600 font-medium">{c.unit}</span>
                           <StatusBadge status={c.status} />
                           {c.phone && (
@@ -284,6 +329,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                         )}
                       </div>
                     </div>
+                    </div>
                   )})}
                 </div>
               </div>
@@ -326,7 +372,21 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
       )}
 
       {viewCand && (
-        <CandidateDetailsModal candidate={viewCand} onClose={() => setViewCand(null)} />
+        <CandidateDetailsModal 
+          candidate={viewCand} 
+          onClose={() => setViewCand(null)} 
+          onReject={(candidate, msg) => {
+            updateStatus(candidate, 'returned', msg);
+            setViewCand(null);
+          }}
+        />
+      )}
+
+      {showCompare && (
+        <CompareModal 
+          candidates={getCompareCandidates()} 
+          onClose={() => setShowCompare(false)} 
+        />
       )}
     </div>
   );

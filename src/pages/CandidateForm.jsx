@@ -1,11 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { ACHIEVEMENT_LEVELS, TARGET_TITLES } from '../data/config';
-import { Save, X, Plus, Trash2, Send, Upload, Paperclip, AlertCircle } from 'lucide-react';
+import { Save, X, Plus, Trash2, Send, Upload, Paperclip, AlertCircle, ScanText, Loader2, MessageSquarePlus } from 'lucide-react';
 import { DriveUploadButton } from '../components/DriveUploadButton';
+import { performOCR } from '../utils/ocr';
 
-export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, fixedCccd, isReadOnly }) => {
+export const CommentContext = createContext({});
+
+export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, fixedCccd, isReadOnly, mode, onCommentChange }) => {
   const [departments, setDepartments] = useState([]);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrProgress, setOcrProgress] = useState(0);
   
   const getInitialState = () => {
     const defaultData = {
@@ -210,20 +215,77 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
 
   const filePrefix = formData.cccd ? `${formData.cccd}_${formData.fullName}` : "";
 
+  const handleOcrUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    setOcrLoading(true);
+    setOcrProgress(0);
+    try {
+      const data = await performOCR(file, (progress) => {
+        setOcrProgress(progress);
+      });
+      
+      if (Object.keys(data).length === 0) {
+        alert("Không nhận diện được thông tin. Vui lòng thử ảnh rõ nét hơn.");
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          ...data
+        }));
+        alert(`Đã nhận diện thành công:\nCCCD: ${data.cccd || 'Không tìm thấy'}\nHọ Tên: ${data.fullName || 'Không tìm thấy'}\nNgày Sinh: ${data.dob || 'Không tìm thấy'}`);
+      }
+    } catch (error) {
+      alert("Có lỗi xảy ra khi quét OCR. Vui lòng nhập tay.");
+    } finally {
+      setOcrLoading(false);
+      e.target.value = null; // reset input
+    }
+  };
+
+  const feedbackData = (() => {
+    try {
+      const parsed = JSON.parse(formData.feedback_message || '{}');
+      if (parsed.general !== undefined || parsed.fields !== undefined) {
+        return parsed;
+      }
+    } catch(e) {}
+    return { general: formData.feedback_message || '', fields: {} };
+  })();
+
+  const handleCommentChange = (fieldName, comment) => {
+    if (onCommentChange) onCommentChange(fieldName, comment);
+  };
+
   return (
+    <CommentContext.Provider value={{ fields: feedbackData.fields || {}, mode, onCommentChange: handleCommentChange }}>
     <form className="space-y-8 pb-10">
-      {formData.status === 'returned' && formData.feedback_message && (
+      {formData.status === 'returned' && feedbackData.general && (
         <div className="bg-rose-50 border-l-4 border-rose-500 p-4 rounded-r-lg flex items-start gap-3 shadow-sm">
           <AlertCircle className="text-rose-500 mt-0.5" size={20} />
           <div>
             <h3 className="font-semibold text-rose-800">Hồ sơ cần chỉnh sửa</h3>
-            <p className="text-rose-700 text-sm mt-1 whitespace-pre-wrap">{formData.feedback_message}</p>
+            <p className="text-rose-700 text-sm mt-1 whitespace-pre-wrap">{feedbackData.general}</p>
           </div>
         </div>
       )}
 
-      <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <h3 className="text-lg font-semibold border-b pb-2 mb-4 text-slate-800">I. Thông tin cá nhân</h3>
+      <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-2 mb-4 gap-2">
+          <h3 className="text-lg font-semibold text-slate-800">I. Thông tin cá nhân</h3>
+          {!isReadOnly && (
+            <div>
+              <input type="file" id="ocr-upload" accept="image/*" className="hidden" onChange={handleOcrUpload} />
+              <label 
+                htmlFor="ocr-upload" 
+                className={`inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors cursor-pointer ${ocrLoading ? 'bg-slate-100 text-slate-400 border-slate-200 pointer-events-none' : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'}`}
+              >
+                {ocrLoading ? <Loader2 size={16} className="animate-spin" /> : <ScanText size={16} />}
+                {ocrLoading ? `Đang nhận diện... ${ocrProgress}%` : 'Quét ảnh tự động điền (AI)'}
+              </label>
+            </div>
+          )}
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input label="Số CCCD" name="cccd" value={formData.cccd} onChange={handleChange} required disabled={!!fixedCccd || isReadOnly} />
           <Input label="Họ tên" name="fullName" value={formData.fullName} onChange={handleChange} required disabled={isReadOnly} />
@@ -524,10 +586,11 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
         </div>
       )}
     </form>
+    </CommentContext.Provider>
   );
 };
 
-const DecisionInputGroup = ({ title, type, data, onChange, disabled, filePrefix }) => (
+export const DecisionInputGroup = ({ title, type, data, onChange, disabled, filePrefix }) => (
   <div className="flex flex-col gap-2">
     <div className="flex justify-between items-end">
       <h4 className="font-medium text-sm text-slate-700">{title}</h4>
@@ -547,18 +610,67 @@ const DecisionInputGroup = ({ title, type, data, onChange, disabled, filePrefix 
   </div>
 );
 
-const Input = ({ label, ...props }) => (
-  <div className="flex flex-col gap-1">
-    <label className="text-sm font-medium text-slate-700">
-      {label} {props.required && <span className="text-rose-500">*</span>}
-    </label>
-    <input className="border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500" {...props} />
-  </div>
-);
+export const Input = ({ label, ...props }) => {
+  const { fields = {}, mode, onCommentChange } = useContext(CommentContext);
+  const error = fields[props.name];
 
-const Checkbox = ({ label, name, checked, onChange, disabled }) => (
-  <label className={`flex items-center gap-2 mb-2 group ${disabled ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}>
-    <input disabled={disabled} type="checkbox" name={name} checked={checked} onChange={onChange} className="w-5 h-5 border-2 border-slate-300 rounded text-blue-600 focus:ring-blue-500 peer disabled:bg-slate-100" />
-    <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">{label}</span>
-  </label>
-);
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex justify-between items-center">
+        <label className="text-sm font-medium text-slate-700">
+          {label} {props.required && <span className="text-rose-500">*</span>}
+        </label>
+        {mode === 'review' && (
+          <button 
+            type="button" 
+            onClick={() => {
+              const current = fields[props.name] || '';
+              const cmt = prompt(`Nhập nhận xét cho [${label}]:`, current);
+              if (cmt !== null) onCommentChange(props.name, cmt);
+            }}
+            className="text-slate-400 hover:text-blue-500 transition-colors"
+            title="Thêm bình luận/báo lỗi"
+          >
+            <MessageSquarePlus size={16} />
+          </button>
+        )}
+      </div>
+      <input 
+        className={`border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500 ${error ? 'border-rose-400 bg-rose-50' : 'border-slate-300'}`} 
+        {...props} 
+      />
+      {error && <span className="text-rose-500 text-xs mt-0.5">{error}</span>}
+    </div>
+  );
+};
+
+export const Checkbox = ({ label, name, checked, onChange, disabled }) => {
+  const { fields = {}, mode, onCommentChange } = useContext(CommentContext);
+  const error = fields[name];
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex justify-between items-center">
+        <label className={`flex items-center gap-2 group ${disabled ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}>
+          <input disabled={disabled} type="checkbox" name={name} checked={checked} onChange={onChange} className="w-5 h-5 border-2 border-slate-300 rounded text-blue-600 focus:ring-blue-500 peer disabled:bg-slate-100" />
+          <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">{label}</span>
+        </label>
+        {mode === 'review' && (
+          <button 
+            type="button" 
+            onClick={() => {
+              const current = fields[name] || '';
+              const cmt = prompt(`Nhập nhận xét cho [${label}]:`, current);
+              if (cmt !== null) onCommentChange(name, cmt);
+            }}
+            className="text-slate-400 hover:text-blue-500 transition-colors"
+            title="Thêm bình luận/báo lỗi"
+          >
+            <MessageSquarePlus size={16} />
+          </button>
+        )}
+      </div>
+      {error && <span className="text-rose-500 text-xs mt-0.5">{error}</span>}
+    </div>
+  );
+};

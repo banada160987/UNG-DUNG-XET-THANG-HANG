@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { checkEligibility } from '../utils/validation';
+import { calculateTotalScore } from '../utils/ranking';
 import { logAction } from '../utils/logger';
 import { StatusBadge } from '../components/StatusBadge';
 import { CandidateTimeline } from '../components/CandidateTimeline';
 import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
-import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle, Send, History, Eye } from 'lucide-react';
+import { CompareModal } from '../components/CompareModal';
+import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle, Send, History, Eye, Scale } from 'lucide-react';
 
 export const HeadDashboard = ({ department, onLogout }) => {
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeBatchId, setActiveBatchId] = useState(null);
+  const [sortByScore, setSortByScore] = useState(false);
+  const [selectedForCompare, setSelectedForCompare] = useState([]);
+  const [showCompare, setShowCompare] = useState(false);
   
   // Trạng thái modal từ chối
   const [rejectingCand, setRejectingCand] = useState(null);
@@ -80,7 +85,25 @@ export const HeadDashboard = ({ department, onLogout }) => {
   };
 
   // Tổ trưởng chỉ thấy hồ sơ nếu trạng thái KHÁC 'draft'
-  const displayCandidates = candidates.filter(c => c.status !== 'draft');
+  let displayCandidates = candidates.filter(c => c.status !== 'draft').map(c => ({
+    ...c,
+    score: calculateTotalScore(c)
+  }));
+  
+  if (sortByScore) {
+    displayCandidates = [...displayCandidates].sort((a, b) => b.score - a.score);
+  }
+
+  const handleToggleCompare = (candidateId) => {
+    setSelectedForCompare(prev => {
+      if (prev.includes(candidateId)) return prev.filter(id => id !== candidateId);
+      return [...prev, candidateId];
+    });
+  };
+
+  const getCompareCandidates = () => {
+    return candidates.filter(c => selectedForCompare.includes(c.id));
+  };
 
   return (
     <div className="min-h-screen bg-slate-100 pb-10">
@@ -104,9 +127,28 @@ export const HeadDashboard = ({ department, onLogout }) => {
           </div>
         ) : (
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <table className="w-full text-left">
+          <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+            <h3 className="font-semibold text-slate-800">Danh sách Giáo viên đã nộp</h3>
+            <button 
+              onClick={() => setSortByScore(!sortByScore)}
+              className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${sortByScore ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}
+            >
+              {sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
+            </button>
+            {selectedForCompare.length >= 2 && (
+              <button
+                onClick={() => setShowCompare(true)}
+                className="ml-2 px-3 py-1.5 text-sm font-medium rounded-lg border bg-blue-600 text-white border-blue-600 hover:bg-blue-700 flex items-center gap-1 shadow-sm"
+              >
+                <Scale size={16} /> Bàn cân đối chiếu ({selectedForCompare.length})
+              </button>
+            )}
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-sm text-slate-600 font-medium">
+                  <th className="p-4 w-12 text-center">So sánh</th>
                   <th className="p-4">Họ tên / CCCD</th>
                   <th className="p-4">Tự động quét ĐK</th>
                   <th className="p-4">Trạng thái</th>
@@ -121,9 +163,35 @@ export const HeadDashboard = ({ department, onLogout }) => {
                   
                   return (
                     <tr key={c.id} className="hover:bg-slate-50/50">
+                      <td className="p-4 text-center">
+                        <input 
+                          type="checkbox"
+                          className="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer"
+                          checked={selectedForCompare.includes(c.id)}
+                          onChange={() => handleToggleCompare(c.id)}
+                        />
+                      </td>
                       <td className="p-4">
-                        <p className="font-bold text-slate-800">{c.fullName}</p>
+                        <p className="font-semibold text-slate-800">{c.fullName}</p>
                         <p className="text-xs text-slate-500">CCCD: {c.cccd}</p>
+                        <div className="mt-1">
+                          <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Điểm: {c.score}</span>
+                        </div>
+                      </td>
+                      <td className="p-4 align-top">
+                        {eligibility.isValid ? (
+                          <span className="inline-flex text-xs text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded">Hệ thống báo: Đủ ĐK</span>
+                        ) : (
+                          <div className="text-xs text-rose-600 bg-rose-50 border border-rose-100 p-2 rounded">
+                            <span className="font-semibold block mb-1">Hệ thống phát hiện thiếu:</span>
+                            <ul className="list-disc pl-4 space-y-0.5">
+                              {eligibility.missing.map((m, i) => <li key={i}>{m}</li>)}
+                            </ul>
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-4 align-top">
+                        <StatusBadge status={c.status} />
                         {c.phone && (
                           <button 
                             onClick={() => {
@@ -142,21 +210,6 @@ export const HeadDashboard = ({ department, onLogout }) => {
                             Zalo: {c.phone}
                           </button>
                         )}
-                      </td>
-                      <td className="p-4">
-                        {eligibility.isValid ? (
-                          <span className="inline-flex text-xs text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded">Hệ thống báo: Đủ ĐK</span>
-                        ) : (
-                          <div className="text-xs text-rose-600 bg-rose-50 border border-rose-100 p-2 rounded">
-                            <span className="font-semibold block mb-1">Hệ thống phát hiện thiếu:</span>
-                            <ul className="list-disc pl-4 space-y-0.5">
-                              {eligibility.missing.map((m, i) => <li key={i}>{m}</li>)}
-                            </ul>
-                          </div>
-                        )}
-                      </td>
-                      <td className="p-4">
-                        <StatusBadge status={c.status} />
                       </td>
                       <td className="p-4 text-right space-x-2">
                         {canAct ? (
@@ -207,6 +260,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
               </tbody>
             </table>
           </div>
+          </div>
         )}
       </div>
 
@@ -244,7 +298,21 @@ export const HeadDashboard = ({ department, onLogout }) => {
       )}
 
       {viewCand && (
-        <CandidateDetailsModal candidate={viewCand} onClose={() => setViewCand(null)} />
+        <CandidateDetailsModal 
+          candidate={viewCand} 
+          onClose={() => setViewCand(null)} 
+          onReject={(candidate, msg) => {
+            handleReject(candidate.id, msg);
+            setViewCand(null);
+          }}
+        />
+      )}
+
+      {showCompare && (
+        <CompareModal 
+          candidates={getCompareCandidates()} 
+          onClose={() => setShowCompare(false)} 
+        />
       )}
     </div>
   );

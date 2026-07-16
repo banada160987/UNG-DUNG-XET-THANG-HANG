@@ -1,9 +1,33 @@
-import React from 'react';
-import { XCircle, FileText, Download } from 'lucide-react';
+import React, { useState } from 'react';
+import { XCircle, FileText, Download, MessageSquareWarning } from 'lucide-react';
 import { CandidateForm } from '../pages/CandidateForm';
 import { exportCandidateToWord } from '../utils/exportWord';
 
-export const CandidateDetailsModal = ({ candidate, onClose }) => {
+export const CandidateDetailsModal = ({ candidate, onClose, onReject }) => {
+  const [fieldComments, setFieldComments] = useState({});
+
+  const handleCommentChange = (fieldName, comment) => {
+    setFieldComments(prev => {
+      const next = { ...prev };
+      if (!comment) {
+        delete next[fieldName];
+      } else {
+        next[fieldName] = comment;
+      }
+      return next;
+    });
+  };
+
+  const handleRejectClick = () => {
+    const generalMsg = prompt("Nhập nhận xét chung (tùy chọn):", "");
+    if (generalMsg === null && Object.keys(fieldComments).length === 0) return; // Cancel
+    
+    const feedbackObj = {
+      general: generalMsg || "Vui lòng xem các lỗi đánh dấu đỏ ở từng mục",
+      fields: fieldComments
+    };
+    onReject(candidate, JSON.stringify(feedbackObj));
+  };
   return (
     <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-50 overflow-y-auto">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-5xl my-8 flex flex-col max-h-[90vh]">
@@ -21,6 +45,16 @@ export const CandidateDetailsModal = ({ candidate, onClose }) => {
               <Download size={16} />
               Xuất Bìa & Danh Mục
             </button>
+            {onReject && (
+              <button 
+                onClick={handleRejectClick}
+                className="flex items-center gap-2 text-sm bg-rose-100 text-rose-700 px-3 py-1.5 rounded-lg hover:bg-rose-200 shadow-sm font-medium"
+                title="Từ chối hồ sơ kèm nhận xét"
+              >
+                <MessageSquareWarning size={16} />
+                Từ chối & Trả hồ sơ
+              </button>
+            )}
             <button onClick={onClose} className="text-slate-400 hover:text-rose-500 transition-colors p-1 bg-white rounded-full shadow-sm hover:shadow">
               <XCircle size={24} />
             </button>
@@ -31,6 +65,8 @@ export const CandidateDetailsModal = ({ candidate, onClose }) => {
           <CandidateForm 
             initialData={candidate} 
             isReadOnly={true} 
+            mode={onReject ? 'review' : 'view'}
+            onCommentChange={handleCommentChange}
             onSave={() => {}} 
             onSubmitToHead={() => {}} 
             onCancel={() => {}} 
