@@ -146,7 +146,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
 
     return (
     <div className="min-h-screen bg-slate-100 pb-10">
-        <header className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+        <header className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-40 shadow-sm">
           <div>
             <p className="text-xs text-slate-500 mb-0.5 font-medium">Hệ thống Xét thăng hạng viên chức | Trường THPT Cao Bá Quát - Phường Tân An - Tỉnh Đắk Lắk</p>
             <h2 className="text-xl font-bold text-slate-800">

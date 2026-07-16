@@ -260,7 +260,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
 
   return (
     <CommentContext.Provider value={{ fields: feedbackData.fields || {}, mode, onCommentChange: handleCommentChange }}>
-    <form className="space-y-8 pb-10">
+    <form className="space-y-8 pb-10" onSubmit={handleSubmitFinal}>
       {formData.status === 'returned' && feedbackData.general && (
         <div className="bg-rose-50 border-l-4 border-rose-500 p-4 rounded-r-lg flex items-start gap-3 shadow-sm">
           <AlertCircle className="text-rose-500 mt-0.5" size={20} />
@@ -583,7 +583,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
             <Save size={18} /> Lưu nháp
           </button>
           
-          <button type="button" onClick={handleSubmitFinal} className="flex items-center gap-2 px-6 py-2 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors">
+          <button type="submit" className="flex items-center gap-2 px-6 py-2 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors">
             <Send size={18} /> Nộp cho Tổ trưởng
           </button>
         </div>

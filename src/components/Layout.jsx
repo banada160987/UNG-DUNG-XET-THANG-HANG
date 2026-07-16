@@ -53,7 +53,7 @@ export const Layout = ({ children, currentPage, setCurrentPage, onLogout }) => {
       </aside>
 
       <main className="flex-1 overflow-x-hidden flex flex-col h-screen overflow-y-auto bg-slate-100">
-        <header className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+        <header className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-40 shadow-sm">
           <h2 className="text-xl font-bold text-slate-800">
             {currentPage === 'dashboard' && 'Dashboard Rà soát'}
             {currentPage === 'list' && 'Bảng Xếp hạng Ưu tiên'}
