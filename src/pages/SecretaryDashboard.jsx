@@ -142,8 +142,11 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
             <Users size={24} />
           </div>
           <div>
-            <h1 className="font-bold text-white leading-tight">Thư ký Rà soát</h1>
-            <p className="text-xs text-slate-400">@{secretaryInfo.username}</p>
+            <h1 className="font-bold text-white leading-tight">Hệ thống Xét thăng hạng</h1>
+            <p className="text-xs text-slate-400" title="Trường THPT Cao Bá Quát - Phường Tân An - Tỉnh Đắk Lắk">THPT Cao Bá Quát</p>
+            <div className="mt-2 text-[10px] bg-emerald-600/50 px-2 py-0.5 rounded text-emerald-100 w-fit">
+              Thư ký: @{secretaryInfo.username}
+            </div>
           </div>
         </div>
         
@@ -222,13 +225,15 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                     Danh sách được phân công rà soát
                   </h3>
                   <div className="flex gap-2">
-                    <button 
-                      onClick={() => setSortByScore(!sortByScore)}
-                      className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${sortByScore ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}
-                    >
-                      {sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
-                    </button>
-                    {settings?.use_scoring !== false && selectedForCompare.length >= 2 && (
+                    {settings?.use_scoring !== false && (
+                      <button 
+                        onClick={() => setSortByScore(!sortByScore)}
+                        className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${sortByScore ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}
+                      >
+                        {sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
+                      </button>
+                    )}
+                    {selectedForCompare.length >= 2 && (
                       <button
                         onClick={() => setShowCompare(true)}
                         className="px-3 py-1.5 text-sm font-medium rounded-lg border bg-blue-600 text-white border-blue-600 hover:bg-blue-700 flex items-center gap-1 shadow-sm"
@@ -246,14 +251,12 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                     <div key={c.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50 transition-colors">
                       <div className="flex gap-3">
                         <div className="pt-1">
-                          {settings?.use_scoring !== false && (
-                      <input 
+                          <input 
                             type="checkbox"
                             className="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer"
                             checked={selectedForCompare.includes(c.id)}
                             onChange={() => handleToggleCompare(c.id)}
                           />
-                    )}
                         </div>
                         <div>
                           <p className="font-semibold text-slate-800 text-lg">{c.fullName} <span className="text-sm font-normal text-slate-500">({c.cccd})</span></p>

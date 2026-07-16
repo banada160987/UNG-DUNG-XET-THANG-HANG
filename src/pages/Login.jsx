@@ -76,8 +76,8 @@ export const Login = ({ onLogin }) => {
           <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <GraduationCap size={32} />
           </div>
-          <h1 className="text-2xl font-bold">Hệ thống Số hóa</h1>
-          <p className="text-blue-100 mt-2">Hồ sơ Xét Thăng Hạng</p>
+          <h1 className="text-2xl font-bold">Hệ thống Xét thăng hạng viên chức</h1>
+          <p className="text-blue-100 mt-2 text-sm font-medium">Trường THPT Cao Bá Quát - Phường Tân An - Tỉnh Đắk Lắk</p>
         </div>
         
         <div className="p-6">

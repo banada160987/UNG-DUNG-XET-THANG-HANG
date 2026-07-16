@@ -10,8 +10,8 @@ export const Layout = ({ children, currentPage, setCurrentPage, onLogout }) => {
             <GraduationCap size={24} />
           </div>
           <div>
-            <h1 className="font-bold text-white text-lg leading-tight">Xét Thăng Hạng</h1>
-            <p className="text-xs text-slate-400">Trang Quản trị viên</p>
+            <h1 className="font-bold text-white text-lg leading-tight">Xét thăng hạng viên chức</h1>
+            <p className="text-xs text-slate-400" title="Trường THPT Cao Bá Quát - Phường Tân An - Tỉnh Đắk Lắk">THPT Cao Bá Quát</p>
           </div>
         </div>
         

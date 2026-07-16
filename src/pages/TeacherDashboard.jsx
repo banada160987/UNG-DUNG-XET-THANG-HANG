@@ -74,9 +74,12 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
     <div className="min-h-screen bg-slate-100 pb-10">
       <header className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
         <div className="flex items-center gap-4">
-          <h2 className="text-xl font-bold text-slate-800">
-            Hồ sơ xét Thăng hạng
-          </h2>
+          <div>
+            <p className="text-xs text-slate-500 mb-0.5 font-medium">Hệ thống Xét thăng hạng viên chức | Trường THPT Cao Bá Quát - Phường Tân An - Tỉnh Đắk Lắk</p>
+            <h2 className="text-xl font-bold text-slate-800">
+              Hồ sơ xét Thăng hạng
+            </h2>
+          </div>
           {candidate && <StatusBadge status={candidate.status} />}
         </div>
         <div className="flex items-center gap-4">

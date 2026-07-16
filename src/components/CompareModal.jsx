@@ -31,9 +31,11 @@ export const CompareModal = ({ candidates, onClose }) => {
                   <h4 className="font-bold text-lg text-slate-800">{c.fullName}</h4>
                   <p className="text-sm text-slate-500">{c.unit}</p>
                   <p className="text-xs text-slate-400 mt-1">Đăng ký: {c.targetTitle}</p>
-                  <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-700 font-bold rounded-lg border border-amber-200">
-                    <Award size={18} /> Điểm tổng: {c.score ?? calculateTotalScore(c, settings)}
-                  </div>
+                  {settings?.use_scoring !== false && (
+                    <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-700 font-bold rounded-lg border border-amber-200">
+                      <Award size={18} /> Điểm tổng: {c.score ?? calculateTotalScore(c, settings)}
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-4 flex-1">
@@ -60,7 +62,9 @@ export const CompareModal = ({ candidates, onClose }) => {
                               <li key={`ach-${i}`}>
                                 {ACHIEVEMENT_LEVELS.find(l => l.id === ach.id)?.name || ach.id}
                                 {ach.year && ` (${ach.year})`}
-                                <span className="ml-2 text-xs font-bold text-blue-600">[+{pts} điểm]</span>
+                                {settings?.use_scoring !== false && (
+                                  <span className="ml-2 text-xs font-bold text-blue-600">[+{pts} điểm]</span>
+                                )}
                               </li>
                             );
                           })}
@@ -69,7 +73,9 @@ export const CompareModal = ({ candidates, onClose }) => {
                             return (
                               <li key={`other-${i}`}>
                                 {ach.id} {ach.year && ` (${ach.year})`}
-                                <span className="ml-2 text-xs font-bold text-blue-600">[+{pts} điểm]</span>
+                                {settings?.use_scoring !== false && (
+                                  <span className="ml-2 text-xs font-bold text-blue-600">[+{pts} điểm]</span>
+                                )}
                               </li>
                             );
                           })}

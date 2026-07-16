@@ -228,24 +228,24 @@ export const Dashboard = ({ candidates, onRefresh }) => {
               <Settings size={16} /> Cấu hình tính điểm
             </button>
           </div>
-          {settings?.use_scoring !== false && (
-            <div className="flex gap-2">
+          <div className="flex gap-2">
+            {settings?.use_scoring !== false && (
               <button 
                 onClick={() => setSortByScore(!sortByScore)}
                 className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${sortByScore ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}
               >
                 {sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
               </button>
-              {selectedForCompare.length >= 2 && (
-                <button
-                  onClick={() => setShowCompare(true)}
-                  className="px-3 py-1.5 text-sm font-medium rounded-lg border bg-blue-600 text-white border-blue-600 hover:bg-blue-700 flex items-center gap-1 shadow-sm transition-colors"
-                >
-                  <Scale size={16} /> Bàn cân đối chiếu ({selectedForCompare.length})
-                </button>
-              )}
-            </div>
-          )}
+            )}
+            {selectedForCompare.length >= 2 && (
+              <button
+                onClick={() => setShowCompare(true)}
+                className="px-3 py-1.5 text-sm font-medium rounded-lg border bg-blue-600 text-white border-blue-600 hover:bg-blue-700 flex items-center gap-1 shadow-sm transition-colors"
+              >
+                <Scale size={16} /> Bàn cân đối chiếu ({selectedForCompare.length})
+              </button>
+            )}
+          </div>
         </div>
         <div className="divide-y divide-slate-100 max-h-[600px] overflow-y-auto">
           {displayList.length === 0 ? (
@@ -254,8 +254,7 @@ export const Dashboard = ({ candidates, onRefresh }) => {
             return (
             <div key={c.id} className="p-4 border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
               <div className="flex justify-between items-start mb-2">
-                <div className="flex items-center gap-3">
-                  {settings?.use_scoring !== false && (
+                  <div className="flex items-center gap-3">
                     <div className="pt-1">
                       <input 
                         type="checkbox"
@@ -264,8 +263,7 @@ export const Dashboard = ({ candidates, onRefresh }) => {
                         onChange={() => handleToggleCompare(c.id)}
                       />
                     </div>
-                  )}
-                  <div>
+                    <div>
                     <p className="font-semibold text-slate-800 text-lg">{c.fullName} <span className="text-sm font-normal text-slate-500">({c.cccd})</span></p>
                     <div className="flex flex-wrap items-center gap-2 mt-1 mb-2">
                       {settings?.use_scoring !== false && (

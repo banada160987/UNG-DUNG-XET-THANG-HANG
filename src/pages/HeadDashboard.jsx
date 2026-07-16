@@ -147,9 +147,12 @@ export const HeadDashboard = ({ department, onLogout }) => {
     return (
     <div className="min-h-screen bg-slate-100 pb-10">
         <header className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
-          <h2 className="text-xl font-bold text-slate-800">
-            Duyệt hồ sơ Tổ: <span className="text-blue-600">{department}</span>
-          </h2>
+          <div>
+            <p className="text-xs text-slate-500 mb-0.5 font-medium">Hệ thống Xét thăng hạng viên chức | Trường THPT Cao Bá Quát - Phường Tân An - Tỉnh Đắk Lắk</p>
+            <h2 className="text-xl font-bold text-slate-800">
+              Duyệt hồ sơ Tổ: <span className="text-blue-600">{department}</span>
+            </h2>
+          </div>
           <div className="flex items-center gap-3">
             <button 
               onClick={() => exportStatisticsWord(candidates, department)} 
@@ -281,14 +284,12 @@ export const HeadDashboard = ({ department, onLogout }) => {
                       return (
                         <tr key={c.id} className="hover:bg-slate-50/50">
                           <td className="p-4 text-center">
-                            {settings?.use_scoring !== false && (
-                      <input 
+                            <input 
                               type="checkbox"
                               className="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer"
                               checked={selectedForCompare.includes(c.id)}
                               onChange={() => handleToggleCompare(c.id)}
                             />
-                    )}
                           </td>
                           <td className="p-4">
                             <p className="font-semibold text-slate-800">{c.fullName}</p>
