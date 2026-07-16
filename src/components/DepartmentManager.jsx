@@ -30,7 +30,10 @@ export const DepartmentManager = () => {
        return;
     }
     const { error } = await supabase.from('heads').upsert({ department: deptName, password }, { onConflict: 'department' });
-    if (error) showAlert('Lỗi', 'Không thể lưu mật khẩu');
+    if (error) {
+       console.error(error);
+       showAlert('Lỗi', `Không thể lưu mật khẩu: ${error.message || error.details || 'Lỗi không xác định'}`);
+    }
     else {
        showAlert('Thành công', 'Đã lưu mật khẩu Tổ trưởng!');
        fetchDepts();
