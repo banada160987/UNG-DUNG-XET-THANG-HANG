@@ -10,6 +10,7 @@ export const Login = ({ onLogin }) => {
   
   // States for Teacher
   const [cccd, setCccd] = useState('');
+  const [teacherPass, setTeacherPass] = useState('');
   
   // States for Head
   const [selectedDept, setSelectedDept] = useState('');
@@ -42,10 +43,43 @@ export const Login = ({ onLogin }) => {
         showAlert('Thông báo', 'Vui lòng nhập đúng 12 số CCCD!');
         return;
       }
-      onLogin({ role: 'teacher', cccd });
+      
+      const { data: teacher, error } = await supabase.from('teachers').select('*').eq('cccd', cccd).maybeSingle();
+      if (error) {
+        showAlert('Thông báo', 'Lỗi kết nối cơ sở dữ liệu!');
+        return;
+      }
+
+      if (!teacher) {
+        if (!teacherPass) {
+          showAlert('Thông báo', 'Đây là lần đăng nhập đầu tiên, vui lòng nhập Mật khẩu để tạo tài khoản!');
+          return;
+        }
+        const { error: insertError } = await supabase.from('teachers').insert([{ cccd, password: teacherPass }]);
+        if (insertError) {
+          showAlert('Thông báo', 'Lỗi tạo tài khoản!');
+          return;
+        }
+        onLogin({ role: 'teacher', cccd });
+      } else {
+        if (!teacherPass) {
+          showAlert('Thông báo', 'Vui lòng nhập mật khẩu!');
+          return;
+        }
+        if (teacher.password !== teacherPass) {
+          showAlert('Thông báo', 'Sai mật khẩu!');
+          return;
+        }
+        onLogin({ role: 'teacher', cccd });
+      }
     } 
     else if (role === 'head') {
-      if (headPass !== import.meta.env.VITE_HEAD_PASS) {
+      const { data: head, error } = await supabase.from('heads').select('*').eq('department', selectedDept).maybeSingle();
+      if (!head) {
+         showAlert('Thông báo', 'Chưa có tài khoản cho Tổ trưởng tổ này. Vui lòng liên hệ Admin!');
+         return;
+      }
+      if (head.password !== headPass) {
         showAlert('Thông báo', 'Sai mật khẩu Tổ trưởng!');
         return;
       }
@@ -112,7 +146,7 @@ export const Login = ({ onLogin }) => {
             {role === 'teacher' && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Số CCCD của bạn</label>
-                <div className="relative">
+                <div className="relative mb-3">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                     <User size={18} />
                   </div>
@@ -121,12 +155,34 @@ export const Login = ({ onLogin }) => {
                     required 
                     value={cccd} 
                     onChange={e => setCccd(e.target.value)}
-                    placeholder="Nhập CCCD để mở hồ sơ..." 
+                    placeholder="Nhập 12 số CCCD..." 
                     className="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                 </div>
+                
+                <label className="block text-sm font-medium text-slate-700 mb-1">Mật khẩu</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <ShieldAlert size={18} />
+                  </div>
+                  <input 
+                    type={showPassword ? "text" : "password"}
+                    required 
+                    value={teacherPass} 
+                    onChange={e => setTeacherPass(e.target.value)}
+                    placeholder="Mật khẩu của bạn..." 
+                    className="w-full pl-10 pr-10 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
                 <p className="text-xs text-slate-500 mt-2">
-                  Dùng CCCD để định danh. Nếu chưa có hồ sơ, hệ thống sẽ tự động tạo mới cho bạn nhập.
+                  Lưu ý: Nếu chưa có tài khoản, hệ thống sẽ tự động tạo bằng CCCD và Mật khẩu bạn nhập ở trên.
                 </p>
               </div>
             )}

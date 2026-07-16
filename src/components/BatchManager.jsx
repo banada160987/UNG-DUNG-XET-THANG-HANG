@@ -115,6 +115,11 @@ export const BatchManager = ({ activeBatchId, onSelectBatch }) => {
               <span>Hạng: {b.type}</span>
               <span className="font-medium text-slate-700">Chỉ tiêu: {b.quota}</span>
             </div>
+            {b.deadline && (
+              <div className="text-[10px] text-rose-500 mt-1 flex items-center gap-1">
+                <span className="font-semibold">Hạn nộp:</span> {new Date(b.deadline).toLocaleDateString('vi-VN')}
+              </div>
+            )}
             {/* Các nút sửa xóa hiển thị khi hover */}
             <div className="absolute -top-2 -right-2 hidden group-hover:flex bg-white shadow-sm border border-slate-200 rounded-lg overflow-hidden z-10">
               <button 

@@ -11,6 +11,7 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
   const [candidate, setCandidate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeBatchId, setActiveBatchId] = useState(null);
+  const [activeBatch, setActiveBatch] = useState(null);
   const [showSignature, setShowSignature] = useState(false);
   const [signature, setSignature] = useState(localStorage.getItem(`signature_${cccd}`) || null);
 
@@ -20,7 +21,7 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
 
   const loadData = async () => {
     setLoading(true);
-    const { data: batches } = await supabase.from('batches').select('id, name').eq('isActive', true).order('created_at', { ascending: false }).limit(1);
+    const { data: batches } = await supabase.from('batches').select('*').eq('isActive', true).order('created_at', { ascending: false }).limit(1);
     
     if (!batches || batches.length === 0) {
       showAlert('Thông báo', "Hiện tại không có đợt xét nào đang mở.");
@@ -28,10 +29,11 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
       return;
     }
     
-    const batchId = batches[0].id;
-    setActiveBatchId(batchId);
+    const batch = batches[0];
+    setActiveBatch(batch);
+    setActiveBatchId(batch.id);
 
-    const { data: cands } = await supabase.from('candidates').select('*').eq('batch_id', batchId).eq('cccd', cccd);
+    const { data: cands } = await supabase.from('candidates').select('*').eq('batch_id', batch.id).eq('cccd', cccd);
     
     if (cands && cands.length > 0) {
       setCandidate(cands[0]);
@@ -68,7 +70,8 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
 
   if (loading) return <div className="p-8 text-center">Đang tải dữ liệu...</div>;
 
-  const isReadOnly = candidate && !['draft', 'head_rejected', 'returned', 'admin_rejected'].includes(candidate.status);
+  const isPastDeadline = activeBatch && activeBatch.deadline && new Date() > new Date(activeBatch.deadline);
+  const isReadOnly = (candidate && !['draft', 'head_rejected', 'returned', 'admin_rejected'].includes(candidate.status)) || isPastDeadline;
 
   return (
     <div className="min-h-screen bg-slate-100 pb-10">
@@ -109,6 +112,16 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
           </button>
         </div>
       </header>
+
+      {isPastDeadline && (
+        <div className="max-w-4xl mx-auto mt-6 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-lg flex items-center gap-3">
+          <AlertCircle />
+          <div>
+            <div className="font-bold">Đã hết hạn nộp/sửa hồ sơ</div>
+            <div className="text-sm">Đợt xét này đã kết thúc thời gian tiếp nhận vào ngày {new Date(activeBatch.deadline).toLocaleDateString('vi-VN')}. Bạn chỉ có thể xem lại thông tin.</div>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-6xl mx-auto p-4 md:p-8">
         {!activeBatchId ? (
