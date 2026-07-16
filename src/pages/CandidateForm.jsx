@@ -433,6 +433,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                   <select 
                     disabled={isReadOnly}
                     value={ach.id} 
+                    title={ACHIEVEMENT_LEVELS.find(lvl => lvl.id === ach.id)?.name || ""}
                     onChange={(e) => updateAchievement(index, 'id', e.target.value)}
                     className="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white disabled:bg-slate-100"
                   >
@@ -454,7 +455,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                 </div>
                 <div className="w-full md:w-48">
                   <label className="text-xs font-medium text-slate-500 mb-1 block">Số Quyết định</label>
-                  <input disabled={isReadOnly} type="text" value={ach.decisionNo} onChange={(e) => updateAchievement(index, 'decisionNo', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
+                  <input disabled={isReadOnly} type="text" value={ach.decisionNo} title={ach.decisionNo} onChange={(e) => updateAchievement(index, 'decisionNo', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
                 </div>
                 
                 <div className="w-full mt-2 pt-2 border-t border-slate-200 border-dashed flex justify-between items-center md:hidden">
@@ -516,6 +517,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                     type="text"
                     placeholder="VD: Giáo viên dạy giỏi..."
                     value={ach.id} 
+                    title={ach.id}
                     onChange={(e) => updateOtherAchievement(index, 'id', e.target.value)}
                     className="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white disabled:bg-slate-100"
                   />
@@ -533,7 +535,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                 </div>
                 <div className="w-full md:w-48">
                   <label className="text-xs font-medium text-slate-500 mb-1 block">Số Quyết định</label>
-                  <input disabled={isReadOnly} type="text" value={ach.decisionNo} onChange={(e) => updateOtherAchievement(index, 'decisionNo', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
+                  <input disabled={isReadOnly} type="text" value={ach.decisionNo} title={ach.decisionNo} onChange={(e) => updateOtherAchievement(index, 'decisionNo', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
                 </div>
                 
                 <div className="w-full mt-2 pt-2 border-t border-slate-200 border-dashed flex justify-between items-center md:hidden">
