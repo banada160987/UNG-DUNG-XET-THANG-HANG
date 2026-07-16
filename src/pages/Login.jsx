@@ -7,6 +7,7 @@ export const Login = ({ onLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState('teacher'); // teacher | head | secretary | admin
   const [departments, setDepartments] = useState([]);
+  const [activeBatch, setActiveBatch] = useState(null);
   
   // States for Teacher
   const [cccd, setCccd] = useState('');
@@ -32,6 +33,11 @@ export const Login = ({ onLogin }) => {
     if (data) {
       setDepartments(data);
       if (data.length > 0) setSelectedDept(data[0].name);
+    }
+    
+    const { data: batches } = await supabase.from('batches').select('*').eq('isActive', true).order('created_at', { ascending: false }).limit(1);
+    if (batches && batches.length > 0) {
+      setActiveBatch(batches[0]);
     }
   };
 
@@ -113,6 +119,12 @@ export const Login = ({ onLogin }) => {
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Hệ thống Xét thăng hạng viên chức</h1>
           <p className="text-blue-100 mt-2 text-xs sm:text-sm font-medium">Trường THPT Cao Bá Quát - Phường Tân An - Tỉnh Đắk Lắk</p>
         </div>
+        
+        {activeBatch && activeBatch.deadline && (
+          <div className="bg-amber-100 text-amber-800 text-center py-2 text-sm font-semibold border-b border-amber-200 shadow-inner">
+            Hạn chót nộp hồ sơ đợt này: {new Date(activeBatch.deadline).toLocaleDateString('vi-VN')}
+          </div>
+        )}
         
         <div className="p-6">
           <div className="flex bg-slate-100 p-1 rounded-lg mb-6 overflow-x-auto whitespace-nowrap scrollbar-hide">
