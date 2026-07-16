@@ -4,13 +4,13 @@ import { Home, List, Settings, GraduationCap, LogOut, Users } from 'lucide-react
 export const Layout = ({ children, currentPage, setCurrentPage, onLogout }) => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
-      <aside className="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col shadow-xl flex-shrink-0 z-20">
+      <aside className="w-full md:w-72 bg-slate-900 text-slate-300 flex flex-col shadow-xl flex-shrink-0 z-20">
         <div className="p-4 bg-slate-950/50 border-b border-slate-800 flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center text-white font-bold shadow-inner">
             <GraduationCap size={24} />
           </div>
           <div>
-            <h1 className="font-bold text-white text-lg leading-tight">Xét thăng hạng viên chức</h1>
+            <h1 className="font-bold text-white text-base sm:text-lg leading-tight whitespace-nowrap">Xét thăng hạng viên chức</h1>
             <p className="text-xs text-slate-400" title="Trường THPT Cao Bá Quát - Phường Tân An - Tỉnh Đắk Lắk">THPT Cao Bá Quát</p>
           </div>
         </div>

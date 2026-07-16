@@ -136,13 +136,13 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row pb-10">
       
-      <aside className="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col shadow-xl flex-shrink-0 z-20">
+      <aside className="w-full md:w-72 bg-slate-900 text-slate-300 flex flex-col shadow-xl flex-shrink-0 z-20">
         <div className="p-4 bg-slate-950/50 border-b border-slate-800 flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center text-white font-bold shadow-inner">
             <Users size={24} />
           </div>
           <div>
-            <h1 className="font-bold text-white leading-tight">Hệ thống Xét thăng hạng</h1>
+            <h1 className="font-bold text-white leading-tight text-base sm:text-lg whitespace-nowrap">Hệ thống Xét thăng hạng</h1>
             <p className="text-xs text-slate-400" title="Trường THPT Cao Bá Quát - Phường Tân An - Tỉnh Đắk Lắk">THPT Cao Bá Quát</p>
             <div className="mt-2 text-[10px] bg-emerald-600/50 px-2 py-0.5 rounded text-emerald-100 w-fit">
               Thư ký: @{secretaryInfo.username}
