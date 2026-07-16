@@ -34,9 +34,9 @@ export const checkEligibility = (candidate) => {
     }
   }
 
-  // V. Kiểm tra chứng chỉ Ngoại ngữ, Tin học
+  // V. Kiểm tra chứng chỉ Ngoại ngữ, Tin học, Tiếng dân tộc
   if (!candidate.certIT) missing.push("Thiếu Chứng chỉ/Xác nhận Tin học");
-  if (!candidate.certLanguage) missing.push("Thiếu Chứng chỉ/Xác nhận Ngoại ngữ");
+  if (!candidate.certLanguage && !candidate.certEthnic) missing.push("Thiếu Chứng chỉ/Xác nhận Ngoại ngữ hoặc Tiếng dân tộc");
 
   // VI. Thành tích
   if (!candidate.achievements || candidate.achievements.length === 0) {
