@@ -7,6 +7,7 @@ import { StatusBadge } from '../components/StatusBadge';
 import { CandidateTimeline } from '../components/CandidateTimeline';
 import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
 import { CompareModal } from '../components/CompareModal';
+import { useSettings } from '../contexts/SettingsContext';
 import { Users, FileText, CheckSquare, Search, ThumbsUp, ThumbsDown, LogOut, XCircle, Send, History, Eye, Scale } from 'lucide-react';
 
 export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
@@ -17,6 +18,8 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
   const [sortByScore, setSortByScore] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
+
+  const { settings } = useSettings();
 
   // Trạng thái modal từ chối
   const [rejectingCand, setRejectingCand] = useState(null);
@@ -97,9 +100,9 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
     return candidates.map(c => ({
       ...c,
       eligibility: checkEligibility(c),
-      score: calculateTotalScore(c)
+      score: calculateTotalScore(c, settings)
     }));
-  }, [candidates]);
+  }, [candidates, settings]);
 
   // Thống kê
   const totalCount = evaluated.length;

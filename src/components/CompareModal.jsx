@@ -1,10 +1,13 @@
 import React from 'react';
 import { XCircle, Award, Calendar, CheckSquare, FileText, User } from 'lucide-react';
 import { StatusBadge } from './StatusBadge';
-import { calculateTotalScore } from '../utils/ranking';
+import { calculateTotalScore, getPointsForAchievement } from '../utils/ranking';
 import { ACHIEVEMENT_LEVELS } from '../data/config';
+import { useSettings } from '../contexts/SettingsContext';
 
 export const CompareModal = ({ candidates, onClose }) => {
+  const { settings } = useSettings();
+
   if (!candidates || candidates.length < 2) return null;
 
   return (
@@ -29,7 +32,7 @@ export const CompareModal = ({ candidates, onClose }) => {
                   <p className="text-sm text-slate-500">{c.unit}</p>
                   <p className="text-xs text-slate-400 mt-1">Đăng ký: {c.targetTitle}</p>
                   <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-700 font-bold rounded-lg border border-amber-200">
-                    <Award size={18} /> Điểm tổng: {c.score ?? calculateTotalScore(c)}
+                    <Award size={18} /> Điểm tổng: {c.score ?? calculateTotalScore(c, settings)}
                   </div>
                 </div>
 
@@ -51,17 +54,25 @@ export const CompareModal = ({ candidates, onClose }) => {
                     <div className="bg-slate-50 p-3 rounded-lg text-sm max-h-48 overflow-y-auto">
                       {(c.achievements?.length > 0 || c.otherAchievements?.length > 0) ? (
                         <ul className="list-disc pl-4 space-y-1">
-                          {c.achievements?.map((ach, i) => (
-                            <li key={`ach-${i}`}>
-                              {ACHIEVEMENT_LEVELS.find(l => l.id === ach.id)?.name || ach.id}
-                              {ach.year && ` (${ach.year})`}
-                            </li>
-                          ))}
-                          {c.otherAchievements?.map((ach, i) => (
-                            <li key={`other-${i}`}>
-                              {ach.id} {ach.year && ` (${ach.year})`}
-                            </li>
-                          ))}
+                          {c.achievements?.map((ach, i) => {
+                            const pts = getPointsForAchievement(ach.id, settings);
+                            return (
+                              <li key={`ach-${i}`}>
+                                {ACHIEVEMENT_LEVELS.find(l => l.id === ach.id)?.name || ach.id}
+                                {ach.year && ` (${ach.year})`}
+                                <span className="ml-2 text-xs font-bold text-blue-600">[+{pts} điểm]</span>
+                              </li>
+                            );
+                          })}
+                          {c.otherAchievements?.map((ach, i) => {
+                            const pts = getPointsForAchievement(ach.id, settings);
+                            return (
+                              <li key={`other-${i}`}>
+                                {ach.id} {ach.year && ` (${ach.year})`}
+                                <span className="ml-2 text-xs font-bold text-blue-600">[+{pts} điểm]</span>
+                              </li>
+                            );
+                          })}
                         </ul>
                       ) : (
                         <span className="text-slate-400 italic">Không có thành tích</span>

@@ -7,7 +7,9 @@ import { logAction } from '../utils/logger';
 import { CandidateTimeline } from '../components/CandidateTimeline';
 import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
 import { CompareModal } from '../components/CompareModal';
-import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye, Trash2, Scale } from 'lucide-react';
+import { SettingsModal } from '../components/SettingsModal';
+import { useSettings } from '../contexts/SettingsContext';
+import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye, Trash2, Scale, Settings } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 
 export const Dashboard = ({ candidates, onRefresh }) => {
@@ -17,14 +19,17 @@ export const Dashboard = ({ candidates, onRefresh }) => {
   const [sortByScore, setSortByScore] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+
+  const { settings } = useSettings();
 
   const evaluated = useMemo(() => {
     return candidates.map(c => ({
       ...c,
       eligibility: checkEligibility(c),
-      score: calculateTotalScore(c)
+      score: calculateTotalScore(c, settings)
     }));
-  }, [candidates]);
+  }, [candidates, settings]);
 
   const updateStatus = async (id, status) => {
     let action = 'Bắt đầu rà soát';
@@ -214,14 +219,6 @@ export const Dashboard = ({ candidates, onRefresh }) => {
             >
               {sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
             </button>
-            {selectedForCompare.length >= 2 && (
-              <button
-                onClick={() => setShowCompare(true)}
-                className="px-3 py-1.5 text-sm font-medium rounded-lg border bg-blue-600 text-white border-blue-600 hover:bg-blue-700 flex items-center gap-1 shadow-sm"
-              >
-                <Scale size={16} /> Bàn cân đối chiếu ({selectedForCompare.length})
-              </button>
-            )}
           </div>
         </div>
         <div className="divide-y divide-slate-100 max-h-[600px] overflow-y-auto">
@@ -229,7 +226,6 @@ export const Dashboard = ({ candidates, onRefresh }) => {
             <p className="text-center p-8 text-slate-400">Không có dữ liệu phù hợp.</p>
           ) : displayList.map(c => {
             const adminCanAct = ['head_approved', 'admin_reviewing'].includes(c.status);
-            
             return (
             <div key={c.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50 transition-colors">
               <div className="flex gap-3">

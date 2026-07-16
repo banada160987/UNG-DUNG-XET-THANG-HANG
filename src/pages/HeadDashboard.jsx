@@ -7,6 +7,7 @@ import { StatusBadge } from '../components/StatusBadge';
 import { CandidateTimeline } from '../components/CandidateTimeline';
 import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
 import { CompareModal } from '../components/CompareModal';
+import { useSettings } from '../contexts/SettingsContext';
 import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle, Send, History, Eye, Scale, Users, FileText, CheckSquare } from 'lucide-react';
 
 export const HeadDashboard = ({ department, onLogout }) => {
@@ -18,6 +19,8 @@ export const HeadDashboard = ({ department, onLogout }) => {
   const [showCompare, setShowCompare] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
+  
+  const { settings } = useSettings();
   
   // Trạng thái modal từ chối
   const [rejectingCand, setRejectingCand] = useState(null);
@@ -89,7 +92,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
   // Tổ trưởng chỉ thấy hồ sơ nếu trạng thái KHÁC 'draft'
   let displayCandidates = candidates.filter(c => c.status !== 'draft').map(c => ({
     ...c,
-    score: calculateTotalScore(c)
+    score: calculateTotalScore(c, settings)
   }));
   
   // Bảng thống kê
