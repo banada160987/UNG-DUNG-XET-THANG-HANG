@@ -11,7 +11,9 @@ export const STATUS_CONFIG = {
   'admin_approved': { label: 'Đủ điều kiện', color: 'bg-emerald-100 text-emerald-800 border-emerald-300', icon: CheckCircle },
   'admin_rejected': { label: 'Không đủ điều kiện', color: 'bg-rose-100 text-rose-800 border-rose-300', icon: XCircle },
   'ranked': { label: 'Đã xếp thứ tự ưu tiên', color: 'bg-amber-100 text-amber-800 border-amber-300', icon: Trophy },
-  'finalized': { label: 'Đã đưa vào danh sách trình', color: 'bg-slate-100 text-slate-800 border-slate-300', icon: FileText }
+  'finalized': { label: 'Đã đưa vào danh sách trình', color: 'bg-slate-100 text-slate-800 border-slate-300', icon: FileText },
+  'eligible': { label: 'Hợp lệ', color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle },
+  'ineligible': { label: 'Chưa hợp lệ', color: 'bg-rose-50 text-rose-700 border-rose-200', icon: AlertCircle }
 };
 
 export const StatusBadge = ({ status }) => {

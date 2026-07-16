@@ -281,7 +281,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
                             </div>
                           </td>
                           <td className="p-4 align-top">
-                            <StatusBadge status={eligibility.isEligible ? 'eligible' : 'ineligible'} />
+                            <StatusBadge status={eligibility.isValid ? 'eligible' : 'ineligible'} />
                           </td>
                           <td className="p-4 align-top">
                             <div className="flex flex-col gap-2 items-start">
