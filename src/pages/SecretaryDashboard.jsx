@@ -228,7 +228,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                     >
                       {sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
                     </button>
-                    {selectedForCompare.length >= 2 && (
+                    {settings?.use_scoring !== false && selectedForCompare.length >= 2 && (
                       <button
                         onClick={() => setShowCompare(true)}
                         className="px-3 py-1.5 text-sm font-medium rounded-lg border bg-blue-600 text-white border-blue-600 hover:bg-blue-700 flex items-center gap-1 shadow-sm"
@@ -246,17 +246,21 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                     <div key={c.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50 transition-colors">
                       <div className="flex gap-3">
                         <div className="pt-1">
-                          <input 
+                          {settings?.use_scoring !== false && (
+                      <input 
                             type="checkbox"
                             className="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer"
                             checked={selectedForCompare.includes(c.id)}
                             onChange={() => handleToggleCompare(c.id)}
                           />
+                    )}
                         </div>
                         <div>
                           <p className="font-semibold text-slate-800 text-lg">{c.fullName} <span className="text-sm font-normal text-slate-500">({c.cccd})</span></p>
                         <div className="flex flex-wrap items-center gap-2 mt-1 mb-2">
-                          <span className="text-sm font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Điểm: {c.score}</span>
+                          {settings?.use_scoring !== false && (
+                        <span className="text-sm font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Điểm: {c.score}</span>
+                      )}
                           <span className="text-sm text-slate-600 font-medium">{c.unit}</span>
                           <StatusBadge status={c.status} />
                           {c.phone && (
@@ -413,3 +417,7 @@ const StatCard = ({ title, value, icon, bgColor, active, onClick, pulse }) => (
     </div>
   </div>
 );
+
+
+
+

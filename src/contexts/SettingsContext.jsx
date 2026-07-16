@@ -26,7 +26,8 @@ export const SettingsProvider = ({ children }) => {
     "cstd_co_so": 3,
     "gk_dang_uy_xa": 1,
     "gk_so_nganh_xa": 1,
-    "seniority_per_year": 1
+    "seniority_per_year": 1,
+    "use_scoring": true
   };
 
   const fetchSettings = async () => {

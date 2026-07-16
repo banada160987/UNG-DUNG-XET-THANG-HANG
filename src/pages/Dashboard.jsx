@@ -207,80 +207,110 @@ export const Dashboard = ({ candidates, onRefresh }) => {
         </div>
       </div>
       
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-        <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-          <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+          <h3 className="font-bold text-slate-800 flex items-center gap-2">
             <FileText size={18} className="text-slate-500" />
-            Danh sách rà soát cấp Trường
+            Danh sách rà soát cấp Trường ({displayList.length})
           </h3>
-          <div className="flex gap-2">
-            <button 
-              onClick={() => setSortByScore(!sortByScore)}
-              className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${sortByScore ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}
-            >
-              {sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
-            </button>
-            {selectedForCompare.length >= 2 && (
-              <button
-                onClick={() => setShowCompare(true)}
-                className="px-3 py-1.5 text-sm font-medium rounded-lg border bg-blue-600 text-white border-blue-600 hover:bg-blue-700 flex items-center gap-1 shadow-sm transition-colors"
+          {settings?.use_scoring !== false && (
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setSortByScore(!sortByScore)}
+                className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${sortByScore ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}
               >
-                <Scale size={16} /> Bàn cân đối chiếu ({selectedForCompare.length})
+                {sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
               </button>
-            )}
-          </div>
+              {selectedForCompare.length >= 2 && (
+                <button
+                  onClick={() => setShowCompare(true)}
+                  className="px-3 py-1.5 text-sm font-medium rounded-lg border bg-blue-600 text-white border-blue-600 hover:bg-blue-700 flex items-center gap-1 shadow-sm transition-colors"
+                >
+                  <Scale size={16} /> Bàn cân đối chiếu ({selectedForCompare.length})
+                </button>
+              )}
+            </div>
+          )}
         </div>
         <div className="divide-y divide-slate-100 max-h-[600px] overflow-y-auto">
           {displayList.length === 0 ? (
             <p className="text-center p-8 text-slate-400">Không có dữ liệu phù hợp.</p>
           ) : displayList.map(c => {
-            const adminCanAct = ['head_approved', 'admin_reviewing'].includes(c.status);
             return (
-            <div key={c.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50 transition-colors">
-              <div className="flex gap-3">
-                <div className="pt-1">
-                  <input 
-                    type="checkbox"
-                    className="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer"
-                    checked={selectedForCompare.includes(c.id)}
-                    onChange={() => handleToggleCompare(c.id)}
-                  />
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-800 text-lg">{c.fullName} <span className="text-sm font-normal text-slate-500">({c.cccd})</span></p>
-                <div className="flex flex-wrap items-center gap-2 mt-1 mb-2">
-                  <span className="text-sm font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Điểm: {c.score}</span>
-                  <span className="text-sm text-slate-600 font-medium">{c.unit}</span>
-                  <StatusBadge status={c.status} />
-                  {c.phone && (
-                    <button 
-                      onClick={() => {
-                        const missingDocs = c.eligibility && !c.eligibility.isValid ? c.eligibility.missing.map(m => `- ${m}`).join('\n') : '';
-                        const msg = missingDocs 
-                          ? `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô trên hệ thống đang thiếu các thông tin/giấy tờ sau:\n${missingDocs}\n\nThầy/cô vui lòng bổ sung sớm nhé!`
-                          : `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô đã được tiếp nhận.`;
-                        navigator.clipboard.writeText(msg).then(() => {
-                          showAlert('Thông báo', "Đã copy sẵn tin nhắn báo thiếu hồ sơ!\nBạn chỉ cần ấn Ctrl+V (Dán) vào khung chat Zalo nhé.");
-                          window.location.href = `zalo://conversation?phone=${c.phone}`;
-                        });
-                      }}
-                      className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded border border-blue-200 hover:bg-blue-100 transition-colors"
-                    >
-                      <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M21.2 5.54C20.66 4.3 19.8 3.2 18.66 2.45C17.06 1.4 14.86 0.7 12 0.7C9.14 0.7 6.94 1.4 5.34 2.45C4.2 3.2 3.34 4.3 2.8 5.54C2.26 6.8 2 8.18 2 9.7C2 11.22 2.26 12.6 2.8 13.86C3.34 15.1 4.2 16.2 5.34 16.95C6.38 17.65 7.6 18.15 8.95 18.42C8.86 18.73 8.7 19.12 8.44 19.55C8.04 20.24 7.54 20.9 7 21.46L6.82 21.65C6.73 21.75 6.64 21.86 6.55 21.98C6.32 22.25 6.42 22.65 6.72 22.78C6.88 22.84 7.05 22.85 7.22 22.78C9.56 22 11.4 20.88 12.86 19.62C14 19.53 15.1 19.26 16.1 18.84C18.25 17.9 19.98 16.42 21.1 14.48C21.7 13.4 22 12.24 22 10.98C22 9.15 21.7 7.34 21.2 5.54Z"/></svg>
-                      Zalo: {c.phone}
-                    </button>
+            <div key={c.id} className="p-4 border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+              <div className="flex justify-between items-start mb-2">
+                <div className="flex items-center gap-3">
+                  {settings?.use_scoring !== false && (
+                    <div className="pt-1">
+                      <input 
+                        type="checkbox"
+                        className="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer"
+                        checked={selectedForCompare.includes(c.id)}
+                        onChange={() => handleToggleCompare(c.id)}
+                      />
+                    </div>
                   )}
-                </div>
-                
-                {!c.eligibility.isValid && (
-                  <div className="flex flex-wrap gap-1">
-                    {c.eligibility.missing.map((err, i) => (
-                      <span key={i} className="inline-flex text-xs bg-rose-50 text-rose-600 border border-rose-100 px-2 py-0.5 rounded-md font-medium">
-                        {err}
+                  <div>
+                    <p className="font-semibold text-slate-800 text-lg">{c.fullName} <span className="text-sm font-normal text-slate-500">({c.cccd})</span></p>
+                    <div className="flex flex-wrap items-center gap-2 mt-1 mb-2">
+                      {settings?.use_scoring !== false && (
+                        <span className="text-sm font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Điểm: {c.score}</span>
+                      )}
+                      <span className="text-sm text-slate-600 font-medium">{c.unit}</span>
+                      <StatusBadge status={c.status} />
+                      {c.phone && (
+                        <button 
+                          onClick={() => {
+                            const missingDocs = c.eligibility && !c.eligibility.isValid ? c.eligibility.missing.map(m => `- ${m}`).join('\n') : '';
+                            const msg = missingDocs 
+                              ? `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô trên hệ thống đang thiếu các thông tin/giấy tờ sau:\n${missingDocs}\n\nThầy/cô vui lòng bổ sung sớm nhé!`
+                              : `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô đã được tiếp nhận.`;
+                            navigator.clipboard.writeText(msg).then(() => {
+                              showAlert('Thông báo', "Đã copy sẵn tin nhắn báo thiếu hồ sơ!\nBạn chỉ cần ấn Ctrl+V (Dán) vào khung chat Zalo nhé.");
+                              window.location.href = `zalo://conversation?phone=${c.phone}`;
+                            });
+                          }}
+                          className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded border border-blue-200 hover:bg-blue-100 transition-colors"
+                        >
+                          <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M21.2 5.54C20.66 4.3 19.8 3.2 18.66 2.45C17.06 1.4 14.86 0.7 12 0.7C9.14 0.7 6.94 1.4 5.34 2.45C4.2 3.2 3.34 4.3 2.8 5.54C2.26 6.8 2 8.18 2 9.7C2 11.22 2.26 12.6 2.8 13.86C3.34 15.1 4.2 16.2 5.34 16.95C6.38 17.65 7.6 18.15 8.95 18.42C8.86 18.73 8.7 19.12 8.44 19.55C8.04 20.24 7.54 20.9 7 21.46L6.82 21.65C6.73 21.75 6.64 21.86 6.55 21.98C6.32 22.25 6.42 22.65 6.72 22.78C6.88 22.84 7.05 22.85 7.22 22.78C9.56 22 11.4 20.88 12.86 19.62C14 19.53 15.1 19.26 16.1 18.84C18.25 17.9 19.98 16.42 21.1 14.48C21.7 13.4 22 12.24 22 10.98C22 9.15 21.7 7.34 21.2 5.54Z"/></svg>
+                          Zalo: {c.phone}
+                        </button>
+                      )}
+                    </div>
+                    
+                    {!c.eligibility.isValid && (
+                      <div className="flex flex-wrap gap-1">
+                        {c.eligibility.missing.map((err, i) => (
+                          <span key={i} className="inline-flex text-xs bg-rose-50 text-rose-600 border border-rose-100 px-2 py-0.5 rounded-md font-medium">
+                            {err}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {c.eligibility.isValid && (
+                      <span className="inline-flex text-xs bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded-md font-medium">
+                        Hệ thống: Đủ điều kiện ban đầu
                       </span>
-                    ))}
-                  </div>
-                )}
+                    )}
+                    {c.phone && (
+                      <button 
+                        onClick={() => {
+                          const missingDocs = c.eligibility && !c.eligibility.isValid ? c.eligibility.missing.map(m => `- ${m}`).join('\n') : '';
+                          const msg = missingDocs 
+                            ? `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô trên hệ thống đang thiếu các thông tin/giấy tờ sau:\n${missingDocs}\n\nThầy/cô vui lòng bổ sung sớm nhé!`
+                            : `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô đã được tiếp nhận.`;
+                          navigator.clipboard.writeText(msg).then(() => {
+                            showAlert('Thông báo', "Đã copy sẵn tin nhắn báo thiếu hồ sơ!\nBạn chỉ cần ấn Ctrl+V (Dán) vào khung chat Zalo nhé.");
+                            window.location.href = `zalo://conversation?phone=${c.phone}`;
+                          });
+                        }}
+                        className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded border border-blue-200 hover:bg-blue-100 transition-colors"
+                      >
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M21.2 5.54C20.66 4.3 19.8 3.2 18.66 2.45C17.06 1.4 14.86 0.7 12 0.7C9.14 0.7 6.94 1.4 5.34 2.45C4.2 3.2 3.34 4.3 2.8 5.54C2.26 6.8 2 8.18 2 9.7C2 11.22 2.26 12.6 2.8 13.86C3.34 15.1 4.2 16.2 5.34 16.95C6.38 17.65 7.6 18.15 8.95 18.42C8.86 18.73 8.7 19.12 8.44 19.55C8.04 20.24 7.54 20.9 7 21.46L6.82 21.65C6.73 21.75 6.64 21.86 6.55 21.98C6.32 22.25 6.42 22.65 6.72 22.78C6.88 22.84 7.05 22.85 7.22 22.78C9.56 22 11.4 20.88 12.86 19.62C14 19.53 15.1 19.26 16.1 18.84C18.25 17.9 19.98 16.42 21.1 14.48C21.7 13.4 22 12.24 22 10.98C22 9.15 21.7 7.34 21.2 5.54Z"/></svg>
+                        Zalo: {c.phone}
+                      </button>
+                    )}
+                </div>
                 {c.eligibility.isValid && (
                   <span className="inline-flex text-xs bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded-md font-medium">
                     Hệ thống: Đủ điều kiện ban đầu
@@ -381,6 +411,7 @@ const StatCard = ({ title, value, icon, bgColor, active, onClick, pulse }) => (
     </div>
   </div>
 );
+
 
 
 

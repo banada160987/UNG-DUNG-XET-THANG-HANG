@@ -227,12 +227,14 @@ export const HeadDashboard = ({ department, onLogout }) => {
                   />
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <button 
-                    onClick={() => setSortByScore(!sortByScore)}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${sortByScore ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}
-                  >
-                    {sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
-                  </button>
+                  {settings?.use_scoring !== false && (
+                    <button 
+                      onClick={() => setSortByScore(!sortByScore)}
+                      className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${sortByScore ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}
+                    >
+                      {sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
+                    </button>
+                  )}
                   {selectedForCompare.length >= 1 && (
                     <button
                       onClick={handleBulkApprove}
@@ -270,12 +272,14 @@ export const HeadDashboard = ({ department, onLogout }) => {
                       return (
                         <tr key={c.id} className="hover:bg-slate-50/50">
                           <td className="p-4 text-center">
-                            <input 
+                            {settings?.use_scoring !== false && (
+                      <input 
                               type="checkbox"
                               className="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer"
                               checked={selectedForCompare.includes(c.id)}
                               onChange={() => handleToggleCompare(c.id)}
                             />
+                    )}
                           </td>
                           <td className="p-4">
                             <p className="font-semibold text-slate-800">{c.fullName}</p>
@@ -409,3 +413,7 @@ const StatCard = ({ title, value, icon, bgColor, active, onClick, pulse }) => (
     </div>
   </div>
 );
+
+
+
+

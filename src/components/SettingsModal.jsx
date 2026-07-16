@@ -14,7 +14,7 @@ export const SettingsModal = ({ isOpen, onClose }) => {
   const handleChange = (id, value) => {
     setLocalSettings(prev => ({
       ...prev,
-      [id]: parseFloat(value) || 0
+      [id]: id === 'use_scoring' ? value : parseFloat(value) || 0
     }));
   };
 
@@ -61,38 +61,57 @@ export const SettingsModal = ({ isOpen, onClose }) => {
                 <p>Cấu hình này sẽ được áp dụng cho toàn bộ quá trình tính điểm tổng của giáo viên trong đợt xét thăng hạng.</p>
               </div>
 
-              <div>
-                <h3 className="font-semibold text-slate-800 mb-3 border-b pb-2">Điểm Thành tích / Danh hiệu</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {ACHIEVEMENT_LEVELS.map(ach => (
-                    <div key={ach.id} className="flex flex-col">
-                      <label className="text-sm text-slate-600 mb-1 line-clamp-1" title={ach.name}>{ach.name}</label>
-                      <input 
-                        type="number" 
-                        value={localSettings[ach.id] !== undefined ? localSettings[ach.id] : ''}
-                        onChange={(e) => handleChange(ach.id, e.target.value)}
-                        className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Nhập điểm..."
-                      />
-                    </div>
-                  ))}
-                </div>
+              <div className="bg-white p-4 rounded-xl border border-slate-200">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <input 
+                    type="checkbox"
+                    checked={localSettings['use_scoring'] !== false} // Default true
+                    onChange={(e) => handleChange('use_scoring', e.target.checked)}
+                    className="w-5 h-5 border-2 border-slate-300 rounded text-blue-600 focus:ring-blue-500 peer"
+                  />
+                  <div>
+                    <div className="font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">Sử dụng tính năng chấm điểm</div>
+                    <div className="text-sm text-slate-500 mt-0.5">Hiển thị điểm số, xếp hạng và Bàn cân dựa trên cấu hình điểm bên dưới. Nếu tắt, hệ thống chỉ xét duyệt theo thứ tự ưu tiên cơ bản.</div>
+                  </div>
+                </label>
               </div>
 
-              <div>
-                <h3 className="font-semibold text-slate-800 mb-3 border-b pb-2">Các cấu hình khác</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex flex-col">
-                    <label className="text-sm text-slate-600 mb-1">Điểm thâm niên (mỗi năm)</label>
-                    <input 
-                      type="number" 
-                      value={localSettings['seniority_per_year'] !== undefined ? localSettings['seniority_per_year'] : ''}
-                      onChange={(e) => handleChange('seniority_per_year', e.target.value)}
-                      className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
+              {localSettings['use_scoring'] !== false && (
+                <>
+                  <div>
+                    <h3 className="font-semibold text-slate-800 mb-3 border-b pb-2">Điểm Thành tích / Danh hiệu</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {ACHIEVEMENT_LEVELS.map(ach => (
+                        <div key={ach.id} className="flex flex-col">
+                          <label className="text-sm text-slate-600 mb-1 line-clamp-1" title={ach.name}>{ach.name}</label>
+                          <input 
+                            type="number" 
+                            value={localSettings[ach.id] !== undefined ? localSettings[ach.id] : ''}
+                            onChange={(e) => handleChange(ach.id, e.target.value)}
+                            className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Nhập điểm..."
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </div>
+
+                  <div>
+                    <h3 className="font-semibold text-slate-800 mb-3 border-b pb-2">Các cấu hình khác</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex flex-col">
+                        <label className="text-sm text-slate-600 mb-1">Điểm thâm niên (mỗi năm)</label>
+                        <input 
+                          type="number" 
+                          value={localSettings['seniority_per_year'] !== undefined ? localSettings['seniority_per_year'] : ''}
+                          onChange={(e) => handleChange('seniority_per_year', e.target.value)}
+                          className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>
