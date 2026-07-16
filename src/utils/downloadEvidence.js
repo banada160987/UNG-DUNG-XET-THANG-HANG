@@ -16,14 +16,26 @@ const fetchFileBlob = async (url) => {
 
 const getExtensionFromUrl = (url) => {
   try {
-    // Basic extraction from path or token
-    const parts = url.split('?')[0].split('.');
+    const path = url.split('?')[0];
+    const filename = path.split('/').pop();
+    const parts = filename.split('.');
     if (parts.length > 1) {
       return '.' + parts.pop();
     }
   } catch (e) {
     return '';
   }
+  return '';
+};
+
+const getExtensionFromMimeType = (mimeType) => {
+  if (mimeType.includes('pdf')) return '.pdf';
+  if (mimeType.includes('jpeg') || mimeType.includes('jpg')) return '.jpg';
+  if (mimeType.includes('png')) return '.png';
+  if (mimeType.includes('wordprocessingml')) return '.docx';
+  if (mimeType.includes('msword')) return '.doc';
+  if (mimeType.includes('spreadsheetml')) return '.xlsx';
+  if (mimeType.includes('ms-excel')) return '.xls';
   return '';
 };
 
@@ -98,7 +110,14 @@ export const downloadAllEvidenceAsZip = async (candidateData) => {
   const fetchPromises = filesToDownload.map(async (fileObj) => {
     const blob = await fetchFileBlob(fileObj.url);
     if (blob) {
-      folder.file(fileObj.name, blob);
+      let finalName = fileObj.name;
+      // If no extension in name, try to guess from mime type
+      if (!finalName.includes('.')) {
+        finalName += getExtensionFromMimeType(blob.type);
+      } else if (finalName.endsWith('.')) {
+        finalName += getExtensionFromMimeType(blob.type).replace('.', '');
+      }
+      folder.file(finalName, blob);
     }
   });
 
