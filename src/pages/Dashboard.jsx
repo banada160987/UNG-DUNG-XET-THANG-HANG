@@ -16,6 +16,7 @@ import { exportStatisticsWord } from '../utils/exportStatistics';
 
 export const Dashboard = ({ candidates, onRefresh }) => {
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [selectedUnit, setSelectedUnit] = useState('all');
   const [timelineCandId, setTimelineCandId] = useState(null);
   const [viewCand, setViewCand] = useState(null);
   const [sortByScore, setSortByScore] = useState(false);
@@ -77,6 +78,7 @@ export const Dashboard = ({ candidates, onRefresh }) => {
   const adminFinishedCount = evaluated.filter(c => ['admin_approved', 'admin_rejected', 'ranked', 'finalized'].includes(c.status)).length;
 
   let displayList = evaluated.filter(c => {
+    if (selectedUnit !== 'all' && c.unit !== selectedUnit) return false;
     if (selectedFilter === 'waiting') return c.status === 'head_approved';
     if (selectedFilter === 'reviewing') return c.status === 'admin_reviewing';
     if (selectedFilter === 'finished') return ['admin_approved', 'returned', 'ranked', 'finalized'].includes(c.status);
@@ -215,8 +217,20 @@ export const Dashboard = ({ candidates, onRefresh }) => {
               <FileText size={18} className="text-slate-500" />
               Danh sách rà soát cấp Trường ({displayList.length})
             </h3>
+            
+            <select 
+              value={selectedUnit}
+              onChange={(e) => setSelectedUnit(e.target.value)}
+              className="text-sm border border-slate-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            >
+              <option value="all">Tất cả Tổ</option>
+              {barData.map(u => (
+                <option key={u.name} value={u.name}>{u.name}</option>
+              ))}
+            </select>
+
             <button 
-              onClick={() => exportStatisticsWord(displayList, "Toàn trường")} 
+              onClick={() => exportStatisticsWord(displayList, selectedUnit === 'all' ? "Toàn trường" : selectedUnit)} 
               className="flex items-center gap-2 text-sm text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-lg border border-green-200 font-medium transition-colors"
             >
               <FileSpreadsheet size={16} /> Xuất thống kê
@@ -271,6 +285,11 @@ export const Dashboard = ({ candidates, onRefresh }) => {
                       )}
                       <span className="text-sm text-slate-600 font-medium">{c.unit}</span>
                       <StatusBadge status={c.status} />
+                      {c.eligibility.isValid && (
+                        <span className="inline-flex text-xs bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded-md font-medium">
+                          Hệ thống: Đủ điều kiện ban đầu
+                        </span>
+                      )}
                       {c.phone && (
                         <button 
                           onClick={() => {
@@ -300,35 +319,7 @@ export const Dashboard = ({ candidates, onRefresh }) => {
                         ))}
                       </div>
                     )}
-                    {c.eligibility.isValid && (
-                      <span className="inline-flex text-xs bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded-md font-medium">
-                        Hệ thống: Đủ điều kiện ban đầu
-                      </span>
-                    )}
-                    {c.phone && (
-                      <button 
-                        onClick={() => {
-                          const missingDocs = c.eligibility && !c.eligibility.isValid ? c.eligibility.missing.map(m => `- ${m}`).join('\n') : '';
-                          const msg = missingDocs 
-                            ? `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô trên hệ thống đang thiếu các thông tin/giấy tờ sau:\n${missingDocs}\n\nThầy/cô vui lòng bổ sung sớm nhé!`
-                            : `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô đã được tiếp nhận.`;
-                          navigator.clipboard.writeText(msg).then(() => {
-                            showAlert('Thông báo', "Đã copy sẵn tin nhắn báo thiếu hồ sơ!\nBạn chỉ cần ấn Ctrl+V (Dán) vào khung chat Zalo nhé.");
-                            window.location.href = `zalo://conversation?phone=${c.phone}`;
-                          });
-                        }}
-                        className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded border border-blue-200 hover:bg-blue-100 transition-colors"
-                      >
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M21.2 5.54C20.66 4.3 19.8 3.2 18.66 2.45C17.06 1.4 14.86 0.7 12 0.7C9.14 0.7 6.94 1.4 5.34 2.45C4.2 3.2 3.34 4.3 2.8 5.54C2.26 6.8 2 8.18 2 9.7C2 11.22 2.26 12.6 2.8 13.86C3.34 15.1 4.2 16.2 5.34 16.95C6.38 17.65 7.6 18.15 8.95 18.42C8.86 18.73 8.7 19.12 8.44 19.55C8.04 20.24 7.54 20.9 7 21.46L6.82 21.65C6.73 21.75 6.64 21.86 6.55 21.98C6.32 22.25 6.42 22.65 6.72 22.78C6.88 22.84 7.05 22.85 7.22 22.78C9.56 22 11.4 20.88 12.86 19.62C14 19.53 15.1 19.26 16.1 18.84C18.25 17.9 19.98 16.42 21.1 14.48C21.7 13.4 22 12.24 22 10.98C22 9.15 21.7 7.34 21.2 5.54Z"/></svg>
-                        Zalo: {c.phone}
-                      </button>
-                    )}
                 </div>
-                {c.eligibility.isValid && (
-                  <span className="inline-flex text-xs bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded-md font-medium">
-                    Hệ thống: Đủ điều kiện ban đầu
-                  </span>
-                )}
                 <button 
                   onClick={() => setTimelineCandId(c.id)}
                   className="inline-flex items-center gap-1 text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded hover:bg-slate-200 mt-2 shadow-sm"
