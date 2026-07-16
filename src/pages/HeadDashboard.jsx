@@ -8,8 +8,9 @@ import { CandidateTimeline } from '../components/CandidateTimeline';
 import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
 import { CompareModal } from '../components/CompareModal';
 import { useSettings } from '../contexts/SettingsContext';
-import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle, Send, History, Eye, Scale, Users, FileText, CheckSquare } from 'lucide-react';
+import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle, Send, History, Eye, Scale, Users, FileText, CheckSquare, FileSpreadsheet } from 'lucide-react';
 import { showAlert, showConfirm } from '../utils/alert';
+import { exportStatisticsWord } from '../utils/exportStatistics';
 
 export const HeadDashboard = ({ department, onLogout }) => {
   const [candidates, setCandidates] = useState([]);
@@ -145,14 +146,22 @@ export const HeadDashboard = ({ department, onLogout }) => {
 
     return (
     <div className="min-h-screen bg-slate-100 pb-10">
-      <header className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
-        <h2 className="text-xl font-bold text-slate-800">
-          Duyệt hồ sơ Tổ: <span className="text-blue-600">{department}</span>
-        </h2>
-        <button onClick={onLogout} className="text-sm text-rose-600 hover:bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-200 font-medium">
-          Thoát
-        </button>
-      </header>
+        <header className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+          <h2 className="text-xl font-bold text-slate-800">
+            Duyệt hồ sơ Tổ: <span className="text-blue-600">{department}</span>
+          </h2>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => exportStatisticsWord(candidates, department)} 
+              className="flex items-center gap-2 text-sm text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-lg border border-green-200 font-medium transition-colors"
+            >
+              <FileSpreadsheet size={16} /> Xuất thống kê
+            </button>
+            <button onClick={onLogout} className="text-sm text-rose-600 hover:bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-200 font-medium">
+              Thoát
+            </button>
+          </div>
+        </header>
 
       <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
         {!activeBatchId ? (

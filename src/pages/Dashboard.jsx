@@ -9,9 +9,10 @@ import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
 import { CompareModal } from '../components/CompareModal';
 import { SettingsModal } from '../components/SettingsModal';
 import { useSettings } from '../contexts/SettingsContext';
-import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye, Trash2, Scale, Settings } from 'lucide-react';
+import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye, Trash2, Scale, Settings, FileSpreadsheet } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import { showAlert, showConfirm, showPrompt } from '../utils/alert';
+import { exportStatisticsWord } from '../utils/exportStatistics';
 
 export const Dashboard = ({ candidates, onRefresh }) => {
   const [selectedFilter, setSelectedFilter] = useState('all');
@@ -209,10 +210,24 @@ export const Dashboard = ({ candidates, onRefresh }) => {
       
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
-          <h3 className="font-bold text-slate-800 flex items-center gap-2">
-            <FileText size={18} className="text-slate-500" />
-            Danh sách rà soát cấp Trường ({displayList.length})
-          </h3>
+          <div className="flex items-center gap-4">
+            <h3 className="font-bold text-slate-800 flex items-center gap-2">
+              <FileText size={18} className="text-slate-500" />
+              Danh sách rà soát cấp Trường ({displayList.length})
+            </h3>
+            <button 
+              onClick={() => exportStatisticsWord(displayList, "Toàn trường")} 
+              className="flex items-center gap-2 text-sm text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-lg border border-green-200 font-medium transition-colors"
+            >
+              <FileSpreadsheet size={16} /> Xuất thống kê
+            </button>
+            <button 
+              onClick={() => setShowSettings(true)} 
+              className="flex items-center gap-2 text-sm text-slate-700 bg-white hover:bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-300 font-medium transition-colors"
+            >
+              <Settings size={16} /> Cấu hình tính điểm
+            </button>
+          </div>
           {settings?.use_scoring !== false && (
             <div className="flex gap-2">
               <button 
@@ -389,6 +404,9 @@ export const Dashboard = ({ candidates, onRefresh }) => {
           candidates={getCompareCandidates()} 
           onClose={() => setShowCompare(false)} 
         />
+      )}
+      {showSettings && (
+        <SettingsModal onClose={() => setShowSettings(false)} />
       )}
     </div>
   );
