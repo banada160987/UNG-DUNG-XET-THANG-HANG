@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Layout } from './components/Layout';
 import { BatchManager } from './components/BatchManager';
 import { DepartmentManager } from './components/DepartmentManager';
+import { TeacherManager } from './components/TeacherManager';
 import { Dashboard } from './pages/Dashboard';
 import { CandidateList } from './pages/CandidateList';
 import { Login } from './pages/Login';
@@ -75,9 +76,10 @@ function App() {
       )}
       
       {currentPage === 'settings' ? (
-        <div className="space-y-6">
+        <div className="space-y-6 pb-10">
           <BatchManager activeBatchId={activeBatchId} onSelectBatch={setActiveBatchId} />
           <DepartmentManager />
+          <TeacherManager />
         </div>
       ) : currentPage === 'secretaries' ? (
         <SecretaryManager />
