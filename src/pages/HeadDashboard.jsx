@@ -146,7 +146,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
 
     return (
     <div className="min-h-screen bg-slate-100 pb-10">
-        <header className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+        <header className="bg-white border-b border-slate-200 px-4 md:px-8 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-50 shadow-sm">
           <div>
             <p className="text-xs text-slate-500 mb-0.5 font-medium">Hệ thống Xét thăng hạng viên chức | Trường THPT Cao Bá Quát - Phường Tân An - Tỉnh Đắk Lắk</p>
             <h2 className="text-xl font-bold text-slate-800">
@@ -155,7 +155,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
           </div>
           <div className="flex items-center gap-3">
             <button 
-              onClick={() => exportStatisticsWord(candidates, department)} 
+              onClick={() => exportStatisticsWord(displayCandidates, department)} 
               className="flex items-center gap-2 text-sm text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-lg border border-green-200 font-medium transition-colors"
             >
               <FileSpreadsheet size={16} /> Xuất thống kê
