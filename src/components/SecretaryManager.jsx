@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { Plus, Trash2, Edit } from 'lucide-react';
 import { showAlert, showConfirm } from '../utils/alert';
+import { hashPassword } from '../utils/security';
 
 export const SecretaryManager = () => {
   const [secretaries, setSecretaries] = useState([]);
@@ -49,9 +50,10 @@ export const SecretaryManager = () => {
       return;
     }
 
+    const hashed = await hashPassword(newSec.password.trim());
     const { error } = await supabase.from('secretaries').insert([{
       username: newSec.username.trim(),
-      password: newSec.password.trim(),
+      password: hashed,
       departments: newSec.selectedDepts
     }]);
 
@@ -144,7 +146,7 @@ export const SecretaryManager = () => {
             ) : secretaries.map(sec => (
               <tr key={sec.id} className="hover:bg-slate-50/50">
                 <td className="p-4 font-medium">{sec.username}</td>
-                <td className="p-4 font-mono text-sm">{sec.password}</td>
+                <td className="p-4 font-mono text-sm text-slate-400">********</td>
                 <td className="p-4">
                   <div className="flex flex-wrap gap-1">
                     {sec.departments.map(dept => (

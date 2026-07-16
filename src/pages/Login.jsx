@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { GraduationCap, User, Users, ShieldAlert, Eye, EyeOff } from 'lucide-react';
 import { showAlert } from '../utils/alert';
+import { hashPassword, logAccess, handleFailedAttempt, handleSuccessfulLogin, getRemainingLockMinutes } from '../utils/security';
 
 export const Login = ({ onLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -61,21 +62,41 @@ export const Login = ({ onLogin }) => {
           showAlert('Thông báo', 'Đây là lần đăng nhập đầu tiên, vui lòng nhập Mật khẩu để tạo tài khoản!');
           return;
         }
-        const { error: insertError } = await supabase.from('teachers').insert([{ cccd, password: teacherPass }]);
+        const hashedPass = await hashPassword(teacherPass);
+        const { error: insertError } = await supabase.from('teachers').insert([{ cccd, password: hashedPass }]);
         if (insertError) {
           showAlert('Thông báo', 'Lỗi tạo tài khoản!');
           return;
         }
+        await logAccess(cccd, 'teacher', 'SUCCESS');
         onLogin({ role: 'teacher', cccd });
       } else {
+        const lockMins = getRemainingLockMinutes(teacher.locked_until);
+        if (lockMins) {
+          showAlert('Lỗi', `Tài khoản đã bị khoá tạm thời do nhập sai quá nhiều lần. Vui lòng thử lại sau ${lockMins} phút.`);
+          await logAccess(cccd, 'teacher', 'LOCKED');
+          return;
+        }
+
         if (!teacherPass) {
           showAlert('Thông báo', 'Vui lòng nhập mật khẩu!');
           return;
         }
-        if (teacher.password !== teacherPass) {
-          showAlert('Thông báo', 'Sai mật khẩu!');
+
+        const hashedPass = await hashPassword(teacherPass);
+        if (teacher.password !== hashedPass) {
+          const isLocked = await handleFailedAttempt('teachers', 'cccd', cccd, teacher.failed_attempts || 0);
+          await logAccess(cccd, 'teacher', 'FAILED');
+          if (isLocked) {
+             showAlert('Lỗi', 'Bạn đã nhập sai mật khẩu quá 5 lần. Tài khoản bị khoá tạm thời 15 phút.');
+          } else {
+             showAlert('Lỗi', 'Sai mật khẩu!');
+          }
           return;
         }
+        
+        await handleSuccessfulLogin('teachers', 'cccd', cccd);
+        await logAccess(cccd, 'teacher', 'SUCCESS');
         onLogin({ role: 'teacher', cccd });
       }
     } 
@@ -85,26 +106,68 @@ export const Login = ({ onLogin }) => {
          showAlert('Thông báo', 'Chưa có tài khoản cho Tổ trưởng tổ này. Vui lòng liên hệ Admin!');
          return;
       }
-      if (head.password !== headPass) {
-        showAlert('Thông báo', 'Sai mật khẩu Tổ trưởng!');
+
+      const lockMins = getRemainingLockMinutes(head.locked_until);
+      if (lockMins) {
+        showAlert('Lỗi', `Tài khoản đã bị khoá tạm thời. Vui lòng thử lại sau ${lockMins} phút.`);
+        await logAccess(selectedDept, 'head', 'LOCKED');
         return;
       }
+
+      const hashedPass = await hashPassword(headPass);
+      if (head.password !== hashedPass) {
+        const isLocked = await handleFailedAttempt('heads', 'department', selectedDept, head.failed_attempts || 0);
+        await logAccess(selectedDept, 'head', 'FAILED');
+        if (isLocked) {
+           showAlert('Lỗi', 'Nhập sai mật khẩu quá 5 lần. Tài khoản bị khoá tạm thời 15 phút.');
+        } else {
+           showAlert('Lỗi', 'Sai mật khẩu Tổ trưởng!');
+        }
+        return;
+      }
+
+      await handleSuccessfulLogin('heads', 'department', selectedDept);
+      await logAccess(selectedDept, 'head', 'SUCCESS');
       onLogin({ role: 'head', department: selectedDept });
     } 
     else if (role === 'secretary') {
-      // Validate with database
-      const { data } = await supabase.from('secretaries').select('*').eq('username', secUser).eq('password', secPass);
-      if (data && data.length > 0) {
-        onLogin({ role: 'secretary', info: data[0] });
-      } else {
+      const { data } = await supabase.from('secretaries').select('*').eq('username', secUser).maybeSingle();
+      if (!data) {
+        await logAccess(secUser, 'secretary', 'FAILED');
         showAlert('Thông báo', 'Sai tên đăng nhập hoặc mật khẩu Thư ký!');
+        return;
       }
+
+      const lockMins = getRemainingLockMinutes(data.locked_until);
+      if (lockMins) {
+        showAlert('Lỗi', `Tài khoản đã bị khoá tạm thời. Vui lòng thử lại sau ${lockMins} phút.`);
+        await logAccess(secUser, 'secretary', 'LOCKED');
+        return;
+      }
+
+      const hashedPass = await hashPassword(secPass);
+      if (data.password !== hashedPass) {
+        const isLocked = await handleFailedAttempt('secretaries', 'username', secUser, data.failed_attempts || 0);
+        await logAccess(secUser, 'secretary', 'FAILED');
+        if (isLocked) {
+           showAlert('Lỗi', 'Nhập sai mật khẩu quá 5 lần. Tài khoản bị khoá tạm thời 15 phút.');
+        } else {
+           showAlert('Lỗi', 'Sai mật khẩu Thư ký!');
+        }
+        return;
+      }
+
+      await handleSuccessfulLogin('secretaries', 'username', secUser);
+      await logAccess(secUser, 'secretary', 'SUCCESS');
+      onLogin({ role: 'secretary', info: data });
     }
     else if (role === 'admin') {
       if (adminPass !== import.meta.env.VITE_ADMIN_PASS) {
+        await logAccess('admin', 'admin', 'FAILED');
         showAlert('Thông báo', 'Sai mật khẩu Quản trị!');
         return;
       }
+      await logAccess('admin', 'admin', 'SUCCESS');
       onLogin({ role: 'admin' });
     }
   };

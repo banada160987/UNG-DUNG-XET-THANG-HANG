@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { Plus, Trash2 } from 'lucide-react';
 import { showAlert, showConfirm } from '../utils/alert';
+import { hashPassword } from '../utils/security';
 
 export const DepartmentManager = () => {
   const [departments, setDepartments] = useState([]);
@@ -19,7 +20,7 @@ export const DepartmentManager = () => {
     const { data: heads } = await supabase.from('heads').select('*');
     if (heads) {
       const pwMap = {};
-      heads.forEach(h => pwMap[h.department] = h.password);
+      heads.forEach(h => pwMap[h.department] = h.password ? '********' : '');
       setHeadPasswords(pwMap);
     }
   };
@@ -29,14 +30,21 @@ export const DepartmentManager = () => {
        showAlert('Thông báo', 'Vui lòng nhập mật khẩu');
        return;
     }
-    const { error } = await supabase.from('heads').upsert({ department: deptName, password }, { onConflict: 'department' });
+    
+    // Nếu password vẫn là ******** thì không lưu lại
+    if (password === '********') {
+       return;
+    }
+
+    const hashed = await hashPassword(password);
+    const { error } = await supabase.from('heads').upsert({ department: deptName, password: hashed }, { onConflict: 'department' });
     if (error) {
        console.error(error);
        showAlert('Lỗi', `Không thể lưu mật khẩu: ${error.message || error.details || 'Lỗi không xác định'}`);
     }
     else {
-       showAlert('Thành công', 'Đã lưu mật khẩu Tổ trưởng!');
-       fetchDepts();
+       showAlert('Thành công', `Đã lưu mật khẩu cho Tổ ${deptName}`);
+       setHeadPasswords(prev => ({ ...prev, [deptName]: '********' }));
     }
   };
 
