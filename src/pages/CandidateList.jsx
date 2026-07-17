@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { checkEligibility } from '../utils/validation';
-import { rankCandidates } from '../utils/ranking';
+import { rankCandidates, evaluateAchievements } from '../utils/ranking';
+import { ACHIEVEMENT_LEVELS } from '../data/config';
 import { StatusBadge } from '../components/StatusBadge';
 import { Download, Calculator, CheckCircle, FileText } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -10,6 +11,37 @@ import { showAlert, showConfirm } from '../utils/alert';
 export const CandidateList = ({ candidates, onRefresh }) => {
   const [rankedList, setRankedList] = useState([]);
   const [hasCalculated, setHasCalculated] = useState(false);
+
+  const getRankingReason = (c) => {
+    if (!hasCalculated || !c.eligibility.isValid) return null;
+    const ev = evaluateAchievements(c.achievements);
+    let achName = "Không có thành tích ưu tiên";
+    if (ev.highestScore !== 999) {
+      const achDef = ACHIEVEMENT_LEVELS.find(a => a.score === ev.highestScore);
+      achName = achDef ? achDef.name : achName;
+    }
+    
+    const bDate = c.dob ? new Date(c.dob).getFullYear() : '?';
+    const recDate = (c.decisionRecruitment?.date || c.decisionProbation?.date) 
+        ? new Date(c.decisionRecruitment?.date || c.decisionProbation?.date).getFullYear() 
+        : '?';
+
+    return (
+      <div className="text-xs text-slate-500 space-y-1 mt-2 md:mt-0">
+        {ev.highestScore !== 999 && (
+          <p><span className="font-medium text-slate-700">Mức cao nhất:</span> {achName} (SL: {ev.highestCount}, Cá nhân: {ev.individualCount})</p>
+        )}
+        <div className="flex gap-4">
+           <span><span className="font-medium text-slate-700">Giới tính:</span> {c.gender || 'Nam'}</span>
+           {c.ethnicity && c.ethnicity.toLowerCase() !== 'kinh' && <span><span className="font-medium text-slate-700">Dân tộc:</span> {c.ethnicity}</span>}
+        </div>
+        <div className="flex gap-4">
+           <span><span className="font-medium text-slate-700">Sinh năm:</span> {bDate}</span>
+           <span><span className="font-medium text-slate-700">Vào ngành:</span> {recDate}</span>
+        </div>
+      </div>
+    );
+  };
 
   // Chỉ lấy những hồ sơ ĐÃ ĐƯỢC QUẢN TRỊ DUYỆT (admin_approved) hoặc đã xếp hạng (ranked, finalized)
   const approvedCandidates = useMemo(() => {
@@ -132,12 +164,13 @@ export const CandidateList = ({ candidates, onRefresh }) => {
                 <th className="p-4">Họ tên & Tổ</th>
                 <th className="p-4 hidden md:table-cell">Chức danh đăng ký</th>
                 <th className="p-4">Tình trạng</th>
+                <th className="p-4">Chi tiết ưu tiên</th>
               </tr>
             </thead>
             <tbody>
               {displayList.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="p-8 text-center text-slate-400">Không có hồ sơ nào đủ điều kiện xếp hạng.</td>
+                  <td colSpan="5" className="p-8 text-center text-slate-400">Không có hồ sơ nào đủ điều kiện xếp hạng.</td>
                 </tr>
               ) : displayList.map(c => (
                 <tr key={c.id} className="border-b border-slate-100 hover:bg-slate-50/50">
@@ -157,6 +190,9 @@ export const CandidateList = ({ candidates, onRefresh }) => {
                   </td>
                   <td className="p-4">
                     <StatusBadge status={c.status} />
+                  </td>
+                  <td className="p-4">
+                    {getRankingReason(c)}
                   </td>
                 </tr>
               ))}
