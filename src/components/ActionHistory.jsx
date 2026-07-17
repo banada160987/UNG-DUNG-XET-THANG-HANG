@@ -40,6 +40,23 @@ export const ActionHistory = () => {
     return 'text-slate-600 bg-slate-50 border-slate-200';
   };
 
+  const renderNotes = (notes) => {
+    if (!notes) return '-';
+    try {
+      const parsed = JSON.parse(notes);
+      if (parsed.general) {
+        const hasFields = parsed.fields && Object.keys(parsed.fields).length > 0;
+        return (
+          <div className="flex flex-col gap-1">
+            <span>{parsed.general}</span>
+            {hasFields && <span className="text-[11px] text-rose-500 italic">Có đính kèm lỗi chi tiết từng mục</span>}
+          </div>
+        );
+      }
+    } catch(e) {}
+    return notes;
+  };
+
   const filteredLogs = logs.filter(log => {
     const matchSearch = (log.actor_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                         (log.action || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -114,7 +131,7 @@ export const ActionHistory = () => {
                     {log.candidate ? log.candidate.fullName : 'Hệ thống'}
                   </td>
                   <td className="p-3 text-slate-600">
-                    {log.notes || '-'}
+                    {renderNotes(log.notes)}
                   </td>
                 </tr>
               ))}

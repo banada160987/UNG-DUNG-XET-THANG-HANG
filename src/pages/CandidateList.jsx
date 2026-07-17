@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { checkEligibility } from '../utils/validation';
-import { rankCandidates, evaluateAchievements } from '../utils/ranking';
+import { rankCandidates, evaluateAchievements, calculateTotalScore } from '../utils/ranking';
 import { ACHIEVEMENT_LEVELS } from '../data/config';
 import { StatusBadge } from '../components/StatusBadge';
 import { Download, Calculator, CheckCircle, FileText, Settings2, Save } from 'lucide-react';
@@ -35,13 +35,22 @@ export const CandidateList = ({ candidates, onRefresh }) => {
         achName = achDef ? achDef.name : achName;
       }
       
-      const bDate = c.dob ? new Date(c.dob).getFullYear() : '?';
+      const formatDate = (dateStr) => {
+        if (!dateStr) return '?';
+        const d = new Date(dateStr);
+        return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+      };
+      
+      const bDate = formatDate(c.dob);
       let recDate = '?';
-      if (c.decisionRecruitment?.date) recDate = new Date(c.decisionRecruitment.date).getFullYear();
-      else if (c.decisionProbation?.date) recDate = new Date(c.decisionProbation.date).getFullYear();
+      if (c.decisionRecruitment?.date) recDate = formatDate(c.decisionRecruitment.date);
+      else if (c.decisionProbation?.date) recDate = formatDate(c.decisionProbation.date);
 
       return (
         <div className="text-xs text-slate-500 space-y-1 mt-2 md:mt-0">
+          <p>
+            <span className="font-medium text-slate-700">Tổng điểm:</span> <strong className="text-blue-600">{calculateTotalScore(c, settings)} đ</strong>
+          </p>
           {ev.highestScore !== 999 ? (
             <p><span className="font-medium text-slate-700">Thành tích:</span> {achName} (SL: {ev.highestCount}, Cá nhân: {ev.individualCount})</p>
           ) : (
@@ -52,7 +61,7 @@ export const CandidateList = ({ candidates, onRefresh }) => {
              {c.ethnicity && c.ethnicity.toLowerCase() !== 'kinh' && <span><span className="font-medium text-slate-700">Dân tộc:</span> {c.ethnicity}</span>}
           </div>
           <div className="flex gap-4">
-             <span><span className="font-medium text-slate-700">Năm sinh:</span> {bDate}</span>
+             <span><span className="font-medium text-slate-700">Sinh:</span> {bDate}</span>
              <span><span className="font-medium text-slate-700">Vào ngành:</span> {recDate}</span>
           </div>
         </div>

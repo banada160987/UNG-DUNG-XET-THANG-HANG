@@ -9,17 +9,38 @@ export const CandidateTimeline = ({ candidateId, onClose }) => {
 
   useEffect(() => {
     const fetchLogs = async () => {
-      const { data } = await supabase
+      setLoading(true);
+      const { data, error } = await supabase
         .from('candidate_logs')
         .select('*')
         .eq('candidate_id', candidateId)
         .order('created_at', { ascending: false });
-      
-      setLogs(data || []);
+
+      if (!error && data) {
+        setLogs(data);
+      }
       setLoading(false);
     };
+    
     fetchLogs();
   }, [candidateId]);
+
+  const renderNotes = (notes) => {
+    if (!notes) return null;
+    try {
+      const parsed = JSON.parse(notes);
+      if (parsed.general) {
+        const hasFields = parsed.fields && Object.keys(parsed.fields).length > 0;
+        return (
+          <div className="flex flex-col gap-1">
+            <span>{parsed.general}</span>
+            {hasFields && <span className="text-[11px] text-rose-500 italic">Có đính kèm lỗi chi tiết từng mục</span>}
+          </div>
+        );
+      }
+    } catch(e) {}
+    return notes;
+  };
 
   return (
     <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
@@ -58,9 +79,9 @@ export const CandidateTimeline = ({ candidateId, onClose }) => {
                       Thực hiện bởi: <span className="font-medium">{log.actor_name}</span> ({log.actor_role})
                     </p>
                     {log.notes && (
-                      <p className="text-sm text-slate-700 bg-white p-2 rounded border border-slate-100 mt-2">
-                        {log.notes}
-                      </p>
+                      <div className="text-sm text-slate-700 bg-white p-2 rounded border border-slate-100 mt-2">
+                        {renderNotes(log.notes)}
+                      </div>
                     )}
                   </div>
                 </div>
