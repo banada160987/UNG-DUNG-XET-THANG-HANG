@@ -288,7 +288,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
     if (formData.decisionAppointment?.number) score += 1;
     if (formData.degrees?.length > 0) score += 1;
     if (formData.certificates?.length > 0) score += 1;
-    if (formData.achievements?.length > 0) score += 1;
+    if (formData.achievements?.length > 0 || formData.evalMinute) score += 1;
     
     return Math.min(100, Math.round((score / total) * 100));
   };
