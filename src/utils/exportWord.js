@@ -51,11 +51,15 @@ export const exportCandidateToWord = async (candidate, signatureDataUrl = null) 
     decisionRecruitment,
     decisionProbation,
     decisionAppointment,
-    decisionSalary
+    decisionSalary,
+    certificates = []
   } = candidate;
 
   // Xử lý dữ liệu văn bằng
   const degreeParas = degrees.map(d => createPara([createText(`- 01 Bản sao Bằng ${d.level} ${d.major}`)], AlignmentType.LEFT, { before: 60, after: 60 }));
+  
+  // Xử lý chứng chỉ
+  const certParas = certificates.map(c => createPara([createText(`- 01 Bản sao ${c.name}`)], AlignmentType.LEFT, { before: 60, after: 60 }));
   
   // Xử lý quyết định
   const formatDecision = (name, obj) => {
@@ -186,7 +190,7 @@ export const exportCandidateToWord = async (candidate, signatureDataUrl = null) 
               // 4
               createRow("4", "Tiêu chuẩn về trình độ đào tạo, bồi dưỡng", "", "", ""),
               createRow("a", "- Bản sao các văn bằng, chứng chỉ", degrees.length > 0 ? "X" : "", degrees.length === 0 ? "X" : "", degreeParas.length > 0 ? degreeParas : ""),
-              createRow("b", "- Bản sao chứng chỉ bồi dưỡng theo tiêu chuẩn chức danh nghề nghiệp.", "", "", ""),
+              createRow("b", "- Bản sao chứng chỉ bồi dưỡng theo tiêu chuẩn chức danh nghề nghiệp.", certificates.length > 0 ? "X" : "", certificates.length === 0 ? "X" : "", certParas.length > 0 ? certParas : ""),
               
               // 5
               createRow("5", "Tiêu chuẩn năng lực chuyên môn, nghiệp vụ; tiêu chuẩn nhiệm vụ từng chức danh thăng hạng", "", "", ""),

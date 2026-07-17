@@ -31,6 +31,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
       decisionAppointment: { date: '', number: '', issuer: '', link: '' },
       decisionSalary: { date: '', number: '', issuer: '', link: '' },
       degrees: [],
+      certificates: [],
       resumeDoc: false,
       certIT: false,
       certLanguage: false,
@@ -112,6 +113,23 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
 
   const removeDegree = (index) => {
     setFormData({ ...formData, degrees: formData.degrees.filter((_, i) => i !== index) });
+  };
+
+  const addCertificate = () => {
+    setFormData({
+      ...formData,
+      certificates: [...(formData.certificates || []), { name: '', issuer: '', year: '', number: '', link: '' }]
+    });
+  };
+
+  const updateCertificate = (index, field, value) => {
+    const newCertificates = [...(formData.certificates || [])];
+    newCertificates[index][field] = value;
+    setFormData({ ...formData, certificates: newCertificates });
+  };
+
+  const removeCertificate = (index) => {
+    setFormData({ ...formData, certificates: (formData.certificates || []).filter((_, i) => i !== index) });
   };
 
   const addAchievement = () => {
@@ -412,9 +430,64 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
         )}
       </section>
 
-      {/* 4. Thành phần hồ sơ khác (Sơ yếu lý lịch, Chứng chỉ, Nhận xét) */}
+      {/* 4. Chứng chỉ chức danh nghề nghiệp */}
       <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <h3 className="text-lg font-semibold border-b pb-2 mb-4 text-slate-800">IV. Thành phần hồ sơ khác</h3>
+        <div className="flex justify-between items-center border-b pb-2 mb-4">
+          <h3 className="text-lg font-semibold text-slate-800">IV. Chứng chỉ theo yêu cầu của chức danh nghề nghiệp xét thăng hạng</h3>
+          {!isReadOnly && (
+            <button type="button" onClick={addCertificate} className="flex items-center gap-1 text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 font-medium">
+              <Plus size={16} /> Thêm chứng chỉ
+            </button>
+          )}
+        </div>
+        
+        {(!formData.certificates || formData.certificates.length === 0) ? (
+          <p className="text-slate-400 italic text-center py-4">Chưa có chứng chỉ nào được thêm.</p>
+        ) : (
+          <div className="space-y-4">
+            {formData.certificates.map((cert, index) => (
+              <div key={index} className="grid grid-cols-1 md:grid-cols-6 gap-3 bg-slate-50 p-4 rounded-lg border border-slate-200 relative">
+                <div className="col-span-1 md:col-span-2">
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Tên chứng chỉ</label>
+                  <input disabled={isReadOnly} type="text" value={cert.name} onChange={(e) => updateCertificate(index, 'name', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
+                </div>
+                <div className="col-span-1 md:col-span-2">
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Nơi cấp</label>
+                  <input disabled={isReadOnly} type="text" value={cert.issuer} onChange={(e) => updateCertificate(index, 'issuer', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
+                </div>
+                <div className="col-span-1">
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Năm cấp</label>
+                  <input disabled={isReadOnly} type="text" value={cert.year} onChange={(e) => updateCertificate(index, 'year', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
+                </div>
+                <div className="col-span-1">
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Số hiệu</label>
+                  <input disabled={isReadOnly} type="text" value={cert.number} onChange={(e) => updateCertificate(index, 'number', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
+                </div>
+                <div className="col-span-1 md:col-span-6 flex items-center justify-between mt-2 pt-2 border-t border-slate-200 border-dashed">
+                  <div className="flex-1">
+                    <DriveUploadButton 
+                      disabled={isReadOnly} 
+                      currentLink={cert.link} 
+                      onUploadSuccess={(url) => updateCertificate(index, 'link', url)} 
+                      compact={true} 
+                      filePrefix={filePrefix}
+                    />
+                  </div>
+                  {!isReadOnly && (
+                    <button type="button" onClick={() => removeCertificate(index)} className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg flex items-center gap-1 text-sm font-medium">
+                      <Trash2 size={16} /> Xóa
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 5. Thành phần hồ sơ khác (Sơ yếu lý lịch, Nhận xét) */}
+      <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h3 className="text-lg font-semibold border-b pb-2 mb-4 text-slate-800">V. Thành phần hồ sơ khác</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg">
           <Checkbox disabled={isReadOnly} label="Đã có Sơ yếu lý lịch (Mẫu HS02-VC/BNV)" name="resumeDoc" checked={formData.resumeDoc} onChange={handleChange} />
           <Checkbox disabled={isReadOnly} label="Đã có Bản nhận xét, đánh giá của thủ trưởng" name="reviewDoc" checked={formData.reviewDoc} onChange={handleChange} />
@@ -424,10 +497,10 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
         </div>
       </section>
 
-      {/* 5. Thành tích */}
+      {/* 6. Thành tích */}
       <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <div className="flex justify-between items-center border-b pb-2 mb-4">
-          <h3 className="text-lg font-semibold text-slate-800">VII. Thành tích (Cập nhật đúng theo Kế hoạch)</h3>
+          <h3 className="text-lg font-semibold text-slate-800">VI. Thành tích (Cập nhật đúng theo Kế hoạch)</h3>
           {!isReadOnly && (
             <button type="button" onClick={addAchievement} className="flex items-center gap-1 text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 font-medium">
               <Plus size={16} /> Thêm thành tích
