@@ -248,5 +248,5 @@ export const exportCandidateToWord = async (candidate, signatureDataUrl = null) 
   });
 
   const blob = await Packer.toBlob(doc);
-  saveAs(blob, `Danh_muc_ho_so_${candidate.cccd}_${candidate.fullName}.docx`);
+  saveAs(blob, `Danh_muc_ho_so_MoiNhat_${candidate.cccd}_${candidate.fullName}.docx`);
 };
