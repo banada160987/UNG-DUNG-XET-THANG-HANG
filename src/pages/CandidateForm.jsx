@@ -5,7 +5,7 @@ import { Save, X, Plus, Trash2, Send, Upload, Paperclip, AlertCircle, ScanText, 
 import { DriveUploadButton } from '../components/DriveUploadButton';
 import { performOCR } from '../utils/ocr';
 import confetti from 'canvas-confetti';
-import { showPrompt } from '../utils/alert';
+import { showPrompt, showAlert, showConfirm } from '../utils/alert';
 import { downloadAllEvidenceAsZip } from '../utils/downloadEvidence';
 
 export const CommentContext = createContext({});
@@ -228,9 +228,21 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
     onSave(getSubmitData()); 
   };
 
-  const handleSubmitFinal = (e) => {
+  const handleSubmitFinal = async (e) => {
     e.preventDefault();
-    if(confirm('Bạn có chắc chắn muốn nộp hồ sơ này cho Tổ trưởng? Bạn sẽ không thể sửa nếu chưa bị trả lại.')){
+    
+    if (!formData.certificates || formData.certificates.length === 0) {
+      showAlert('Thiếu thông tin', 'Bắt buộc phải có Chứng chỉ theo yêu cầu của chức danh nghề nghiệp để đủ điều kiện xét thăng hạng.', 'warning');
+      return;
+    }
+
+    const isConfirmed = await showConfirm(
+      'Xác nhận nộp', 
+      'Bạn có chắc chắn muốn nộp hồ sơ này cho Tổ trưởng? Bạn sẽ không thể sửa nếu chưa bị trả lại.', 
+      'question'
+    );
+    
+    if(isConfirmed){
       onSubmitToHead(getSubmitData());
     }
   };
@@ -465,6 +477,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                   <div className="col-span-1">
                   <label className="text-xs font-medium text-slate-500 mb-1 block">Trình độ</label>
                   <select disabled={isReadOnly} value={deg.level} onChange={(e) => updateDegree(index, 'level', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white disabled:bg-slate-100">
+                    <option value="Trung cấp">Trung cấp</option>
                     <option value="Đại học">Đại học</option>
                     <option value="Thạc sĩ">Thạc sĩ</option>
                     <option value="Tiến sĩ">Tiến sĩ</option>
