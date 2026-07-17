@@ -164,7 +164,7 @@ export const exportCandidateToWord = async (candidate, signatureDataUrl = null) 
           createPara([createText("DANH MỤC HỒ SƠ MINH CHỨNG XÉT THĂNG HẠNG", true, false, 32)], AlignmentType.CENTER),
           createPara([], AlignmentType.CENTER, { before: 200, after: 200 }),
           createPara([createText("Họ và tên viên chức: ", false), createText(fullName, true)]),
-          createPara([createText("Đơn vị: ", false), createText(unit, true)]),
+          createPara([createText("Đơn vị: ", false), createText(workplace, true)]),
           createPara([createText("Cơ quan quản lý cấp trên: ", false), createText("Sở GDĐT Đắk Lắk", true)]),
           createPara([createText("Hồ sơ đăng ký xét thăng hạng chức danh nghề nghiệp được đóng thành tập và sắp xếp các thành phần của hồ sơ theo "), createText("đúng thứ tự", true), createText(" như sau:")]),
           
@@ -197,7 +197,7 @@ export const exportCandidateToWord = async (candidate, signatureDataUrl = null) 
               createRow("6", "Thời gian giữ hạng: Bản sao các quyết định tuyển dụng, xét hết tập sự, bổ nhiệm ngạch, bổ nhiệm chức danh nghề nghiệp, nâng lương, thâm niên hiện hưởng, hợp đồng lao động, hợp đồng làm việc, ...", decisions.length > 0 ? "X" : "", decisions.length === 0 ? "X" : "", decisionParas.length > 0 ? decisionParas : ""),
               
               // 7
-              createRow("7", "Minh chứng các thành tích đạt được trong hoạt động nghề nghiệp đã được cấp có thẩm quyền công nhận theo Đề án (để xét ưu tiên khi số lượng viên chức đăng ký nhiều hơn chỉ tiêu thăng hạng được phê duyệt).", achievements.length > 0 ? "X" : "", achievements.length === 0 ? "X" : "", achParas.length > 0 ? achParas : ""),
+              createRow("7", "Minh chứng các thành tích đạt được trong hoạt động nghề nghiệp đã được cấp có thẩm quyền công nhận theo Đề án (để xét ưu tiên khi số lượng viên chức đăng ký nhiều hơn chỉ tiêu thăng hạng được phê duyệt).", "", "", ""),
               
               // 8
               createRow("8", "Các giấy tờ khác có liên quan (ghi rõ)", otherDocs.length > 0 ? "X" : "", otherDocs.length === 0 ? "X" : "", otherDocsParas.length > 0 ? otherDocsParas : "")
