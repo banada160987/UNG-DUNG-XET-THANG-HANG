@@ -1,9 +1,10 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { ACHIEVEMENT_LEVELS, TARGET_TITLES } from '../data/config';
-import { Save, X, Plus, Trash2, Send, Upload, Paperclip, AlertCircle, ScanText, Loader2, MessageSquarePlus, Download } from 'lucide-react';
+import { Save, X, Plus, Trash2, Send, Upload, Paperclip, AlertCircle, ScanText, Loader2, MessageSquarePlus, Download, Award, Medal, Trophy, Globe, GraduationCap, Star, CheckCircle2 } from 'lucide-react';
 import { DriveUploadButton } from '../components/DriveUploadButton';
 import { performOCR } from '../utils/ocr';
+import confetti from 'canvas-confetti';
 import { showPrompt } from '../utils/alert';
 import { downloadAllEvidenceAsZip } from '../utils/downloadEvidence';
 
@@ -277,6 +278,38 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
     if (onCommentChange) onCommentChange(fieldName, comment);
   };
 
+  const calculateProgress = () => {
+    let score = 0;
+    let total = 7;
+    if (formData.cccd && formData.fullName && formData.dob) score += 1;
+    if (formData.unit && formData.currentTitle && formData.targetTitle) score += 1;
+    if (formData.decisionRecruitment?.number) score += 1;
+    if (formData.decisionAppointment?.number) score += 1;
+    if (formData.degrees?.length > 0) score += 1;
+    if (formData.certificates?.length > 0) score += 1;
+    if (formData.achievements?.length > 0) score += 1;
+    
+    return Math.min(100, Math.round((score / total) * 100));
+  };
+
+  const badges = (() => {
+    const b = [];
+    if (formData.degrees?.some(d => d.level === 'Thạc sĩ' || d.level === 'Tiến sĩ')) {
+      b.push({ id: 'degree', name: 'Học vấn bậc cao', icon: <GraduationCap size={16} className="text-purple-600" />, bg: 'bg-purple-100 text-purple-800 border-purple-200' });
+    }
+    if ((formData.certIT && formData.certLanguage) || (formData.certificates?.length >= 1)) {
+      b.push({ id: 'cert', name: 'Kỹ năng Đa dạng', icon: <Globe size={16} className="text-blue-600" />, bg: 'bg-blue-100 text-blue-800 border-blue-200' });
+    }
+    if (formData.achievements?.some(a => ['cstd_tinh', 'bang_khen_bo', 'bang_khen_tinh'].includes(a.id))) {
+      b.push({ id: 'ach', name: 'Giáo viên Xuất sắc', icon: <Trophy size={16} className="text-amber-600" />, bg: 'bg-amber-100 text-amber-800 border-amber-200' });
+    } else if (formData.achievements?.length >= 2) {
+      b.push({ id: 'ach2', name: 'Nhiều Thành tích', icon: <Star size={16} className="text-rose-600" />, bg: 'bg-rose-100 text-rose-800 border-rose-200' });
+    }
+    return b;
+  })();
+
+  const progress = calculateProgress();
+
   return (
     <CommentContext.Provider value={{ fields: feedbackData.fields || {}, mode, onCommentChange: handleCommentChange }}>
     <form className="space-y-8 pb-10" onSubmit={handleSubmitFinal}>
@@ -289,6 +322,48 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
           </div>
         </div>
       )}
+
+      {/* Gamification Profile Overview */}
+      <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-4 opacity-10">
+          <Award size={100} />
+        </div>
+        <div className="relative z-10 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+          <div className="flex-1 w-full">
+            <h3 className="text-lg font-bold text-slate-800 mb-2 flex items-center gap-2">
+              <CheckCircle2 size={20} className={progress === 100 ? "text-emerald-500" : "text-slate-400"} />
+              Độ hoàn thiện hồ sơ: {progress}%
+            </h3>
+            <div className="w-full bg-slate-100 rounded-full h-3 mb-2 overflow-hidden border border-slate-200">
+              <div 
+                className={`h-3 rounded-full transition-all duration-1000 ease-out ${progress === 100 ? 'bg-emerald-500' : 'bg-indigo-500'}`} 
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+            <p className="text-sm text-slate-500">
+              {progress === 100 
+                ? "Tuyệt vời! Hồ sơ của bạn đã sẵn sàng để nộp." 
+                : "Hãy điền thêm các thông tin văn bằng, chứng chỉ và thành tích để đạt 100%."}
+            </p>
+          </div>
+          
+          <div className="w-full md:w-auto min-w-[200px]">
+            <h4 className="text-sm font-semibold text-slate-600 mb-3 uppercase tracking-wider">Huy hiệu đạt được</h4>
+            <div className="flex flex-wrap gap-2">
+              {badges.length === 0 ? (
+                <span className="text-sm text-slate-400 italic">Chưa có huy hiệu nào</span>
+              ) : (
+                badges.map(b => (
+                  <div key={b.id} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-medium shadow-sm ${b.bg}`}>
+                    {b.icon}
+                    {b.name}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-2 mb-4 gap-2">
@@ -379,10 +454,14 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
         {formData.degrees.length === 0 ? (
           <p className="text-slate-400 italic text-center py-4">Chưa có văn bằng nào được thêm.</p>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {formData.degrees.map((deg, index) => (
-              <div key={index} className="grid grid-cols-1 md:grid-cols-6 gap-3 bg-slate-50 p-4 rounded-lg border border-slate-200 relative">
-                <div className="col-span-1">
+              <div key={index} className="relative bg-gradient-to-br from-white to-blue-50/30 p-5 rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-all">
+                <div className="absolute top-0 right-0 bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1.5 rounded-bl-xl rounded-tr-xl flex items-center gap-1.5 shadow-sm border-b border-l border-blue-200">
+                  <GraduationCap size={14} /> Văn bằng {index + 1}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                  <div className="col-span-1">
                   <label className="text-xs font-medium text-slate-500 mb-1 block">Trình độ</label>
                   <select disabled={isReadOnly} value={deg.level} onChange={(e) => updateDegree(index, 'level', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white disabled:bg-slate-100">
                     <option value="Đại học">Đại học</option>
@@ -408,7 +487,8 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                     <input disabled={isReadOnly} type="text" value={deg.number} onChange={(e) => updateDegree(index, 'number', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
                   </div>
                 </div>
-                <div className="col-span-1 md:col-span-6 flex items-center justify-between mt-2 pt-2 border-t border-slate-200 border-dashed">
+                </div>
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-blue-100 border-dashed">
                   <div className="flex-1">
                     <DriveUploadButton 
                       disabled={isReadOnly} 
@@ -444,26 +524,31 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
         {(!formData.certificates || formData.certificates.length === 0) ? (
           <p className="text-slate-400 italic text-center py-4">Chưa có chứng chỉ nào được thêm.</p>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {formData.certificates.map((cert, index) => (
-              <div key={index} className="grid grid-cols-1 md:grid-cols-6 gap-3 bg-slate-50 p-4 rounded-lg border border-slate-200 relative">
-                <div className="col-span-1 md:col-span-2">
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">Tên chứng chỉ</label>
-                  <input disabled={isReadOnly} type="text" value={cert.name} onChange={(e) => updateCertificate(index, 'name', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
+              <div key={index} className="relative bg-gradient-to-br from-white to-amber-50/30 p-5 rounded-xl border border-amber-100 shadow-sm hover:shadow-md transition-all">
+                <div className="absolute top-0 right-0 bg-amber-100 text-amber-700 text-xs font-bold px-3 py-1.5 rounded-bl-xl rounded-tr-xl flex items-center gap-1.5 shadow-sm border-b border-l border-amber-200">
+                  <Medal size={14} /> Chứng chỉ {index + 1}
                 </div>
-                <div className="col-span-1 md:col-span-2">
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">Nơi cấp</label>
-                  <input disabled={isReadOnly} type="text" value={cert.issuer} onChange={(e) => updateCertificate(index, 'issuer', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                  <div className="col-span-1 md:col-span-2">
+                    <label className="text-xs font-medium text-slate-500 mb-1 block">Tên chứng chỉ</label>
+                    <input disabled={isReadOnly} type="text" value={cert.name} onChange={(e) => updateCertificate(index, 'name', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
+                  </div>
+                  <div className="col-span-1 md:col-span-2">
+                    <label className="text-xs font-medium text-slate-500 mb-1 block">Nơi cấp</label>
+                    <input disabled={isReadOnly} type="text" value={cert.issuer} onChange={(e) => updateCertificate(index, 'issuer', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
+                  </div>
+                  <div className="col-span-1">
+                    <label className="text-xs font-medium text-slate-500 mb-1 block">Năm cấp</label>
+                    <input disabled={isReadOnly} type="text" value={cert.year} onChange={(e) => updateCertificate(index, 'year', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
+                  </div>
+                  <div className="col-span-1">
+                    <label className="text-xs font-medium text-slate-500 mb-1 block">Số hiệu</label>
+                    <input disabled={isReadOnly} type="text" value={cert.number} onChange={(e) => updateCertificate(index, 'number', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
+                  </div>
                 </div>
-                <div className="col-span-1">
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">Năm cấp</label>
-                  <input disabled={isReadOnly} type="text" value={cert.year} onChange={(e) => updateCertificate(index, 'year', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
-                </div>
-                <div className="col-span-1">
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">Số hiệu</label>
-                  <input disabled={isReadOnly} type="text" value={cert.number} onChange={(e) => updateCertificate(index, 'number', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
-                </div>
-                <div className="col-span-1 md:col-span-6 flex items-center justify-between mt-2 pt-2 border-t border-slate-200 border-dashed">
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-amber-100 border-dashed">
                   <div className="flex-1">
                     <DriveUploadButton 
                       disabled={isReadOnly} 

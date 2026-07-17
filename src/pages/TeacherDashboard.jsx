@@ -6,6 +6,7 @@ import { AlertCircle, FileCheck, Search, Download, PenTool } from 'lucide-react'
 import { exportCandidateToWord } from '../utils/exportWord';
 import { SignatureModal } from '../components/SignatureModal';
 import { showAlert } from '../utils/alert';
+import confetti from 'canvas-confetti';
 
 export const TeacherDashboard = ({ cccd, onLogout }) => {
   const [candidate, setCandidate] = useState(null);
@@ -55,8 +56,17 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
     }
     
     await loadData();
-    if(newStatus === 'draft') showAlert('Thông báo', 'Đã lưu nháp thành công!');
-    else showAlert('Thông báo', 'Đã nộp hồ sơ cho Tổ trưởng!');
+    if(newStatus === 'draft') {
+      showAlert('Thông báo', 'Đã lưu nháp thành công!');
+    } else {
+      confetti({
+        particleCount: 150,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ['#26ccff', '#a25afd', '#ff5e7e', '#88ff5a', '#fcff42', '#ffa62d', '#ff36ff']
+      });
+      showAlert('Chúc mừng!', 'Đã nộp hồ sơ cho Tổ trưởng thành công!');
+    }
   };
 
   const handleSaveDraft = async (formData) => {
