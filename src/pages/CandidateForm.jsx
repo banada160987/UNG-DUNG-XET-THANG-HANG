@@ -236,6 +236,20 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
       return;
     }
 
+    // Ràng buộc thành tích chính
+    const invalidAch = formData.achievements.some(ach => !ach.decisionNo.trim());
+    if (invalidAch) {
+      showAlert('Thiếu thông tin', 'Vui lòng nhập đầy đủ Số quyết định cho các thành tích ở phần VII.', 'warning');
+      return;
+    }
+
+    // Ràng buộc thành tích khác
+    const invalidOtherAch = formData.otherAchievements?.some(ach => !ach.id.trim() || !ach.decisionNo.trim());
+    if (invalidOtherAch) {
+      showAlert('Thiếu thông tin', 'Vui lòng nhập đầy đủ Tên thành tích và Số quyết định cho các thành tích ở phần VIII.', 'warning');
+      return;
+    }
+
     const isConfirmed = await showConfirm(
       'Xác nhận nộp', 
       'Bạn có chắc chắn muốn nộp hồ sơ này cho Tổ trưởng? Bạn sẽ không thể sửa nếu chưa bị trả lại.', 
@@ -641,8 +655,8 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                   </select>
                 </div>
                 <div className="w-full md:w-48">
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">Số Quyết định</label>
-                  <input disabled={isReadOnly} type="text" value={ach.decisionNo} title={ach.decisionNo} onChange={(e) => updateAchievement(index, 'decisionNo', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Số Quyết định <span className="text-rose-500">*</span></label>
+                  <input disabled={isReadOnly} required type="text" value={ach.decisionNo} title={ach.decisionNo} onChange={(e) => updateAchievement(index, 'decisionNo', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Nhập số QĐ..." />
                 </div>
                 
                 <div className="w-full mt-2 pt-2 border-t border-slate-200 border-dashed flex justify-between items-center md:hidden">
@@ -698,9 +712,10 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
             {formData.otherAchievements.map((ach, index) => (
               <div key={index} className="flex flex-col md:flex-row gap-3 items-start md:items-end bg-slate-50 p-4 rounded-lg border border-slate-200">
                 <div className="flex-1 w-full">
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">Tên thành tích</label>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Tên thành tích <span className="text-rose-500">*</span></label>
                   <input 
                     disabled={isReadOnly}
+                    required
                     type="text"
                     placeholder="VD: Giáo viên dạy giỏi..."
                     value={ach.id} 
@@ -721,8 +736,8 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                   </select>
                 </div>
                 <div className="w-full md:w-48">
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">Số Quyết định</label>
-                  <input disabled={isReadOnly} type="text" value={ach.decisionNo} title={ach.decisionNo} onChange={(e) => updateOtherAchievement(index, 'decisionNo', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Số Quyết định <span className="text-rose-500">*</span></label>
+                  <input disabled={isReadOnly} required type="text" value={ach.decisionNo} title={ach.decisionNo} onChange={(e) => updateOtherAchievement(index, 'decisionNo', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" placeholder="Nhập số QĐ..." />
                 </div>
                 
                 <div className="w-full mt-2 pt-2 border-t border-slate-200 border-dashed flex justify-between items-center md:hidden">
