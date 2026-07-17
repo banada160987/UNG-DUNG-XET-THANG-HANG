@@ -13,34 +13,42 @@ export const CandidateList = ({ candidates, onRefresh }) => {
   const [hasCalculated, setHasCalculated] = useState(false);
 
   const getRankingReason = (c) => {
-    if (!hasCalculated || !c.eligibility.isValid) return null;
-    const ev = evaluateAchievements(c.achievements);
-    let achName = "Không có thành tích ưu tiên";
-    if (ev.highestScore !== 999) {
-      const achDef = ACHIEVEMENT_LEVELS.find(a => a.score === ev.highestScore);
-      achName = achDef ? achDef.name : achName;
-    }
-    
-    const bDate = c.dob ? new Date(c.dob).getFullYear() : '?';
-    const recDate = (c.decisionRecruitment?.date || c.decisionProbation?.date) 
-        ? new Date(c.decisionRecruitment?.date || c.decisionProbation?.date).getFullYear() 
-        : '?';
+    try {
+      if (!c.eligibility?.isValid) {
+        return <div className="text-red-500 text-xs">Chưa có thông tin điều kiện</div>;
+      }
+      const ev = evaluateAchievements(c.achievements);
+      let achName = "Không có thành tích ưu tiên";
+      if (ev.highestScore !== 999) {
+        const achDef = ACHIEVEMENT_LEVELS.find(a => a.score === ev.highestScore);
+        achName = achDef ? achDef.name : achName;
+      }
+      
+      const bDate = c.dob ? new Date(c.dob).getFullYear() : '?';
+      let recDate = '?';
+      if (c.decisionRecruitment?.date) recDate = new Date(c.decisionRecruitment.date).getFullYear();
+      else if (c.decisionProbation?.date) recDate = new Date(c.decisionProbation.date).getFullYear();
 
-    return (
-      <div className="text-xs text-slate-500 space-y-1 mt-2 md:mt-0">
-        {ev.highestScore !== 999 && (
-          <p><span className="font-medium text-slate-700">Mức cao nhất:</span> {achName} (SL: {ev.highestCount}, Cá nhân: {ev.individualCount})</p>
-        )}
-        <div className="flex gap-4">
-           <span><span className="font-medium text-slate-700">Giới tính:</span> {c.gender || 'Nam'}</span>
-           {c.ethnicity && c.ethnicity.toLowerCase() !== 'kinh' && <span><span className="font-medium text-slate-700">Dân tộc:</span> {c.ethnicity}</span>}
+      return (
+        <div className="text-xs text-slate-500 space-y-1 mt-2 md:mt-0">
+          {ev.highestScore !== 999 ? (
+            <p><span className="font-medium text-slate-700">Thành tích:</span> {achName} (SL: {ev.highestCount}, Cá nhân: {ev.individualCount})</p>
+          ) : (
+            <p><span className="font-medium text-slate-700">Thành tích:</span> Không có</p>
+          )}
+          <div className="flex gap-4">
+             <span><span className="font-medium text-slate-700">Giới tính:</span> {c.gender || 'Nam'}</span>
+             {c.ethnicity && c.ethnicity.toLowerCase() !== 'kinh' && <span><span className="font-medium text-slate-700">Dân tộc:</span> {c.ethnicity}</span>}
+          </div>
+          <div className="flex gap-4">
+             <span><span className="font-medium text-slate-700">Năm sinh:</span> {bDate}</span>
+             <span><span className="font-medium text-slate-700">Vào ngành:</span> {recDate}</span>
+          </div>
         </div>
-        <div className="flex gap-4">
-           <span><span className="font-medium text-slate-700">Sinh năm:</span> {bDate}</span>
-           <span><span className="font-medium text-slate-700">Vào ngành:</span> {recDate}</span>
-        </div>
-      </div>
-    );
+      );
+    } catch (err) {
+      return <div className="text-red-500 text-xs">Lỗi hiển thị: {err.message}</div>;
+    }
   };
 
   // Chỉ lấy những hồ sơ ĐÃ ĐƯỢC QUẢN TRỊ DUYỆT (admin_approved) hoặc đã xếp hạng (ranked, finalized)
