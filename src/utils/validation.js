@@ -41,6 +41,13 @@ export const checkEligibility = (candidate) => {
   // VI. Thành tích
   if (!candidate.achievements || candidate.achievements.length === 0) {
     missing.push("Thiếu bản sao Bằng khen/Giấy chứng nhận thành tích");
+  } else {
+    const hasInvalidAch = candidate.achievements.some(ach => 
+      !ach.id || !String(ach.id).trim() || !ach.decisionNo || !String(ach.decisionNo).trim()
+    );
+    if (hasInvalidAch) {
+      missing.push("Thiếu tên thành tích hoặc số quyết định trong danh sách thành tích");
+    }
   }
 
   return {
