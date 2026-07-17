@@ -55,7 +55,7 @@ export const exportCandidateToWord = async (candidate, signatureDataUrl = null) 
   } = candidate;
 
   // Xử lý dữ liệu văn bằng
-  const degreeStrings = degrees.map(d => `01 Bằng ${d.level} ${d.major}`).join("\n");
+  const degreeParas = degrees.map(d => createPara([createText(`- 01 Bản sao Bằng ${d.level} ${d.major}`)], AlignmentType.LEFT, { before: 60, after: 60 }));
   
   // Xử lý quyết định
   const formatDecision = (name, obj) => {
@@ -69,7 +69,7 @@ export const exportCandidateToWord = async (candidate, signatureDataUrl = null) 
         suffix += ` ngày ${obj.date}`;
       }
     }
-    return `01 Bản sao ${name}${suffix}`;
+    return `- 01 Bản sao ${name}${suffix}`;
   };
 
   const decisions = [];
@@ -81,16 +81,16 @@ export const exportCandidateToWord = async (candidate, signatureDataUrl = null) 
   if (appStr) decisions.push(appStr);
   const salStr = formatDecision("Quyết định nâng lương gần nhất", decisionSalary);
   if (salStr) decisions.push(salStr);
-  const decisionStrings = decisions.join("\n");
+  const decisionParas = decisions.map(d => createPara([createText(d)], AlignmentType.LEFT, { before: 60, after: 60 }));
 
   const otherDocs = [];
-  if (certIT) otherDocs.push("01 Chứng chỉ Tin học");
-  if (certLanguage) otherDocs.push("01 Chứng chỉ Ngoại ngữ");
-  if (certEthnic) otherDocs.push("01 Chứng chỉ tiếng dân tộc thiểu số");
-  const otherDocsString = otherDocs.join("\n");
+  if (certIT) otherDocs.push("- 01 Chứng chỉ Tin học");
+  if (certLanguage) otherDocs.push("- 01 Chứng chỉ Ngoại ngữ");
+  if (certEthnic) otherDocs.push("- 01 Chứng chỉ tiếng dân tộc thiểu số");
+  const otherDocsParas = otherDocs.map(d => createPara([createText(d)], AlignmentType.LEFT, { before: 60, after: 60 }));
 
   // Xử lý thành tích
-  const achStrings = achievements.map(a => {
+  const achParas = achievements.map(a => {
     let name = a.id;
     const configAch = ACHIEVEMENT_LEVELS.find(lvl => lvl.id === a.id);
     if (configAch) {
@@ -99,8 +99,8 @@ export const exportCandidateToWord = async (candidate, signatureDataUrl = null) 
     let suffix = "";
     if (a.year) suffix += ` năm ${a.year}`;
     if (a.decisionNo) suffix += ` số ${a.decisionNo}`;
-    return `01 Bản sao ${name}${suffix}`;
-  }).join("\n");
+    return createPara([createText(`- 01 Bản sao ${name}${suffix}`)], AlignmentType.LEFT, { before: 60, after: 60 });
+  });
 
   // Định dạng ngày sinh
   let dobStr = dob;
@@ -185,22 +185,22 @@ export const exportCandidateToWord = async (candidate, signatureDataUrl = null) 
               
               // 4
               createRow("4", "Tiêu chuẩn về trình độ đào tạo, bồi dưỡng", "", "", ""),
-              createRow("a", "- Bản sao các văn bằng, chứng chỉ", degrees.length > 0 ? "X" : "", degrees.length === 0 ? "X" : "", degreeStrings),
+              createRow("a", "- Bản sao các văn bằng, chứng chỉ", degrees.length > 0 ? "X" : "", degrees.length === 0 ? "X" : "", degreeParas.length > 0 ? degreeParas : ""),
               createRow("b", "- Bản sao chứng chỉ bồi dưỡng theo tiêu chuẩn chức danh nghề nghiệp.", "", "", ""),
               
               // 5
               createRow("5", "Tiêu chuẩn năng lực chuyên môn, nghiệp vụ; tiêu chuẩn nhiệm vụ từng chức danh thăng hạng", "", "", ""),
               createRow("a", "Khả năng, chủ động, sáng tạo, ứng dụng, linh hoạt, hỗ trợ, hướng dẫn, thực hiện nhiệm vụ chuyên môn...\nĐối với các tiêu chuẩn không có minh chứng là các văn bằng, chứng chỉ, chứng nhận, quyết định, bằng khen, giấy khen, đề tài, đề án hoặc sản phẩm được ứng dụng trong giáo dục, giảng dạy học sinh và tài liệu có liên quan thì minh chứng là biên bản đánh giá, nhận xét về khả năng đáp ứng các tiêu chuẩn đó của tổ chuyên môn, tổ bộ môn hoặc tương đương và có xác nhận của người đứng đầu cơ sở giáo dục trực tiếp quản lý, sử dụng viên chức", "", "", ""),
-              createRow("b", "Danh hiệu thi đua, hình thức khen thưởng (chiến sĩ thi đua, bằng khen, chứng nhận giáo viên dạy giỏi, giáo viên chủ nhiệm lớp giỏi, giáo viên làm tổng phụ trách Đội giỏi, quyết định, giấy khen,...), đề tài, đề án hoặc sản phẩm được ứng dụng trong hoạt động chuyên môn, tài liệu liên quan", achievements.length > 0 ? "X" : "", achievements.length === 0 ? "X" : "", achStrings),
+              createRow("b", "Danh hiệu thi đua, hình thức khen thưởng (chiến sĩ thi đua, bằng khen, chứng nhận giáo viên dạy giỏi, giáo viên chủ nhiệm lớp giỏi, giáo viên làm tổng phụ trách Đội giỏi, quyết định, giấy khen,...), đề tài, đề án hoặc sản phẩm được ứng dụng trong hoạt động chuyên môn, tài liệu liên quan", achievements.length > 0 ? "X" : "", achievements.length === 0 ? "X" : "", achParas.length > 0 ? achParas : ""),
               
               // 6
-              createRow("6", "Thời gian giữ hạng: Bản sao các quyết định tuyển dụng, xét hết tập sự, bổ nhiệm ngạch, bổ nhiệm chức danh nghề nghiệp, nâng lương, thâm niên hiện hưởng, hợp đồng lao động, hợp đồng làm việc, ...", decisions.length > 0 ? "X" : "", decisions.length === 0 ? "X" : "", decisionStrings),
+              createRow("6", "Thời gian giữ hạng: Bản sao các quyết định tuyển dụng, xét hết tập sự, bổ nhiệm ngạch, bổ nhiệm chức danh nghề nghiệp, nâng lương, thâm niên hiện hưởng, hợp đồng lao động, hợp đồng làm việc, ...", decisions.length > 0 ? "X" : "", decisions.length === 0 ? "X" : "", decisionParas.length > 0 ? decisionParas : ""),
               
               // 7
-              createRow("7", "Minh chứng các thành tích đạt được trong hoạt động nghề nghiệp đã được cấp có thẩm quyền công nhận theo Đề án (để xét ưu tiên khi số lượng viên chức đăng ký nhiều hơn chỉ tiêu thăng hạng được phê duyệt).", achievements.length > 0 ? "X" : "", achievements.length === 0 ? "X" : "", achStrings),
+              createRow("7", "Minh chứng các thành tích đạt được trong hoạt động nghề nghiệp đã được cấp có thẩm quyền công nhận theo Đề án (để xét ưu tiên khi số lượng viên chức đăng ký nhiều hơn chỉ tiêu thăng hạng được phê duyệt).", achievements.length > 0 ? "X" : "", achievements.length === 0 ? "X" : "", achParas.length > 0 ? achParas : ""),
               
               // 8
-              createRow("8", "Các giấy tờ khác có liên quan (ghi rõ)", otherDocs.length > 0 ? "X" : "", otherDocs.length === 0 ? "X" : "", otherDocsString)
+              createRow("8", "Các giấy tờ khác có liên quan (ghi rõ)", otherDocs.length > 0 ? "X" : "", otherDocs.length === 0 ? "X" : "", otherDocsParas.length > 0 ? otherDocsParas : "")
             ]
           }),
           
