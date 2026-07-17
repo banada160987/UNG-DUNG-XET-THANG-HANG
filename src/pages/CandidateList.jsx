@@ -72,6 +72,30 @@ export const CandidateList = ({ candidates, onRefresh }) => {
       }));
   }, [candidates]);
 
+  React.useEffect(() => {
+    const alreadyRanked = approvedCandidates.some(c => c.status === 'ranked' || c.status === 'finalized');
+    if (alreadyRanked && !hasCalculated) {
+      const valid = approvedCandidates.filter(c => c.eligibility.isValid);
+      const titles = [...new Set(valid.map(c => c.targetTitle))];
+      const sortedValid = [];
+      
+      titles.forEach(title => {
+        const group = valid.filter(c => c.targetTitle === title).sort(rankCandidates);
+        group.forEach((c, i) => c.rank = i + 1);
+        sortedValid.push(...group);
+      });
+
+      sortedValid.sort((a, b) => {
+         if (a.targetTitle < b.targetTitle) return -1;
+         if (a.targetTitle > b.targetTitle) return 1;
+         return a.rank - b.rank;
+      });
+
+      setRankedList(sortedValid);
+      setHasCalculated(true);
+    }
+  }, [approvedCandidates, hasCalculated]);
+
   // Hành động 1: Nút tính xếp hạng (Bỏ qua người không đủ điều kiện)
   const calculateRanking = async () => {
     // Rank chỉ những người admin_approved hoặc ranked
