@@ -52,7 +52,8 @@ export const exportCandidateToWord = async (candidate, signatureDataUrl = null) 
     decisionProbation,
     decisionAppointment,
     decisionSalary,
-    certificates = []
+    certificates = [],
+    evalMinute = false
   } = candidate;
 
   // Xử lý dữ liệu văn bằng
@@ -194,7 +195,7 @@ export const exportCandidateToWord = async (candidate, signatureDataUrl = null) 
               
               // 5
               createRow("5", "Tiêu chuẩn năng lực chuyên môn, nghiệp vụ; tiêu chuẩn nhiệm vụ từng chức danh thăng hạng", "", "", ""),
-              createRow("a", "Khả năng, chủ động, sáng tạo, ứng dụng, linh hoạt, hỗ trợ, hướng dẫn, thực hiện nhiệm vụ chuyên môn...\nĐối với các tiêu chuẩn không có minh chứng là các văn bằng, chứng chỉ, chứng nhận, quyết định, bằng khen, giấy khen, đề tài, đề án hoặc sản phẩm được ứng dụng trong giáo dục, giảng dạy học sinh và tài liệu có liên quan thì minh chứng là biên bản đánh giá, nhận xét về khả năng đáp ứng các tiêu chuẩn đó của tổ chuyên môn, tổ bộ môn hoặc tương đương và có xác nhận của người đứng đầu cơ sở giáo dục trực tiếp quản lý, sử dụng viên chức", "", "", ""),
+              createRow("a", "Khả năng, chủ động, sáng tạo, ứng dụng, linh hoạt, hỗ trợ, hướng dẫn, thực hiện nhiệm vụ chuyên môn...\nĐối với các tiêu chuẩn không có minh chứng là các văn bằng, chứng chỉ, chứng nhận, quyết định, bằng khen, giấy khen, đề tài, đề án hoặc sản phẩm được ứng dụng trong giáo dục, giảng dạy học sinh và tài liệu có liên quan thì minh chứng là biên bản đánh giá, nhận xét về khả năng đáp ứng các tiêu chuẩn đó của tổ chuyên môn, tổ bộ môn hoặc tương đương và có xác nhận của người đứng đầu cơ sở giáo dục trực tiếp quản lý, sử dụng viên chức", evalMinute ? "X" : "", !evalMinute ? "X" : "", ""),
               createRow("b", "Danh hiệu thi đua, hình thức khen thưởng (chiến sĩ thi đua, bằng khen, chứng nhận giáo viên dạy giỏi, giáo viên chủ nhiệm lớp giỏi, giáo viên làm tổng phụ trách Đội giỏi, quyết định, giấy khen,...), đề tài, đề án hoặc sản phẩm được ứng dụng trong hoạt động chuyên môn, tài liệu liên quan", achievements.length > 0 ? "X" : "", achievements.length === 0 ? "X" : "", achParas.length > 0 ? achParas : ""),
               
               // 6

@@ -41,6 +41,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
       achievements: [],
       otherAchievements: [],
       files: [],
+      evalMinute: false,
       status: 'draft',
       feedback_message: ''
     };
@@ -571,6 +572,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
       </section>
 
       {/* 5. Thành phần hồ sơ khác (Sơ yếu lý lịch, Nhận xét) */}
+      {/* 5. Thành phần hồ sơ khác (Sơ yếu lý lịch, Nhận xét) */}
       <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <h3 className="text-lg font-semibold border-b pb-2 mb-4 text-slate-800">V. Thành phần hồ sơ khác</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg">
@@ -579,6 +581,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
           <Checkbox disabled={isReadOnly} label="Tin học (Có chứng chỉ hoặc xác nhận)" name="certIT" checked={formData.certIT} onChange={handleChange} />
           <Checkbox disabled={isReadOnly} label="Ngoại ngữ (Có chứng chỉ hoặc xác nhận)" name="certLanguage" checked={formData.certLanguage} onChange={handleChange} />
           <Checkbox disabled={isReadOnly} label="Tiếng dân tộc thiểu số (Có chứng chỉ hoặc xác nhận)" name="certEthnic" checked={formData.certEthnic} onChange={handleChange} />
+          <Checkbox disabled={isReadOnly} label="Đã có Biên bản đánh giá năng lực của Tổ chuyên môn (Thay thế cho Sáng kiến kinh nghiệm/Bằng khen)" name="evalMinute" checked={formData.evalMinute} onChange={handleChange} />
         </div>
       </section>
 
