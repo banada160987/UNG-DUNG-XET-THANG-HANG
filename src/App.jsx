@@ -9,6 +9,7 @@ import { Login } from './pages/Login';
 import { TeacherDashboard } from './pages/TeacherDashboard';
 import { HeadDashboard } from './pages/HeadDashboard';
 import { SecretaryDashboard } from './pages/SecretaryDashboard';
+import { ActionHistory } from './components/ActionHistory';
 import { SecretaryManager } from './components/SecretaryManager';
 import { supabase } from './utils/supabaseClient';
 
@@ -83,6 +84,8 @@ function App() {
         </div>
       ) : currentPage === 'secretaries' ? (
         <SecretaryManager />
+      ) : currentPage === 'history' ? (
+        <ActionHistory />
       ) : (
         <>
           <BatchManager activeBatchId={activeBatchId} onSelectBatch={setActiveBatchId} />

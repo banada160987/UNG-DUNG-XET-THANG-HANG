@@ -4,13 +4,24 @@ import { checkEligibility } from '../utils/validation';
 import { rankCandidates, evaluateAchievements } from '../utils/ranking';
 import { ACHIEVEMENT_LEVELS } from '../data/config';
 import { StatusBadge } from '../components/StatusBadge';
-import { Download, Calculator, CheckCircle, FileText } from 'lucide-react';
+import { Download, Calculator, CheckCircle, FileText, Settings2, Save } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { showAlert, showConfirm } from '../utils/alert';
+import { useSettings } from '../contexts/SettingsContext';
+import { exportProposalWord } from '../utils/exportProposal';
 
 export const CandidateList = ({ candidates, onRefresh }) => {
   const [rankedList, setRankedList] = useState([]);
   const [hasCalculated, setHasCalculated] = useState(false);
+  const { settings, updateSettings } = useSettings();
+  const [localQuotas, setLocalQuotas] = useState({});
+  const [showQuotaConfig, setShowQuotaConfig] = useState(false);
+
+  React.useEffect(() => {
+    if (settings && settings.quotas) {
+      setLocalQuotas(settings.quotas);
+    }
+  }, [settings]);
 
   const getRankingReason = (c) => {
     try {
@@ -65,9 +76,24 @@ export const CandidateList = ({ candidates, onRefresh }) => {
   const calculateRanking = async () => {
     // Rank chỉ những người admin_approved hoặc ranked
     const valid = approvedCandidates.filter(c => c.eligibility.isValid);
-    const sortedValid = valid.sort(rankCandidates);
-    sortedValid.forEach((c, i) => c.rank = i + 1);
     
+    // Group by targetTitle to rank them separately within their title
+    const titles = [...new Set(valid.map(c => c.targetTitle))];
+    const sortedValid = [];
+    
+    titles.forEach(title => {
+      const group = valid.filter(c => c.targetTitle === title).sort(rankCandidates);
+      group.forEach((c, i) => c.rank = i + 1);
+      sortedValid.push(...group);
+    });
+
+    // Sắp xếp hiển thị theo Title rồi đến Rank
+    sortedValid.sort((a, b) => {
+       if (a.targetTitle < b.targetTitle) return -1;
+       if (a.targetTitle > b.targetTitle) return 1;
+       return a.rank - b.rank;
+    });
+
     setRankedList(sortedValid);
     setHasCalculated(true);
     
@@ -77,6 +103,12 @@ export const CandidateList = ({ candidates, onRefresh }) => {
       await supabase.from('candidates').update({ status: 'ranked' }).in('id', toUpdate);
       if(onRefresh) onRefresh();
     }
+  };
+
+  const handleSaveQuotas = async () => {
+    await updateSettings({ quotas: localQuotas });
+    showAlert('Thành công', 'Đã lưu cấu hình chỉ tiêu xét thăng hạng!');
+    setShowQuotaConfig(false);
   };
 
   const finalizeList = async () => {
@@ -94,12 +126,30 @@ export const CandidateList = ({ candidates, onRefresh }) => {
     }
   };
 
-  // Các hàm xuất Excel
+  // Các hàm xuất Excel và Tờ trình
   const exportToExcel = (data, filename) => {
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+    XLSX.utils.book_append_sheet(wb, ws, "Danh_sach");
     XLSX.writeFile(wb, `${filename}.xlsx`);
+  };
+
+  const handleExportProposal = async () => {
+    if (!hasCalculated) {
+      showAlert('Thông báo', 'Bạn cần Tính Xếp hạng ưu tiên trước khi xuất tờ trình.');
+      return;
+    }
+    const hasQuotas = Object.values(localQuotas).some(v => v > 0);
+    if (!hasQuotas) {
+      if (!confirm('Bạn chưa thiết lập Chỉ tiêu nào! Tờ trình sẽ trống. Bạn có muốn tiếp tục không?')) return;
+    }
+    
+    const success = await exportProposalWord(rankedList, localQuotas);
+    if (success) {
+      showAlert('Thành công', 'Đã tải xuống file Tờ trình thành công!');
+    } else {
+      showAlert('Lỗi', 'Không thể tạo file Word. Vui lòng thử lại sau.');
+    }
   };
 
   const exportValid = () => {
@@ -133,31 +183,73 @@ export const CandidateList = ({ candidates, onRefresh }) => {
   };
 
   const displayList = hasCalculated ? rankedList : approvedCandidates;
+  const uniqueTitles = [...new Set(approvedCandidates.filter(c => c.eligibility.isValid).map(c => c.targetTitle))];
 
   return (
     <div className="space-y-6 pb-10">
-      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
-        <div className="flex gap-2 w-full md:w-auto">
-          <button 
-            onClick={calculateRanking} 
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-bold shadow-md hover:bg-blue-700 transition-all active:scale-95"
-          >
-            <Calculator size={20} /> Xếp hạng Ưu tiên
-          </button>
-          
-          <button 
-            onClick={finalizeList} 
-            disabled={!hasCalculated}
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-slate-800 text-white px-6 py-3 rounded-lg font-bold shadow-md hover:bg-slate-900 transition-all disabled:opacity-50 disabled:grayscale"
-          >
-            <FileText size={20} /> Trình Hiệu trưởng
-          </button>
+      {/* Các action buttons */}
+      <div className="flex flex-col gap-4">
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
+          <div className="flex gap-2 w-full md:w-auto">
+            <button 
+              onClick={calculateRanking} 
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-bold shadow-md hover:bg-blue-700 transition-all active:scale-95"
+            >
+              <Calculator size={20} /> Xếp hạng Ưu tiên
+            </button>
+            
+            <button 
+              onClick={finalizeList} 
+              disabled={!hasCalculated}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-slate-800 text-white px-6 py-3 rounded-lg font-bold shadow-md hover:bg-slate-900 transition-all disabled:opacity-50 disabled:grayscale"
+            >
+              <FileText size={20} /> Trình Hiệu trưởng
+            </button>
+            
+            <button 
+              onClick={() => setShowQuotaConfig(!showQuotaConfig)} 
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white text-slate-700 border border-slate-300 px-6 py-3 rounded-lg font-bold shadow-sm hover:bg-slate-50 transition-all"
+            >
+              <Settings2 size={20} /> Chỉ tiêu
+            </button>
+          </div>
+
+          <div className="flex flex-wrap gap-2 w-full md:w-auto justify-end">
+            <ExportBtn label="Tải DS Đủ ĐK" onClick={exportValid} color="emerald" />
+            <ExportBtn label="Tải DS Xếp hạng" onClick={exportRanked} color="amber" disabled={!hasCalculated} />
+            <ExportBtn label="Xuất Tờ trình (Word)" onClick={handleExportProposal} color="blue" disabled={!hasCalculated} />
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 w-full md:w-auto justify-end">
-          <ExportBtn label="Tải DS Đủ ĐK" onClick={exportValid} color="emerald" />
-          <ExportBtn label="Tải DS Xếp hạng" onClick={exportRanked} color="amber" disabled={!hasCalculated} />
-        </div>
+        {/* Khung cấu hình chỉ tiêu */}
+        {showQuotaConfig && (
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm animate-fade-in">
+            <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Thiết lập Chỉ tiêu thăng hạng</h3>
+            {uniqueTitles.length === 0 ? (
+              <p className="text-sm text-slate-500">Chưa có hồ sơ đủ điều kiện để xét chỉ tiêu.</p>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {uniqueTitles.map(title => (
+                    <div key={title} className="flex flex-col gap-1">
+                      <label className="text-sm font-semibold text-slate-700">{title}</label>
+                      <input 
+                        type="number" min="0"
+                        className="p-2 border border-slate-300 rounded-md outline-none focus:border-blue-500"
+                        placeholder="VD: 2"
+                        value={localQuotas[title] || ''}
+                        onChange={(e) => setLocalQuotas({...localQuotas, [title]: parseInt(e.target.value) || 0})}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <button onClick={handleSaveQuotas} className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-2 rounded-md font-bold hover:bg-emerald-700 shadow-sm transition-all">
+                  <Save size={18} /> Lưu Cấu Hình
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
@@ -180,30 +272,47 @@ export const CandidateList = ({ candidates, onRefresh }) => {
                 <tr>
                   <td colSpan="5" className="p-8 text-center text-slate-400">Không có hồ sơ nào đủ điều kiện xếp hạng.</td>
                 </tr>
-              ) : displayList.map(c => (
-                <tr key={c.id} className="border-b border-slate-100 hover:bg-slate-50/50">
-                  <td className="p-4 text-center">
-                    {hasCalculated && c.eligibility.isValid ? (
-                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 text-amber-700 font-bold border border-amber-200 shadow-sm">
-                        {c.rank}
-                      </span>
-                    ) : <span className="text-slate-300">-</span>}
-                  </td>
-                  <td className="p-4">
-                    <p className="font-semibold text-slate-800">{c.fullName}</p>
-                    <p className="text-xs text-slate-500">{c.unit}</p>
-                  </td>
-                  <td className="p-4 hidden md:table-cell text-sm text-slate-600">
-                    {c.targetTitle}
-                  </td>
-                  <td className="p-4">
-                    <StatusBadge status={c.status} />
-                  </td>
-                  <td className="p-4">
-                    {getRankingReason(c)}
-                  </td>
-                </tr>
-              ))}
+              ) : displayList.map(c => {
+                const isRankedAndValid = hasCalculated && c.eligibility.isValid;
+                const quota = localQuotas[c.targetTitle] || 0;
+                const isPassed = isRankedAndValid && quota > 0 && c.rank <= quota;
+                const rowClass = isPassed ? "bg-emerald-50/50 hover:bg-emerald-100" : "hover:bg-slate-50/50";
+                
+                return (
+                  <tr key={c.id} className={`border-b border-slate-100 ${rowClass}`}>
+                    <td className="p-4 text-center">
+                      {isRankedAndValid ? (
+                        <div className="flex flex-col items-center gap-1">
+                          <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold border shadow-sm ${
+                            isPassed ? 'bg-emerald-100 text-emerald-700 border-emerald-300' : 'bg-slate-100 text-slate-500 border-slate-200'
+                          }`}>
+                            {c.rank}
+                          </span>
+                          {quota > 0 && (
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isPassed ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-200 text-slate-500'}`}>
+                              {isPassed ? 'Trúng tuyển' : 'Vượt chỉ tiêu'}
+                            </span>
+                          )}
+                        </div>
+                      ) : <span className="text-slate-300">-</span>}
+                    </td>
+                    <td className="p-4">
+                      <p className="font-semibold text-slate-800">{c.fullName}</p>
+                      <p className="text-xs text-slate-500">{c.unit}</p>
+                    </td>
+                    <td className="p-4 hidden md:table-cell text-sm text-slate-600">
+                      {c.targetTitle}
+                      {quota > 0 && <span className="ml-2 text-xs font-medium text-slate-400">(Chỉ tiêu: {quota})</span>}
+                    </td>
+                    <td className="p-4">
+                      <StatusBadge status={c.status} />
+                    </td>
+                    <td className="p-4">
+                      {getRankingReason(c)}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

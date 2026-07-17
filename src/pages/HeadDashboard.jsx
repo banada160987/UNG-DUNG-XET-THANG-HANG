@@ -8,9 +8,10 @@ import { CandidateTimeline } from '../components/CandidateTimeline';
 import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
 import { CompareModal } from '../components/CompareModal';
 import { useSettings } from '../contexts/SettingsContext';
-import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle, Send, History, Eye, Scale, Users, FileText, CheckSquare, FileSpreadsheet } from 'lucide-react';
+import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle, Send, History, Eye, Scale, Users, FileText, CheckSquare, FileSpreadsheet, Clock } from 'lucide-react';
 import { showAlert, showConfirm } from '../utils/alert';
 import { exportStatisticsWord } from '../utils/exportStatistics';
+import { ActionHistory } from '../components/ActionHistory';
 
 export const HeadDashboard = ({ department, onLogout }) => {
   const [candidates, setCandidates] = useState([]);
@@ -21,6 +22,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
   const [showCompare, setShowCompare] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [showHistory, setShowHistory] = useState(false);
   
   const { settings } = useSettings();
   
@@ -155,6 +157,12 @@ export const HeadDashboard = ({ department, onLogout }) => {
           </div>
           <div className="flex items-center gap-3">
             <button 
+              onClick={() => setShowHistory(!showHistory)} 
+              className={`flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border font-medium transition-colors ${showHistory ? 'bg-blue-100 text-blue-700 border-blue-200' : 'text-slate-600 bg-slate-50 hover:bg-slate-100 border-slate-200'}`}
+            >
+              <Clock size={16} /> Nhật ký
+            </button>
+            <button 
               onClick={() => exportStatisticsWord(displayCandidates, department)} 
               className="flex items-center gap-2 text-sm text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-lg border border-green-200 font-medium transition-colors"
             >
@@ -167,7 +175,9 @@ export const HeadDashboard = ({ department, onLogout }) => {
         </header>
 
       <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
-        {!activeBatchId ? (
+        {showHistory ? (
+          <ActionHistory />
+        ) : !activeBatchId ? (
           <div className="text-center p-8 text-slate-500 bg-white rounded-lg border">Chưa có đợt xét nào đang mở.</div>
         ) : displayCandidates.length === 0 && selectedFilter === 'all' && !searchQuery ? (
           <div className="text-center p-12 text-slate-500 bg-white rounded-lg border flex flex-col items-center">
