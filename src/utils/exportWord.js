@@ -201,7 +201,7 @@ export const exportCandidateToWord = async (candidate, signatureDataUrl = null) 
               createRow("6", "Thời gian giữ hạng: Bản sao các quyết định tuyển dụng, xét hết tập sự, bổ nhiệm ngạch, bổ nhiệm chức danh nghề nghiệp, nâng lương, thâm niên hiện hưởng, hợp đồng lao động, hợp đồng làm việc, ...", decisions.length > 0 ? "X" : "", decisions.length === 0 ? "X" : "", decisionParas.length > 0 ? decisionParas : ""),
               
               // 7
-              createRow("7", "Minh chứng các thành tích đạt được trong hoạt động nghề nghiệp đã được cấp có thẩm quyền công nhận theo Đề án (để xét ưu tiên khi số lượng viên chức đăng ký nhiều hơn chỉ tiêu thăng hạng được phê duyệt).", "", "", ""),
+              createRow("7", "Minh chứng các thành tích đạt được trong hoạt động nghề nghiệp đã được cấp có thẩm quyền công nhận theo Đề án (để xét ưu tiên khi số lượng viên chức đăng ký nhiều hơn chỉ tiêu thăng hạng được phê duyệt).", "", "X", ""),
               
               // 8
               createRow("8", "Các giấy tờ khác có liên quan (ghi rõ)", otherDocs.length > 0 ? "X" : "", otherDocs.length === 0 ? "X" : "", otherDocsParas.length > 0 ? otherDocsParas : "")
