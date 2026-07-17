@@ -8,8 +8,9 @@ import { CandidateTimeline } from '../components/CandidateTimeline';
 import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
 import { CompareModal } from '../components/CompareModal';
 import { useSettings } from '../contexts/SettingsContext';
-import { Users, FileText, CheckSquare, Search, ThumbsUp, ThumbsDown, LogOut, XCircle, Send, History, Eye, Scale } from 'lucide-react';
+import { Users, FileText, CheckSquare, Search, ThumbsUp, ThumbsDown, LogOut, XCircle, Send, History, Eye, Scale, HelpCircle } from 'lucide-react';
 import { showAlert } from '../utils/alert';
+import { UserGuideModal } from '../components/UserGuideModal';
 
 export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
   const [candidates, setCandidates] = useState([]);
@@ -17,6 +18,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
   const [activeBatchId, setActiveBatchId] = useState(null);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [sortByScore, setSortByScore] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
 
@@ -175,6 +177,14 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
       <main className="flex-1 overflow-x-hidden flex flex-col h-screen overflow-y-auto bg-slate-100">
         <header className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-40 shadow-sm">
           <h2 className="text-xl font-bold text-slate-800">Tiếp nhận & Rà soát Hồ sơ</h2>
+          <button 
+            onClick={() => setShowGuide(true)}
+            className="flex items-center gap-2 text-sm bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-100 shadow-sm font-medium border border-blue-200"
+            title="Hướng dẫn sử dụng"
+          >
+            <HelpCircle size={16} />
+            Hướng dẫn
+          </button>
         </header>
 
         <div className="p-4 md:p-8 space-y-6 max-w-6xl mx-auto w-full">
@@ -295,9 +305,13 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                             ))}
                           </div>
                         )}
-                        {c.eligibility.isValid && (
+                        {c.eligibility.isValid ? (
                           <span className="inline-flex text-xs bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded-md font-medium">
                             Hệ thống: Đủ điều kiện ban đầu
+                          </span>
+                        ) : (
+                          <span className="inline-flex text-xs bg-rose-50 text-rose-600 border border-rose-100 px-2 py-0.5 rounded-md font-medium" title={c.eligibility.missing?.join('\n')}>
+                            Hệ thống: Thiếu thông tin
                           </span>
                         )}
                         <button 
@@ -398,6 +412,10 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
           candidates={getCompareCandidates()} 
           onClose={() => setShowCompare(false)} 
         />
+      )}
+
+      {showGuide && (
+        <UserGuideModal role="secretary" onClose={() => setShowGuide(false)} />
       )}
     </div>
   );

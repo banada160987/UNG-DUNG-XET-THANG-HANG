@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { CandidateForm } from './CandidateForm';
 import { StatusBadge } from '../components/StatusBadge';
-import { AlertCircle, FileCheck, Search, Download, PenTool } from 'lucide-react';
+import { AlertCircle, FileCheck, Search, Download, PenTool, HelpCircle } from 'lucide-react';
 import { exportCandidateToWord } from '../utils/exportWord';
 import { SignatureModal } from '../components/SignatureModal';
+import { UserGuideModal } from '../components/UserGuideModal';
 import { showAlert } from '../utils/alert';
 import confetti from 'canvas-confetti';
 
@@ -14,6 +15,7 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
   const [activeBatchId, setActiveBatchId] = useState(null);
   const [activeBatch, setActiveBatch] = useState(null);
   const [showSignature, setShowSignature] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
   const [signature, setSignature] = useState(localStorage.getItem(`signature_${cccd}`) || null);
 
   useEffect(() => {
@@ -96,6 +98,14 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
           {candidate && <StatusBadge status={candidate.status} />}
         </div>
         <div className="flex items-center gap-4">
+          <button 
+            onClick={() => setShowGuide(true)}
+            className="flex items-center gap-2 text-sm bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-100 shadow-sm font-medium border border-blue-200"
+            title="Hướng dẫn sử dụng"
+          >
+            <HelpCircle size={16} />
+            Hướng dẫn
+          </button>
           {candidate && (
             <>
               <button 
@@ -199,12 +209,16 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
 
       {showSignature && (
         <SignatureModal 
-          onClose={() => setShowSignature(false)} 
-          onSave={(dataUrl) => {
-            setSignature(dataUrl);
-            localStorage.setItem(`signature_${cccd}`, dataUrl);
+          cccd={cccd} 
+          onSave={(sig) => {
+            setSignature(sig);
+            localStorage.setItem(`signature_${cccd}`, sig);
           }} 
+          onClose={() => setShowSignature(false)} 
         />
+      )}
+      {showGuide && (
+        <UserGuideModal role="teacher" onClose={() => setShowGuide(false)} />
       )}
     </div>
   );

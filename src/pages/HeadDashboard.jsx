@@ -8,16 +8,18 @@ import { CandidateTimeline } from '../components/CandidateTimeline';
 import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
 import { CompareModal } from '../components/CompareModal';
 import { useSettings } from '../contexts/SettingsContext';
-import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle, Send, History, Eye, Scale, Users, FileText, CheckSquare, FileSpreadsheet, Clock } from 'lucide-react';
+import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle, Send, History, Eye, Scale, Users, FileText, CheckSquare, FileSpreadsheet, Clock, HelpCircle } from 'lucide-react';
 import { showAlert, showConfirm } from '../utils/alert';
 import { exportStatisticsWord } from '../utils/exportStatistics';
 import { ActionHistory } from '../components/ActionHistory';
+import { UserGuideModal } from '../components/UserGuideModal';
 
 export const HeadDashboard = ({ department, onLogout }) => {
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeBatchId, setActiveBatchId] = useState(null);
   const [sortByScore, setSortByScore] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -156,6 +158,14 @@ export const HeadDashboard = ({ department, onLogout }) => {
             </h2>
           </div>
           <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setShowGuide(true)}
+              className="flex items-center gap-2 text-sm bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-100 shadow-sm font-medium border border-blue-200"
+              title="Hướng dẫn sử dụng"
+            >
+              <HelpCircle size={16} />
+              Hướng dẫn
+            </button>
             <button 
               onClick={() => setShowHistory(!showHistory)} 
               className={`flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border font-medium transition-colors ${showHistory ? 'bg-blue-100 text-blue-700 border-blue-200' : 'text-slate-600 bg-slate-50 hover:bg-slate-100 border-slate-200'}`}
@@ -412,6 +422,10 @@ export const HeadDashboard = ({ department, onLogout }) => {
           candidates={getCompareCandidates()} 
           onClose={() => setShowCompare(false)} 
         />
+      )}
+
+      {showGuide && (
+        <UserGuideModal role="head" onClose={() => setShowGuide(false)} />
       )}
     </div>
   );

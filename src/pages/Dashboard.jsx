@@ -285,9 +285,13 @@ export const Dashboard = ({ candidates, onRefresh }) => {
                       )}
                       <span className="text-sm text-slate-600 font-medium">{c.unit}</span>
                       <StatusBadge status={c.status} />
-                      {c.eligibility.isValid && (
+                      {c.eligibility.isValid ? (
                         <span className="inline-flex text-xs bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded-md font-medium">
                           Hệ thống: Đủ điều kiện ban đầu
+                        </span>
+                      ) : (
+                        <span className="inline-flex text-xs bg-rose-50 text-rose-600 border border-rose-100 px-2 py-0.5 rounded-md font-medium" title={c.eligibility.missing?.join('\n')}>
+                          Hệ thống: Thiếu thông tin
                         </span>
                       )}
                       {c.phone && (

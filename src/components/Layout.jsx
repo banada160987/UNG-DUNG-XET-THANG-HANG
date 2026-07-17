@@ -1,7 +1,9 @@
-import React from 'react';
-import { Home, List, Settings, GraduationCap, LogOut, Users, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Home, List, Settings, GraduationCap, LogOut, Users, Clock, HelpCircle } from 'lucide-react';
+import { UserGuideModal } from './UserGuideModal';
 
 export const Layout = ({ children, currentPage, setCurrentPage, onLogout }) => {
+  const [showGuide, setShowGuide] = useState(false);
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
       <aside className="w-full md:w-72 bg-slate-900 text-slate-300 flex flex-col shadow-xl flex-shrink-0 z-20">
@@ -67,9 +69,19 @@ export const Layout = ({ children, currentPage, setCurrentPage, onLogout }) => {
             {currentPage === 'history' && 'Nhật ký Hoạt động Hệ thống'}
             {currentPage === 'settings' && 'Cài đặt Hệ thống'}
           </h2>
-          <div className="flex items-center gap-2 text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
-            Máy chủ đang kết nối
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setShowGuide(true)}
+              className="flex items-center gap-2 text-sm bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-100 shadow-sm font-medium border border-blue-200"
+              title="Hướng dẫn sử dụng"
+            >
+              <HelpCircle size={16} />
+              Hướng dẫn
+            </button>
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+              Máy chủ đang kết nối
+            </div>
           </div>
         </header>
         
@@ -77,6 +89,10 @@ export const Layout = ({ children, currentPage, setCurrentPage, onLogout }) => {
           {children}
         </div>
       </main>
+
+      {showGuide && (
+        <UserGuideModal role="admin" onClose={() => setShowGuide(false)} />
+      )}
     </div>
   );
 };
