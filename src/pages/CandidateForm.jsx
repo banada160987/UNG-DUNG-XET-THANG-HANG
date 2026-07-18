@@ -1,7 +1,7 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { ACHIEVEMENT_LEVELS, TARGET_TITLES } from '../data/config';
-import { Save, X, Plus, Trash2, Send, Upload, Paperclip, AlertCircle, ScanText, Loader2, MessageSquarePlus, Download, Award, Medal, Trophy, Globe, GraduationCap, Star, CheckCircle2 } from 'lucide-react';
+import { Save, X, Plus, Trash2, Send, Upload, Paperclip, AlertCircle, ScanText, Loader2, MessageSquarePlus, Download, Award, Medal, Trophy, Globe, GraduationCap, Star, CheckCircle2, ArrowDown, ArrowUp } from 'lucide-react';
 import { DriveUploadButton } from '../components/DriveUploadButton';
 import { performOCR } from '../utils/ocr';
 import confetti from 'canvas-confetti';
@@ -139,7 +139,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
       ...formData,
       achievements: [
         ...formData.achievements,
-        { id: 'cstd_co_so', year: new Date().getFullYear(), type: 'cá nhân', decisionNo: '', link: '' }
+        { id: '', year: new Date().getFullYear(), type: 'Cá nhân', decisionNo: '', link: '' }
       ]
     });
   };
@@ -169,6 +169,29 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
 
   const removeOtherAchievement = (index) => {
     setFormData({ ...formData, otherAchievements: formData.otherAchievements.filter((_, i) => i !== index) });
+  };
+
+  const moveToOtherAchievements = (index) => {
+    const ach = formData.achievements[index];
+    const name = ACHIEVEMENT_LEVELS.find(lvl => lvl.id === ach.id)?.name || ach.id;
+    const newAch = { ...ach, id: name };
+    setFormData({
+      ...formData,
+      achievements: formData.achievements.filter((_, i) => i !== index),
+      otherAchievements: [...(formData.otherAchievements || []), newAch]
+    });
+  };
+
+  const moveToMainAchievements = (index) => {
+    const ach = formData.otherAchievements[index];
+    const matched = ACHIEVEMENT_LEVELS.find(lvl => lvl.name.toLowerCase() === ach.id.toLowerCase());
+    const newId = matched ? matched.id : '';
+    const newAch = { ...ach, id: newId };
+    setFormData({
+      ...formData,
+      otherAchievements: formData.otherAchievements.filter((_, i) => i !== index),
+      achievements: [...(formData.achievements || []), newAch]
+    });
   };
 
   const handleFileUpload = async (e) => {
@@ -237,9 +260,9 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
     }
 
     // Ràng buộc thành tích chính
-    const invalidAch = formData.achievements.some(ach => !ach.decisionNo.trim());
+    const invalidAch = formData.achievements.some(ach => !ach.id || !ach.decisionNo.trim());
     if (invalidAch) {
-      showAlert('Thiếu thông tin', 'Vui lòng nhập đầy đủ Số quyết định cho các thành tích ở phần VII.', 'warning');
+      showAlert('Thiếu thông tin', 'Vui lòng chọn Loại thành tích và nhập đầy đủ Số quyết định cho các thành tích ở phần VI.', 'warning');
       return;
     }
 
@@ -247,6 +270,25 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
     const invalidOtherAch = formData.otherAchievements?.some(ach => !ach.id.trim() || !ach.decisionNo.trim());
     if (invalidOtherAch) {
       showAlert('Thiếu thông tin', 'Vui lòng nhập đầy đủ Tên thành tích và Số quyết định cho các thành tích ở phần VIII.', 'warning');
+      return;
+    }
+
+    // Ràng buộc không cho phép nhập thành tích chính vào mục thành tích khác
+    const checkIsOfficial = (text) => {
+      const lower = text.toLowerCase().trim();
+      if (lower.length < 4) return false;
+      const exactOrPartialKeywords = [
+        'chiến sĩ thi đua', 'chiến sỹ thi đua', 'cstđ', 'cstd', 
+        'huân chương', 'nhà giáo ưu tú', 'nhà giáo nhân dân', 'ngưt', 'ngnd',
+        'bằng khen của bộ', 'bằng khen của ubnd', 'bằng khen của tỉnh', 'bằng khen thủ tướng', 'bằng khen của ban thường vụ'
+      ];
+      if (exactOrPartialKeywords.some(kw => lower.includes(kw))) return true;
+      const officialNames = ACHIEVEMENT_LEVELS.map(lvl => lvl.name.toLowerCase().trim());
+      return officialNames.some(name => name === lower || lower.includes(name) || (lower.length > 15 && name.includes(lower)));
+    };
+    const overlappingAch = formData.otherAchievements?.find(ach => checkIsOfficial(ach.id));
+    if (overlappingAch) {
+      showAlert('Sai vị trí thành tích', `Thành tích "${overlappingAch.id}" thuộc danh mục Thành tích chính quy định tại Kế hoạch 125. Vui lòng bấm nút mũi tên chuyển thành tích này lên mục VI để hợp lệ và được tính điểm.`, 'warning');
       return;
     }
 
@@ -638,6 +680,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                     onChange={(e) => updateAchievement(index, 'id', e.target.value)}
                     className="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white disabled:bg-slate-100"
                   >
+                    <option value="" disabled hidden>-- Chọn loại thành tích --</option>
                     {ACHIEVEMENT_LEVELS.map(lvl => (
                       <option key={lvl.id} value={lvl.id}>{lvl.name}</option>
                     ))}
@@ -668,9 +711,14 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                     filePrefix={filePrefix}
                   />
                   {!isReadOnly && (
-                    <button type="button" onClick={() => removeAchievement(index)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg">
-                      <Trash2 size={18} />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button type="button" onClick={() => moveToOtherAchievements(index)} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg" title="Chuyển xuống Thành tích khác">
+                        <ArrowDown size={18} />
+                      </button>
+                      <button type="button" onClick={() => removeAchievement(index)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg">
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   )}
                 </div>
                 
@@ -683,9 +731,14 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                     filePrefix={filePrefix}
                   />
                   {!isReadOnly && (
-                    <button type="button" onClick={() => removeAchievement(index)} className="text-xs text-rose-500 hover:underline flex items-center gap-1">
-                      <Trash2 size={12} /> Xóa thành tích
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button type="button" onClick={() => moveToOtherAchievements(index)} className="text-xs text-blue-500 hover:underline flex items-center gap-1">
+                        <ArrowDown size={12} /> Chuyển xuống Mục VIII
+                      </button>
+                      <button type="button" onClick={() => removeAchievement(index)} className="text-xs text-rose-500 hover:underline flex items-center gap-1">
+                        <Trash2 size={12} /> Xóa thành tích
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -749,9 +802,14 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                     filePrefix={filePrefix}
                   />
                   {!isReadOnly && (
-                    <button type="button" onClick={() => removeOtherAchievement(index)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg">
-                      <Trash2 size={18} />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button type="button" onClick={() => moveToMainAchievements(index)} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg" title="Chuyển lên Thành tích chính">
+                        <ArrowUp size={18} />
+                      </button>
+                      <button type="button" onClick={() => removeOtherAchievement(index)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg">
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   )}
                 </div>
                 
@@ -764,9 +822,14 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                     filePrefix={filePrefix}
                   />
                   {!isReadOnly && (
-                    <button type="button" onClick={() => removeOtherAchievement(index)} className="text-xs text-rose-500 hover:underline flex items-center gap-1">
-                      <Trash2 size={12} /> Xóa thành tích
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button type="button" onClick={() => moveToMainAchievements(index)} className="text-xs text-blue-500 hover:underline flex items-center gap-1">
+                        <ArrowUp size={12} /> Chuyển lên Mục VI
+                      </button>
+                      <button type="button" onClick={() => removeOtherAchievement(index)} className="text-xs text-rose-500 hover:underline flex items-center gap-1">
+                        <Trash2 size={12} /> Xóa thành tích
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
