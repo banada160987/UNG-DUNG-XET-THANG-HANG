@@ -1,8 +1,11 @@
-import React, { useMemo } from 'react';
-import { X, BarChart2, Award, FileText, CheckCircle, Clock } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { X, BarChart2, Award, FileText, CheckCircle, Clock, Download } from 'lucide-react';
+import { exportDetailedStatsWord } from '../utils/exportDetailedStats';
 import { ACHIEVEMENT_LEVELS } from '../data/config';
 
 export const StatisticsModal = ({ candidates, onClose, unitName }) => {
+  const [isExporting, setIsExporting] = useState(false);
+  
   const stats = useMemo(() => {
     const total = candidates.length;
     const evaluated = candidates.filter(c => c.status === 'admin_approved' || c.status === 'admin_rejected').length;
@@ -113,9 +116,23 @@ export const StatisticsModal = ({ candidates, onClose, unitName }) => {
               <p className="text-sm text-slate-500">Dữ liệu tổng hợp từ {stats.total} hồ sơ {unitName ? `- ${unitName}` : ''}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
-            <X size={24} />
-          </button>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={async () => {
+                setIsExporting(true);
+                await exportDetailedStatsWord(stats, unitName);
+                setIsExporting(false);
+              }}
+              disabled={isExporting}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg font-medium transition-colors disabled:opacity-50"
+            >
+              <Download size={18} />
+              {isExporting ? 'Đang xuất...' : 'Xuất Word'}
+            </button>
+            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+              <X size={24} />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
