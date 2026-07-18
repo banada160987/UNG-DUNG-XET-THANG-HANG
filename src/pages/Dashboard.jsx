@@ -9,8 +9,9 @@ import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
 import { CompareModal } from '../components/CompareModal';
 import { SettingsModal } from '../components/SettingsModal';
 import { StatisticsModal } from '../components/StatisticsModal';
+import { AIReportModal } from '../components/AIReportModal';
 import { useSettings } from '../contexts/SettingsContext';
-import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye, Trash2, Scale, Settings, FileSpreadsheet, BarChart2 } from 'lucide-react';
+import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye, Trash2, Scale, Settings, FileSpreadsheet, BarChart2, Sparkles } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import { showAlert, showConfirm, showPrompt } from '../utils/alert';
 import { exportStatisticsWord } from '../utils/exportStatistics';
@@ -25,6 +26,7 @@ export const Dashboard = ({ candidates, onRefresh }) => {
   const [showCompare, setShowCompare] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showStatistics, setShowStatistics] = useState(false);
+  const [showAIReport, setShowAIReport] = useState(false);
 
   const { settings } = useSettings();
 
@@ -244,6 +246,12 @@ export const Dashboard = ({ candidates, onRefresh }) => {
               <BarChart2 size={16} /> Chi tiết thành tích
             </button>
             <button 
+              onClick={() => setShowAIReport(true)} 
+              className="flex items-center gap-2 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-lg border border-purple-200 font-medium transition-colors"
+            >
+              <Sparkles size={16} /> Phân tích AI
+            </button>
+            <button 
               onClick={() => setShowSettings(true)} 
               className="flex items-center gap-2 text-sm text-slate-700 bg-white hover:bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-300 font-medium transition-colors"
             >
@@ -408,6 +416,7 @@ export const Dashboard = ({ candidates, onRefresh }) => {
       )}
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
       {showStatistics && <StatisticsModal candidates={displayList} onClose={() => setShowStatistics(false)} />}
+      {showAIReport && <AIReportModal candidates={displayList} unitName={selectedUnit === 'all' ? "Toàn trường" : selectedUnit} onClose={() => setShowAIReport(false)} />}
     </div>
   );
 };

@@ -8,11 +8,12 @@ import { CandidateTimeline } from '../components/CandidateTimeline';
 import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
 import { CompareModal } from '../components/CompareModal';
 import { StatisticsModal } from '../components/StatisticsModal';
+import { AIReportModal } from '../components/AIReportModal';
+import { UserGuideModal } from '../components/UserGuideModal';
 import { useSettings } from '../contexts/SettingsContext';
-import { Users, FileText, CheckSquare, Search, ThumbsUp, ThumbsDown, LogOut, XCircle, Send, History, Eye, Scale, HelpCircle, BarChart2, FileSpreadsheet } from 'lucide-react';
+import { Users, FileText, CheckSquare, Search, ThumbsUp, ThumbsDown, LogOut, XCircle, Send, History, Eye, Scale, HelpCircle, BarChart2, FileSpreadsheet, Sparkles } from 'lucide-react';
 import { showAlert } from '../utils/alert';
 import { exportStatisticsWord } from '../utils/exportStatistics';
-import { UserGuideModal } from '../components/UserGuideModal';
 
 export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
   const [candidates, setCandidates] = useState([]);
@@ -21,6 +22,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [sortByScore, setSortByScore] = useState(false);
   const [showStatistics, setShowStatistics] = useState(false);
+  const [showAIReport, setShowAIReport] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
@@ -200,6 +202,12 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
               className="flex items-center gap-2 text-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg border border-indigo-200 font-medium transition-colors"
             >
               <BarChart2 size={16} /> Chi tiết thành tích
+            </button>
+            <button 
+              onClick={() => setShowAIReport(true)} 
+              className="flex items-center gap-2 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-lg border border-purple-200 font-medium transition-colors"
+            >
+              <Sparkles size={16} /> Phân tích AI
             </button>
           </div>
         </header>
@@ -432,6 +440,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
       )}
 
       {showStatistics && <StatisticsModal candidates={displayList} onClose={() => setShowStatistics(false)} />}
+      {showAIReport && <AIReportModal candidates={displayList} unitName={`Thư ký ${secretaryInfo.fullName}`} onClose={() => setShowAIReport(false)} />}
       {showGuide && (
         <UserGuideModal role="secretary" onClose={() => setShowGuide(false)} />
       )}
