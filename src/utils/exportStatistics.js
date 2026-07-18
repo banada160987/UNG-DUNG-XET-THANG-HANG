@@ -1,5 +1,6 @@
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, BorderStyle, AlignmentType, VerticalAlign, PageOrientation } from 'docx';
 import { saveAs } from 'file-saver';
+import { ACHIEVEMENT_LEVELS } from '../data/config';
 
 // Helper to create TextRun
 const createText = (text, bold = false, italic = false, size = 22, color = "000000") => 
@@ -148,6 +149,10 @@ export const exportStatisticsWord = async (candidates, unitName = "Toàn trườ
         else if (ach.id === 'gk_so_nganh_xa') {
           if (textIncludes(ach, ['sở', 'sgd'])) counts.gk_so++;
           else counts.gk_ban++;
+        }
+        else {
+          const achObj = ACHIEVEMENT_LEVELS.find(lvl => lvl.id === ach.id);
+          counts.khac.push(achObj ? achObj.name : ach.id);
         }
       });
 

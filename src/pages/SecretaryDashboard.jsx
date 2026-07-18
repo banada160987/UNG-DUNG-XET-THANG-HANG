@@ -7,9 +7,11 @@ import { StatusBadge } from '../components/StatusBadge';
 import { CandidateTimeline } from '../components/CandidateTimeline';
 import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
 import { CompareModal } from '../components/CompareModal';
+import { StatisticsModal } from '../components/StatisticsModal';
 import { useSettings } from '../contexts/SettingsContext';
-import { Users, FileText, CheckSquare, Search, ThumbsUp, ThumbsDown, LogOut, XCircle, Send, History, Eye, Scale, HelpCircle } from 'lucide-react';
+import { Users, FileText, CheckSquare, Search, ThumbsUp, ThumbsDown, LogOut, XCircle, Send, History, Eye, Scale, HelpCircle, BarChart2, FileSpreadsheet } from 'lucide-react';
 import { showAlert } from '../utils/alert';
+import { exportStatisticsWord } from '../utils/exportStatistics';
 import { UserGuideModal } from '../components/UserGuideModal';
 
 export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
@@ -18,6 +20,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
   const [activeBatchId, setActiveBatchId] = useState(null);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [sortByScore, setSortByScore] = useState(false);
+  const [showStatistics, setShowStatistics] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
@@ -177,14 +180,28 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
       <main className="flex-1 overflow-x-hidden flex flex-col h-screen overflow-y-auto bg-slate-100">
         <header className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-40 shadow-sm">
           <h2 className="text-xl font-bold text-slate-800">Tiếp nhận & Rà soát Hồ sơ</h2>
-          <button 
-            onClick={() => setShowGuide(true)}
-            className="flex items-center gap-2 text-sm bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-100 shadow-sm font-medium border border-blue-200"
-            title="Hướng dẫn sử dụng"
-          >
-            <HelpCircle size={16} />
-            Hướng dẫn
-          </button>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setShowGuide(true)}
+              className="flex items-center gap-2 text-sm bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-100 shadow-sm font-medium border border-blue-200"
+              title="Hướng dẫn sử dụng"
+            >
+              <HelpCircle size={16} />
+              Hướng dẫn
+            </button>
+            <button 
+              onClick={() => exportStatisticsWord(displayList, "Danh sách phụ trách")} 
+              className="flex items-center gap-2 text-sm text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-lg border border-green-200 font-medium transition-colors"
+            >
+              <FileSpreadsheet size={16} /> Xuất thống kê
+            </button>
+            <button 
+              onClick={() => setShowStatistics(true)} 
+              className="flex items-center gap-2 text-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg border border-indigo-200 font-medium transition-colors"
+            >
+              <BarChart2 size={16} /> Chi tiết thành tích
+            </button>
+          </div>
         </header>
 
         <div className="p-4 md:p-8 space-y-6 max-w-6xl mx-auto w-full">
@@ -414,6 +431,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
         />
       )}
 
+      {showStatistics && <StatisticsModal candidates={displayList} onClose={() => setShowStatistics(false)} />}
       {showGuide && (
         <UserGuideModal role="secretary" onClose={() => setShowGuide(false)} />
       )}

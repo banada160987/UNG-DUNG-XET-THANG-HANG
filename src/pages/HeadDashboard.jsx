@@ -7,8 +7,9 @@ import { StatusBadge } from '../components/StatusBadge';
 import { CandidateTimeline } from '../components/CandidateTimeline';
 import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
 import { CompareModal } from '../components/CompareModal';
+import { StatisticsModal } from '../components/StatisticsModal';
 import { useSettings } from '../contexts/SettingsContext';
-import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle, Send, History, Eye, Scale, Users, FileText, CheckSquare, FileSpreadsheet, Clock, HelpCircle } from 'lucide-react';
+import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle, Send, History, Eye, Scale, Users, FileText, CheckSquare, FileSpreadsheet, Clock, HelpCircle, BarChart2 } from 'lucide-react';
 import { showAlert, showConfirm } from '../utils/alert';
 import { exportStatisticsWord } from '../utils/exportStatistics';
 import { ActionHistory } from '../components/ActionHistory';
@@ -25,6 +26,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [showHistory, setShowHistory] = useState(false);
+  const [showStatistics, setShowStatistics] = useState(false);
   
   const { settings } = useSettings();
   
@@ -177,6 +179,12 @@ export const HeadDashboard = ({ department, onLogout }) => {
               className="flex items-center gap-2 text-sm text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-lg border border-green-200 font-medium transition-colors"
             >
               <FileSpreadsheet size={16} /> Xuất thống kê
+            </button>
+            <button 
+              onClick={() => setShowStatistics(true)} 
+              className="flex items-center gap-2 text-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg border border-indigo-200 font-medium transition-colors"
+            >
+              <BarChart2 size={16} /> Chi tiết thành tích
             </button>
             <button onClick={onLogout} className="text-sm text-rose-600 hover:bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-200 font-medium">
               Thoát
@@ -423,6 +431,8 @@ export const HeadDashboard = ({ department, onLogout }) => {
           onClose={() => setShowCompare(false)} 
         />
       )}
+      
+      {showStatistics && <StatisticsModal candidates={displayCandidates} onClose={() => setShowStatistics(false)} />}
 
       {showGuide && (
         <UserGuideModal role="head" onClose={() => setShowGuide(false)} />
