@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import { ACHIEVEMENT_LEVELS } from '../data/config';
 
 export const AIReportModal = ({ candidates, onClose, unitName = "Toàn trường" }) => {
-  const [apiKey, setApiKey] = useState(localStorage.getItem('gemini_api_key') || 'AIzaSyBr4fb8gUk02KzQ1E-23Tma5lq3R6naSKM');
+  const [apiKey, setApiKey] = useState(localStorage.getItem('gemini_api_key') || '');
   const [isGenerating, setIsGenerating] = useState(false);
   const [report, setReport] = useState('');
   const [error, setError] = useState('');
