@@ -22,6 +22,16 @@ const createCell = (children, widthPercent, bold = false, align = AlignmentType.
   });
 };
 
+// Helper to create Cell with multiple paragraphs
+const createMultiParaCell = (paras, widthPercent, valign = VerticalAlign.CENTER) => {
+  return new TableCell({
+    children: paras.length > 0 ? paras : [createPara([createText(" ")])],
+    width: { size: widthPercent, type: WidthType.PERCENTAGE },
+    verticalAlign: valign,
+    margins: { top: 100, bottom: 100, left: 100, right: 100 },
+  });
+};
+
 export const exportDetailedStatsWord = async (stats, unitName = "Toàn trường") => {
   try {
     const doc = new Document({
@@ -101,7 +111,7 @@ export const exportDetailedStatsWord = async (stats, unitName = "Toàn trường
 
                 return new TableRow({
                   children: [
-                    createCell([
+                    createMultiParaCell([
                       createPara([createText(lvl.name, true)]),
                       createPara([createText(usersText, false, true, 24, "555555")]),
                     ], 70),
@@ -130,7 +140,7 @@ export const exportDetailedStatsWord = async (stats, unitName = "Toàn trường
 
                 return new TableRow({
                   children: [
-                    createCell([
+                    createMultiParaCell([
                       createPara([createText(data.name, true)]),
                       createPara([createText(usersText, false, true, 24, "555555")]),
                     ], 70),
@@ -156,7 +166,7 @@ export const exportDetailedStatsWord = async (stats, unitName = "Toàn trường
               ...stats.otherAchs.map(ach => {
                 return new TableRow({
                   children: [
-                    createCell([
+                    createMultiParaCell([
                       createPara([createText(ach.name, true)]),
                       createPara([createText(ach.unit, false, true, 24)]),
                     ], 30),
