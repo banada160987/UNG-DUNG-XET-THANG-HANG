@@ -22,9 +22,22 @@ const createCell = (children, widthPercent, bold = false, align = AlignmentType.
   });
 };
 
+// Helper to create multi-paragraph cell for lists
+const createMultiParaCell = (paras, widthPercent, valign = VerticalAlign.CENTER, rowSpan = 1, columnSpan = 1) => {
+  return new TableCell({
+    children: paras.length > 0 ? paras : [createPara([createText("")])],
+    width: { size: widthPercent, type: WidthType.PERCENTAGE },
+    verticalAlign: valign,
+    rowSpan,
+    columnSpan,
+    margins: { top: 100, bottom: 100, left: 100, right: 100 },
+  });
+};
+
 const textIncludes = (obj, keywords) => {
-  const text = ((obj.id || '') + ' ' + (obj.name || '')).toLowerCase().normalize('NFC');
-  return keywords.some(k => text.includes(k.toLowerCase().normalize('NFC')));
+  const text = typeof obj === 'string' ? obj : ((obj.id || '') + ' ' + (obj.name || ''));
+  const lower = text.toLowerCase().normalize('NFC');
+  return keywords.some(k => lower.includes(k.toLowerCase().normalize('NFC')));
 };
 
 export const exportStatisticsWord = async (candidates, unitName = "Toàn trường") => {
@@ -115,7 +128,7 @@ export const exportStatisticsWord = async (candidates, unitName = "Toàn trườ
 
     candidates.forEach((cand, idx) => {
       const stt = (idx + 1).toString();
-      const name = cand.fullName || '';
+      const name = (cand.fullName || '').toUpperCase(); // 1) Viết hoa tên
 
       // T1 Data
       const t1 = {
@@ -137,47 +150,41 @@ export const exportStatisticsWord = async (candidates, unitName = "Toàn trườ
         ht_khen: 0, cd_khen: 0, dtn_khen: 0, khac: []
       };
 
-      (cand.achievements || []).forEach(ach => {
-        if (ach.id === 'bk_ubnd_tinh') counts.bk_ubndt++;
-        else if (ach.id === 'bk_ldld_tinhdoan') {
+      const mapAchievement = (ach) => {
+        const textStr = typeof ach === 'string' ? ach : (ach.id || ach.name || '');
+        if (!textStr) return;
+        
+        // 2) Chủ động đưa thành tích vào đúng cột
+        if (ach.id === 'bk_ubnd_tinh' || textIncludes(ach, ['ubnd tỉnh'])) counts.bk_ubndt++;
+        else if (ach.id === 'cstd_cap_tinh' || textIncludes(ach, ['cstđ cấp tỉnh', 'cstđ tỉnh', 'chiến sĩ thi đua cấp tỉnh'])) counts.cstd_tinh++;
+        else if (ach.id === 'cstd_co_so' || textIncludes(ach, ['cstđ cơ sở', 'chiến sĩ thi đua cơ sở'])) counts.cstd_cs++;
+        else if (ach.id === 'gk_so_nganh_xa' || textIncludes(ach, ['sở giáo dục', 'giám đốc sở'])) counts.gk_so++;
+        else if (textIncludes(ach, ['giấy khen của thủ trưởng', 'chủ tịch ubnd', 'ngành', 'ban', 'gk ban'])) counts.gk_ban++;
+        else if (ach.id === 'bk_ldld_tinhdoan' || textIncludes(ach, ['lđlđ', 'liên đoàn lao động', 'tỉnh đoàn', 'thành đoàn', 'đoàn thanh niên'])) {
           if (textIncludes(ach, ['đoàn', 'đtn', 'thanh niên', 'tn'])) counts.bk_tinhdoan++;
           else counts.bk_ldld++;
         }
-        else if (ach.id === 'cstd_cap_tinh') counts.cstd_tinh++;
-        else if (ach.id === 'cstd_co_so') counts.cstd_cs++;
-        else if (ach.id === 'gk_so_nganh_xa') {
-          if (textIncludes(ach, ['sở', 'sgd'])) counts.gk_so++;
-          else counts.gk_ban++;
-        }
-        else {
-          // Xử lý các thành tích nhập tay (legacy hoặc bị đưa nhầm vào achievements)
-          if (textIncludes(ach, ['gvdg', 'dạy giỏi'])) counts.gvdg++;
-          else if (textIncludes(ach, ['gvcng', 'chủ nhiệm'])) counts.gvcng++;
-          else if (textIncludes(ach, ['skkn', 'sáng kiến'])) counts.skkn.push(ach.id || ach.name);
-          else if (textIncludes(ach, ['ht', 'hiệu trưởng'])) counts.ht_khen++;
-          else if (textIncludes(ach, ['cđ', 'công đoàn'])) counts.cd_khen++;
-          else if (textIncludes(ach, ['đtn', 'thanh niên'])) counts.dtn_khen++;
-          else {
-            const achObj = ACHIEVEMENT_LEVELS.find(lvl => lvl.id === ach.id);
-            counts.khac.push(achObj ? achObj.name : ach.id);
-          }
-        }
-      });
-
-      (cand.otherAchievements || []).forEach(ach => {
-        if (textIncludes(ach, ['gvdg', 'dạy giỏi'])) counts.gvdg++;
-        else if (textIncludes(ach, ['gvcng', 'chủ nhiệm'])) counts.gvcng++;
-        else if (textIncludes(ach, ['skkn', 'sáng kiến'])) counts.skkn.push(ach.id || ach.name);
-        else if (textIncludes(ach, ['ht', 'hiệu trưởng'])) counts.ht_khen++;
+        else if (textIncludes(ach, ['gvdg', 'dạy giỏi', 'giáo viên dạy giỏi'])) counts.gvdg++;
+        else if (textIncludes(ach, ['gvcng', 'chủ nhiệm', 'gvcn'])) counts.gvcng++;
+        else if (textIncludes(ach, ['skkn', 'sáng kiến'])) counts.skkn.push(textStr);
+        else if (textIncludes(ach, ['ht ', 'hiệu trưởng', 'trường khen', 'cấp trường khen'])) counts.ht_khen++;
         else if (textIncludes(ach, ['cđ', 'công đoàn'])) counts.cd_khen++;
-        else if (textIncludes(ach, ['đtn', 'thanh niên'])) counts.dtn_khen++;
-        else counts.khac.push(ach.id || ach.name);
-      });
+        else if (textIncludes(ach, ['đtn', 'đoàn trường'])) counts.dtn_khen++;
+        else {
+          const achObj = typeof ach === 'object' ? ACHIEVEMENT_LEVELS.find(lvl => lvl.id === ach.id) : null;
+          counts.khac.push(achObj ? achObj.name : textStr);
+        }
+      };
+
+      (cand.achievements || []).forEach(mapAchievement);
+      (cand.otherAchievements || []).forEach(mapAchievement);
 
       const formatCount = (c) => c > 0 ? c.toString() : '';
       const formatCountX = (c) => c > 0 ? 'X' : '';
-      const formatSkkn = () => counts.skkn.length > 0 ? counts.skkn.map(k => `- ${k}`).join('\n') : '';
-      const formatKhac = () => counts.khac.length > 0 ? counts.khac.map(k => `- ${k}`).join('\n') : '';
+      
+      // 3) Xuống dòng mỗi danh hiệu bằng cách tạo nhiều Paragraph
+      const formatSkknParas = () => counts.skkn.map(k => createPara([createText(`- ${k}`, false, false, 22)], AlignmentType.LEFT));
+      const formatKhacParas = () => counts.khac.map(k => createPara([createText(`- ${k}`, false, false, 22)], AlignmentType.LEFT));
 
       table1Rows.push(new TableRow({
         children: [
@@ -210,13 +217,14 @@ export const exportStatisticsWord = async (candidates, unitName = "Toàn trườ
         ]
       }));
 
+      // 4) Chuẩn hoá định dạng cho dễ hiểu
       table3Rows.push(new TableRow({
         children: [
           createCell([createText(stt)], 5, true),
           createCell([createText(name, true)], 20, false, AlignmentType.LEFT),
           createCell([createText(formatCountX(counts.gvcng))], 10),
-          createCell([createText(formatSkkn())], 25, false, AlignmentType.LEFT),
-          createCell([createText(formatKhac())], 40, false, AlignmentType.LEFT)
+          createMultiParaCell(formatSkknParas(), 25, VerticalAlign.TOP),
+          createMultiParaCell(formatKhacParas(), 40, VerticalAlign.TOP)
         ]
       }));
 
@@ -229,7 +237,7 @@ export const exportStatisticsWord = async (candidates, unitName = "Toàn trườ
           createCell([createText(formatCount(counts.dtn_khen))], 10),
           createCell([createText(formatCountX(counts.gvdg))], 10),
           createCell([createText(formatCountX(counts.gvcng))], 10),
-          createCell([createText(formatKhac())], 25, false, AlignmentType.LEFT)
+          createMultiParaCell(formatKhacParas(), 25, VerticalAlign.TOP)
         ]
       }));
     });
