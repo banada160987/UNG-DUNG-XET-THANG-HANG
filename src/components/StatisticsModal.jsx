@@ -17,6 +17,17 @@ export const StatisticsModal = ({ candidates, onClose }) => {
       officialCount[lvl.id] = { count: 0, users: [] };
     });
 
+    const otherStats = {
+      skkn: { name: 'Sáng kiến kinh nghiệm', count: 0, users: [] },
+      gvcng: { name: 'Giáo viên chủ nhiệm giỏi', count: 0, users: [] },
+      gvdg: { name: 'Giáo viên dạy giỏi', count: 0, users: [] },
+      ht_khen: { name: 'Hiệu trưởng khen', count: 0, users: [] },
+      cd_nganh: { name: 'Công đoàn ngành khen', count: 0, users: [] },
+      td_bmt: { name: 'Thành đoàn BMT khen', count: 0, users: [] },
+      cd_truong: { name: 'Công đoàn trường khen', count: 0, users: [] },
+      dt_khen: { name: 'Đoàn trường khen', count: 0, users: [] },
+    };
+
     // Danh sách thành tích khác
     const otherAchs = [];
 
@@ -24,29 +35,67 @@ export const StatisticsModal = ({ candidates, onClose }) => {
       if (c.gender === 'Nam') males++;
       else if (c.gender === 'Nữ') females++;
 
-      if (c.achievements) {
-        c.achievements.forEach(ach => {
-          if (officialCount[ach.id] !== undefined) {
-            officialCount[ach.id].count++;
-            officialCount[ach.id].users.push(c.fullName);
-          }
-        });
-      }
-
-      if (c.otherAchievements) {
-        c.otherAchievements.forEach(ach => {
+      const processAchText = (ach) => {
+        const text = typeof ach === 'string' ? ach : (ach.id || ach.name || '');
+        const lowerText = text.toLowerCase();
+        
+        if (lowerText.includes('sáng kiến') || lowerText.includes('skkn')) {
+          otherStats.skkn.count++;
+          otherStats.skkn.users.push(c.fullName);
+        } else if (lowerText.includes('chủ nhiệm') || lowerText.includes('gvcng')) {
+          otherStats.gvcng.count++;
+          otherStats.gvcng.users.push(c.fullName);
+        } else if (lowerText.includes('dạy giỏi') || lowerText.includes('gvdg')) {
+          otherStats.gvdg.count++;
+          otherStats.gvdg.users.push(c.fullName);
+        } else if (lowerText.includes('hiệu trưởng') || lowerText.includes('ht khen')) {
+          otherStats.ht_khen.count++;
+          otherStats.ht_khen.users.push(c.fullName);
+        } else if (lowerText.includes('công đoàn ngành') || lowerText.includes('cđ ngành')) {
+          otherStats.cd_nganh.count++;
+          otherStats.cd_nganh.users.push(c.fullName);
+        } else if (lowerText.includes('công đoàn trường') || lowerText.includes('cđ trường') || lowerText.includes('công đoàn')) {
+           if (lowerText.includes('ngành')) {
+             otherStats.cd_nganh.count++;
+             otherStats.cd_nganh.users.push(c.fullName);
+           } else {
+             otherStats.cd_truong.count++;
+             otherStats.cd_truong.users.push(c.fullName);
+           }
+        } else if (lowerText.includes('thành đoàn') || lowerText.includes('bmt')) {
+          otherStats.td_bmt.count++;
+          otherStats.td_bmt.users.push(c.fullName);
+        } else if (lowerText.includes('đoàn trường') || lowerText.includes('đtn trường') || lowerText.includes('đoàn thanh niên')) {
+          otherStats.dt_khen.count++;
+          otherStats.dt_khen.users.push(c.fullName);
+        } else {
           otherAchs.push({
             name: c.fullName,
             unit: c.unit,
             achName: ach.id || ach.name,
             decisionNo: ach.decisionNo
           });
+        }
+      };
+
+      if (c.achievements) {
+        c.achievements.forEach(ach => {
+          if (officialCount[ach.id] !== undefined) {
+            officialCount[ach.id].count++;
+            officialCount[ach.id].users.push(c.fullName);
+          } else {
+            processAchText(ach);
+          }
         });
+      }
+
+      if (c.otherAchievements) {
+        c.otherAchievements.forEach(processAchText);
       }
     });
 
     return {
-      total, evaluated, pending, males, females, officialCount, otherAchs
+      total, evaluated, pending, males, females, officialCount, otherStats, otherAchs
     };
   }, [candidates]);
 
@@ -140,6 +189,55 @@ export const StatisticsModal = ({ candidates, onClose }) => {
                     <tr>
                       <td colSpan="2" className="py-8 text-center text-slate-500 italic">
                         Chưa có dữ liệu thành tích chuẩn nào được ghi nhận.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm mb-6 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
+              <Award size={18} className="text-purple-500" />
+              <h3 className="font-semibold text-slate-800">Thống kê Danh hiệu & Thành tích bổ sung</h3>
+            </div>
+            <div className="p-0">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-600">
+                    <th className="py-3 px-5 font-medium">Tên thành tích</th>
+                    <th className="py-3 px-5 font-medium text-center w-24">Số lượng</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {Object.entries(stats.otherStats).filter(([_, data]) => data.count > 0).map(([key, data]) => {
+                    return (
+                      <tr key={key} className="hover:bg-slate-50 transition-colors">
+                        <td className="py-3 px-5 text-slate-700">
+                          <span className="font-medium text-slate-800 block mb-1">{data.name}</span>
+                          {data.users.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {data.users.map((u, i) => (
+                                <span key={i} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                                  {u}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-3 px-5 text-center align-top">
+                          <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-purple-100 text-purple-700 font-semibold mt-0.5">
+                            {data.count}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {Object.values(stats.otherStats).every(v => v.count === 0) && (
+                    <tr>
+                      <td colSpan="2" className="py-8 text-center text-slate-500 italic">
+                        Chưa có thành tích bổ sung nào được ghi nhận.
                       </td>
                     </tr>
                   )}
