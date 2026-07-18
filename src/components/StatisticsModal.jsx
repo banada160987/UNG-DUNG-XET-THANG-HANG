@@ -14,7 +14,7 @@ export const StatisticsModal = ({ candidates, onClose }) => {
     // Đếm thành tích chuẩn
     const officialCount = {};
     ACHIEVEMENT_LEVELS.forEach(lvl => {
-      officialCount[lvl.id] = 0;
+      officialCount[lvl.id] = { count: 0, users: [] };
     });
 
     // Danh sách thành tích khác
@@ -27,7 +27,8 @@ export const StatisticsModal = ({ candidates, onClose }) => {
       if (c.achievements) {
         c.achievements.forEach(ach => {
           if (officialCount[ach.id] !== undefined) {
-            officialCount[ach.id]++;
+            officialCount[ach.id].count++;
+            officialCount[ach.id].users.push(c.fullName);
           }
         });
       }
@@ -107,20 +108,29 @@ export const StatisticsModal = ({ candidates, onClose }) => {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {ACHIEVEMENT_LEVELS.map(lvl => {
-                    const count = stats.officialCount[lvl.id];
-                    if (count === 0) return null; // Chỉ hiển thị các thành tích có người đạt
+                    const data = stats.officialCount[lvl.id];
+                    if (data.count === 0) return null; // Chỉ hiển thị các thành tích có người đạt
                     return (
                       <tr key={lvl.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="py-3 px-5 text-slate-800 font-medium">{lvl.name}</td>
-                        <td className="py-3 px-5 text-center">
-                          <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold">
-                            {count}
+                        <td className="py-3 px-5 text-slate-800">
+                          <div className="font-medium">{lvl.name}</div>
+                          <div className="text-xs text-slate-500 mt-1 flex flex-wrap gap-1">
+                            {data.users.map((u, i) => (
+                              <span key={i} className="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200">
+                                {u}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="py-3 px-5 text-center align-top">
+                          <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold mt-0.5">
+                            {data.count}
                           </span>
                         </td>
                       </tr>
                     );
                   })}
-                  {Object.values(stats.officialCount).every(v => v === 0) && (
+                  {Object.values(stats.officialCount).every(v => v.count === 0) && (
                     <tr>
                       <td colSpan="2" className="py-8 text-center text-slate-500 italic">
                         Chưa có dữ liệu thành tích chuẩn nào được ghi nhận.
