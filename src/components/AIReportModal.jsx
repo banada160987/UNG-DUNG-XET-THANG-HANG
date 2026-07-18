@@ -37,7 +37,7 @@ Nhiệm vụ: Hãy phân tích số liệu và viết một báo cáo phân tíc
 Dữ liệu danh sách giáo viên và thành tích của họ (định dạng JSON):
 ${JSON.stringify(compactData, null, 2)}
 
-Yêu cầu nội dung báo cáo (trình bày bằng Markdown đẹp mắt):
+Yêu cầu nội dung báo cáo (trình bày bằng Markdown đẹp mắt, VIẾT ĐẦY ĐỦ VÀ CHI TIẾT 4 PHẦN SAU):
 1. Đánh giá tổng quan bức tranh thành tích của đơn vị.
 2. Vinh danh cụ thể những cá nhân có thành tích xuất sắc nhất (dựa trên các bằng khen cấp cao).
 3. Chỉ ra những điểm yếu/thiếu sót chung hoặc những loại thành tích mà đa số giáo viên còn thiếu.
@@ -74,7 +74,13 @@ Yêu cầu nội dung báo cáo (trình bày bằng Markdown đẹp mắt):
             topK: 40,
             topP: 0.95,
             maxOutputTokens: 2048,
-          }
+          },
+          safetySettings: [
+            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+          ]
         })
       });
 
