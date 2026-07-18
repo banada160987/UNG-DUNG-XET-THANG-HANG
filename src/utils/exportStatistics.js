@@ -3,8 +3,10 @@ import { saveAs } from 'file-saver';
 import { ACHIEVEMENT_LEVELS } from '../data/config';
 
 // Helper to create TextRun
-const createText = (text, bold = false, italic = false, size = 22, color = "000000") => 
-  new TextRun({ text: text || "", bold, italic, size, font: "Times New Roman", color });
+const createText = (text, bold = false, italic = false, size = 22, color = "000000") => {
+  const safeText = (text === undefined || text === null || String(text).trim() === "") ? " " : String(text);
+  return new TextRun({ text: safeText, bold, italic, size, font: "Times New Roman", color });
+};
 
 // Helper to create Paragraph
 const createPara = (children, alignment = AlignmentType.CENTER, spacing = { before: 60, after: 60, line: 240 }) => 
