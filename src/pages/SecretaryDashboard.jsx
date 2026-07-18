@@ -439,7 +439,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
         />
       )}
 
-      {showStatistics && <StatisticsModal candidates={displayList} onClose={() => setShowStatistics(false)} />}
+      {showStatistics && <StatisticsModal candidates={displayList} unitName={`Thư ký ${secretaryInfo.fullName}`} onClose={() => setShowStatistics(false)} />}
       {showAIReport && <AIReportModal candidates={displayList} unitName={`Thư ký ${secretaryInfo.fullName}`} onClose={() => setShowAIReport(false)} />}
       {showGuide && (
         <UserGuideModal role="secretary" onClose={() => setShowGuide(false)} />

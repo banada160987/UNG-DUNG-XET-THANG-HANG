@@ -415,7 +415,7 @@ export const Dashboard = ({ candidates, onRefresh }) => {
         />
       )}
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
-      {showStatistics && <StatisticsModal candidates={displayList} onClose={() => setShowStatistics(false)} />}
+      {showStatistics && <StatisticsModal candidates={displayList} unitName={selectedUnit === 'all' ? "Toàn trường" : selectedUnit} onClose={() => setShowStatistics(false)} />}
       {showAIReport && <AIReportModal candidates={displayList} unitName={selectedUnit === 'all' ? "Toàn trường" : selectedUnit} onClose={() => setShowAIReport(false)} />}
     </div>
   );

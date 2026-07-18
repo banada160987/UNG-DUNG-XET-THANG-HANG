@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { X, BarChart2, Award, FileText, CheckCircle, Clock } from 'lucide-react';
 import { ACHIEVEMENT_LEVELS } from '../data/config';
 
-export const StatisticsModal = ({ candidates, onClose }) => {
+export const StatisticsModal = ({ candidates, onClose, unitName }) => {
   const stats = useMemo(() => {
     const total = candidates.length;
     const evaluated = candidates.filter(c => c.status === 'admin_approved' || c.status === 'admin_rejected').length;
@@ -110,7 +110,7 @@ export const StatisticsModal = ({ candidates, onClose }) => {
             </div>
             <div>
               <h2 className="text-xl font-bold text-slate-800">Thống kê Thành tích Chi tiết</h2>
-              <p className="text-sm text-slate-500">Dữ liệu tổng hợp từ {stats.total} hồ sơ</p>
+              <p className="text-sm text-slate-500">Dữ liệu tổng hợp từ {stats.total} hồ sơ {unitName ? `- ${unitName}` : ''}</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
@@ -218,11 +218,17 @@ export const StatisticsModal = ({ candidates, onClose }) => {
                           <span className="font-medium text-slate-800 block mb-1">{data.name}</span>
                           {data.users.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {data.users.map((u, i) => (
-                                <span key={i} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                                  {u}
-                                </span>
-                              ))}
+                              {(() => {
+                                const userCounts = {};
+                                data.users.forEach(u => {
+                                  userCounts[u] = (userCounts[u] || 0) + 1;
+                                });
+                                return Object.entries(userCounts).map(([u, c], i) => (
+                                  <span key={i} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200 uppercase">
+                                    {u} {c > 1 ? `(${c})` : ''}
+                                  </span>
+                                ));
+                              })()}
                             </div>
                           )}
                         </td>
