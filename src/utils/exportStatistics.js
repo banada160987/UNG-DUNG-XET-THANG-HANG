@@ -23,9 +23,8 @@ const createCell = (children, widthPercent, bold = false, align = AlignmentType.
 };
 
 const textIncludes = (obj, keywords) => {
-  if (!obj) return false;
-  const str = ((obj.id || '') + ' ' + (obj.decisionNo || '')).toLowerCase();
-  return keywords.some(kw => str.includes(kw));
+  const text = ((obj.id || '') + ' ' + (obj.name || '')).toLowerCase().normalize('NFC');
+  return keywords.some(k => text.includes(k.toLowerCase().normalize('NFC')));
 };
 
 export const exportStatisticsWord = async (candidates, unitName = "Toàn trường") => {
@@ -151,8 +150,17 @@ export const exportStatisticsWord = async (candidates, unitName = "Toàn trườ
           else counts.gk_ban++;
         }
         else {
-          const achObj = ACHIEVEMENT_LEVELS.find(lvl => lvl.id === ach.id);
-          counts.khac.push(achObj ? achObj.name : ach.id);
+          // Xử lý các thành tích nhập tay (legacy hoặc bị đưa nhầm vào achievements)
+          if (textIncludes(ach, ['gvdg', 'dạy giỏi'])) counts.gvdg++;
+          else if (textIncludes(ach, ['gvcng', 'chủ nhiệm'])) counts.gvcng++;
+          else if (textIncludes(ach, ['skkn', 'sáng kiến'])) counts.skkn.push(ach.id || ach.name);
+          else if (textIncludes(ach, ['ht', 'hiệu trưởng'])) counts.ht_khen++;
+          else if (textIncludes(ach, ['cđ', 'công đoàn'])) counts.cd_khen++;
+          else if (textIncludes(ach, ['đtn', 'thanh niên'])) counts.dtn_khen++;
+          else {
+            const achObj = ACHIEVEMENT_LEVELS.find(lvl => lvl.id === ach.id);
+            counts.khac.push(achObj ? achObj.name : ach.id);
+          }
         }
       });
 
@@ -168,8 +176,8 @@ export const exportStatisticsWord = async (candidates, unitName = "Toàn trườ
 
       const formatCount = (c) => c > 0 ? c.toString() : '';
       const formatCountX = (c) => c > 0 ? 'X' : '';
-      const formatSkkn = () => counts.skkn.length > 0 ? `${counts.skkn.length}: ${counts.skkn.join(', ')}` : '';
-      const formatKhac = () => counts.khac.length > 0 ? counts.khac.join(', ') : '';
+      const formatSkkn = () => counts.skkn.length > 0 ? counts.skkn.map(k => `- ${k}`).join('\n') : '';
+      const formatKhac = () => counts.khac.length > 0 ? counts.khac.map(k => `- ${k}`).join('\n') : '';
 
       table1Rows.push(new TableRow({
         children: [

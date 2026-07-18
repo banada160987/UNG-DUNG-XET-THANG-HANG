@@ -115,11 +115,17 @@ export const StatisticsModal = ({ candidates, onClose }) => {
                         <td className="py-3 px-5 text-slate-800">
                           <div className="font-medium">{lvl.name}</div>
                           <div className="text-xs text-slate-500 mt-1 flex flex-wrap gap-1">
-                            {data.users.map((u, i) => (
-                              <span key={i} className="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200">
-                                {u}
-                              </span>
-                            ))}
+                            {(() => {
+                              const userCounts = {};
+                              data.users.forEach(u => {
+                                userCounts[u] = (userCounts[u] || 0) + 1;
+                              });
+                              return Object.entries(userCounts).map(([u, c], i) => (
+                                <span key={i} className="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200">
+                                  {u} {c > 1 ? `(${c})` : ''}
+                                </span>
+                              ));
+                            })()}
                           </div>
                         </td>
                         <td className="py-3 px-5 text-center align-top">
