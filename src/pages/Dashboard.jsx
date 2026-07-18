@@ -303,6 +303,11 @@ export const Dashboard = ({ candidates, onRefresh }) => {
             <option value="all">Tất cả Tổ</option>
             {barData.map(u => <option key={u.name} value={u.name}>{u.name}</option>)}
           </select>
+          {selectedForCompare.length >= 2 && (
+            <button onClick={() => setShowCompare(true)} className="flex items-center justify-center gap-2 text-sm bg-orange-50 border border-orange-200 hover:bg-orange-100 text-orange-700 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none">
+              <Scale size={16} /> Đối sánh ({selectedForCompare.length})
+            </button>
+          )}
           <button onClick={() => setShowStatistics(true)} className="flex items-center justify-center gap-2 text-sm bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none">
             <BarChart2 size={16} /> Chi tiết
           </button>
