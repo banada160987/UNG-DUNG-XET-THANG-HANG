@@ -11,7 +11,7 @@ import { SettingsModal } from '../components/SettingsModal';
 import { StatisticsModal } from '../components/StatisticsModal';
 import { AIReportModal } from '../components/AIReportModal';
 import { useSettings } from '../contexts/SettingsContext';
-import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye, Trash2, Scale, Settings, FileSpreadsheet, BarChart2, Sparkles } from 'lucide-react';
+import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye, Trash2, Scale, Settings, FileSpreadsheet, BarChart2, Sparkles, AlertTriangle, CheckCircle } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import { showAlert, showConfirm, showPrompt } from '../utils/alert';
 import { exportStatisticsWord } from '../utils/exportStatistics';
@@ -75,7 +75,7 @@ export const Dashboard = ({ candidates, onRefresh }) => {
     }
   };
 
-  // Thống kê
+  // Thống kê đếm
   const totalCount = evaluated.length;
   const waitingAdminCount = evaluated.filter(c => c.status === 'head_approved').length;
   const reviewingCount = evaluated.filter(c => c.status === 'admin_reviewing').length;
@@ -104,14 +104,42 @@ export const Dashboard = ({ candidates, onRefresh }) => {
     return candidates.filter(c => selectedForCompare.includes(c.id));
   };
 
-  // Dữ liệu Biểu đồ tròn
+  // Các biểu đồ thống kê
   const pieData = [
     { name: 'Đủ điều kiện', value: evaluated.filter(c => ['admin_approved', 'ranked', 'finalized'].includes(c.status)).length, color: '#10b981' },
     { name: 'Đang rà soát', value: evaluated.filter(c => ['admin_reviewing', 'head_approved'].includes(c.status)).length, color: '#f59e0b' },
     { name: 'Trả lại/Loại', value: evaluated.filter(c => ['returned', 'admin_rejected', 'head_rejected'].includes(c.status)).length, color: '#f43f5e' },
   ].filter(d => d.value > 0);
 
-  // Dữ liệu Biểu đồ cột
+  const genderData = useMemo(() => {
+    let male = 0, female = 0;
+    evaluated.forEach(c => {
+      if (c.gender === 'Nam') male++;
+      else if (c.gender === 'Nữ') female++;
+    });
+    return [
+      { name: 'Nam', value: male, color: '#3b82f6' },
+      { name: 'Nữ', value: female, color: '#ec4899' }
+    ].filter(d => d.value > 0);
+  }, [evaluated]);
+
+  const degreeData = useMemo(() => {
+    let ts = 0, ths = 0, dh = 0, khac = 0;
+    evaluated.forEach(c => {
+      if (!c.degrees || c.degrees.length === 0) khac++;
+      else if (c.degrees.some(d => d.level === 'Tiến sĩ')) ts++;
+      else if (c.degrees.some(d => d.level === 'Thạc sĩ')) ths++;
+      else if (c.degrees.some(d => d.level === 'Đại học')) dh++;
+      else khac++;
+    });
+    return [
+      { name: 'Tiến sĩ', value: ts, color: '#8b5cf6' },
+      { name: 'Thạc sĩ', value: ths, color: '#6366f1' },
+      { name: 'Đại học', value: dh, color: '#0ea5e9' },
+      { name: 'Chưa rõ', value: khac, color: '#cbd5e1' }
+    ].filter(d => d.value > 0);
+  }, [evaluated]);
+
   const barData = useMemo(() => {
     const counts = {};
     evaluated.forEach(c => {
@@ -123,9 +151,24 @@ export const Dashboard = ({ candidates, onRefresh }) => {
     })).sort((a, b) => b.total - a.total);
   }, [evaluated]);
 
+  const missingData = useMemo(() => {
+    const counts = {};
+    evaluated.forEach(c => {
+      if (!c.eligibility.isValid) {
+        c.eligibility.missing.forEach(m => {
+          counts[m] = (counts[m] || 0) + 1;
+        });
+      }
+    });
+    return Object.keys(counts).map(k => ({
+      name: k,
+      total: counts[k]
+    })).sort((a, b) => b.total - a.total).slice(0, 5); // top 5 lỗi
+  }, [evaluated]);
+
   return (
     <div className="space-y-6 pb-10">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard 
           title="Tất cả Hồ sơ" 
           value={totalCount} 
@@ -161,46 +204,62 @@ export const Dashboard = ({ candidates, onRefresh }) => {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 h-80 flex flex-col">
-          <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
-            Tỉ lệ phê duyệt
-          </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 h-72 flex flex-col">
+          <h3 className="font-semibold text-slate-800 mb-2">Tỉ lệ phê duyệt</h3>
           <div className="flex-1 min-h-0">
-            {pieData.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-slate-400">Chưa có dữ liệu</div>
-            ) : (
+            {pieData.length === 0 ? <div className="h-full flex items-center justify-center text-slate-400">Chưa có dữ liệu</div> :
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
+                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={5} dataKey="value">
+                    {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                   </Pie>
                   <RechartsTooltip />
                   <Legend verticalAlign="bottom" height={36}/>
                 </PieChart>
               </ResponsiveContainer>
-            )}
+            }
           </div>
         </div>
-
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 h-80 flex flex-col">
-          <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
-            Số lượng nộp theo Tổ
-          </h3>
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 h-72 flex flex-col">
+          <h3 className="font-semibold text-slate-800 mb-2">Cơ cấu Giới tính</h3>
           <div className="flex-1 min-h-0">
-            {barData.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-slate-400">Chưa có dữ liệu</div>
-            ) : (
+            {genderData.length === 0 ? <div className="h-full flex items-center justify-center text-slate-400">Chưa có dữ liệu</div> :
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={genderData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={5} dataKey="value">
+                    {genderData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                  </Pie>
+                  <RechartsTooltip />
+                  <Legend verticalAlign="bottom" height={36}/>
+                </PieChart>
+              </ResponsiveContainer>
+            }
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 h-72 flex flex-col">
+          <h3 className="font-semibold text-slate-800 mb-2">Trình độ chuyên môn</h3>
+          <div className="flex-1 min-h-0">
+            {degreeData.length === 0 ? <div className="h-full flex items-center justify-center text-slate-400">Chưa có dữ liệu</div> :
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={degreeData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={5} dataKey="value">
+                    {degreeData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                  </Pie>
+                  <RechartsTooltip />
+                  <Legend verticalAlign="bottom" height={36}/>
+                </PieChart>
+              </ResponsiveContainer>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 h-80 flex flex-col">
+          <h3 className="font-semibold text-slate-800 mb-2">Số lượng nộp theo Tổ</h3>
+          <div className="flex-1 min-h-0">
+            {barData.length === 0 ? <div className="h-full flex items-center justify-center text-slate-400">Chưa có dữ liệu</div> :
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={barData} layout="vertical" margin={{ left: 50, right: 20 }}>
                   <XAxis type="number" hide />
@@ -209,188 +268,174 @@ export const Dashboard = ({ candidates, onRefresh }) => {
                   <Bar dataKey="total" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} />
                 </BarChart>
               </ResponsiveContainer>
-            )}
+            }
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 h-80 flex flex-col">
+          <h3 className="font-semibold text-slate-800 mb-2">Thiếu sót phổ biến (Top 5)</h3>
+          <div className="flex-1 min-h-0">
+            {missingData.length === 0 ? <div className="h-full flex items-center justify-center text-emerald-500">Tuyệt vời! Không có thiếu sót nào.</div> :
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={missingData} layout="vertical" margin={{ left: 10, right: 20 }}>
+                  <XAxis type="number" hide />
+                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} fontSize={11} width={150} interval={0} />
+                  <RechartsTooltip cursor={{fill: '#f8fafc'}} />
+                  <Bar dataKey="total" fill="#ef4444" radius={[0, 4, 4, 0]} barSize={20} />
+                </BarChart>
+              </ResponsiveContainer>
+            }
           </div>
         </div>
       </div>
       
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <h3 className="font-bold text-slate-800 flex items-center gap-2">
-              <FileText size={18} className="text-slate-500" />
-              Danh sách rà soát cấp Trường ({displayList.length})
-            </h3>
-            
-            <select 
-              value={selectedUnit}
-              onChange={(e) => setSelectedUnit(e.target.value)}
-              className="text-sm border border-slate-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-            >
-              <option value="all">Tất cả Tổ</option>
-              {barData.map(u => (
-                <option key={u.name} value={u.name}>{u.name}</option>
-              ))}
-            </select>
-
-            <button 
-              onClick={() => exportStatisticsWord(displayList, selectedUnit === 'all' ? "Toàn trường" : selectedUnit)} 
-              className="flex items-center gap-2 text-sm text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-lg border border-green-200 font-medium transition-colors"
-            >
-              <FileSpreadsheet size={16} /> Xuất thống kê
-            </button>
-            <button 
-              onClick={() => setShowStatistics(true)} 
-              className="flex items-center gap-2 text-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg border border-indigo-200 font-medium transition-colors"
-            >
-              <BarChart2 size={16} /> Chi tiết thành tích
-            </button>
-            <button 
-              onClick={() => setShowAIReport(true)} 
-              className="flex items-center gap-2 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-lg border border-purple-200 font-medium transition-colors"
-            >
-              <Sparkles size={16} /> Phân tích AI
-            </button>
-            <button 
-              onClick={() => setShowSettings(true)} 
-              className="flex items-center gap-2 text-sm text-slate-700 bg-white hover:bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-300 font-medium transition-colors"
-            >
-              <Settings size={16} /> Cấu hình tính điểm
-            </button>
-          </div>
-          <div className="flex gap-2">
-            {settings?.use_scoring !== false && (
-              <button 
-                onClick={() => setSortByScore(!sortByScore)}
-                className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${sortByScore ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}
-              >
-                {sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
-              </button>
-            )}
-            {selectedForCompare.length >= 2 && (
-              <button
-                onClick={() => setShowCompare(true)}
-                className="px-3 py-1.5 text-sm font-medium rounded-lg border bg-blue-600 text-white border-blue-600 hover:bg-blue-700 flex items-center gap-1 shadow-sm transition-colors"
-              >
-                <Scale size={16} /> Bàn cân đối chiếu ({selectedForCompare.length})
-              </button>
-            )}
-          </div>
+      {/* Toolbar & Filter */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mt-8 mb-4">
+        <h3 className="font-bold text-xl text-slate-800 flex items-center gap-2">
+          <FileText className="text-blue-500" />
+          Danh sách hồ sơ ({displayList.length})
+        </h3>
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          <select 
+            value={selectedUnit}
+            onChange={(e) => setSelectedUnit(e.target.value)}
+            className="text-sm border border-slate-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[150px] shadow-sm flex-1 md:flex-none"
+          >
+            <option value="all">Tất cả Tổ</option>
+            {barData.map(u => <option key={u.name} value={u.name}>{u.name}</option>)}
+          </select>
+          <button onClick={() => setShowStatistics(true)} className="flex items-center justify-center gap-2 text-sm bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none">
+            <BarChart2 size={16} /> Chi tiết
+          </button>
+          <button onClick={() => setShowAIReport(true)} className="flex items-center justify-center gap-2 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none">
+            <Sparkles size={16} /> Báo cáo AI
+          </button>
+          <button onClick={() => exportStatisticsWord(displayList, selectedUnit === 'all' ? "Toàn trường" : selectedUnit)} className="flex items-center justify-center gap-2 text-sm text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none">
+            <FileSpreadsheet size={16} /> Xuất Word
+          </button>
+          <button onClick={() => setShowSettings(true)} className="flex items-center justify-center gap-2 text-sm bg-slate-800 text-white hover:bg-slate-700 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none">
+            <Settings size={16} /> Cấu hình
+          </button>
         </div>
-        <div className="divide-y divide-slate-100 max-h-[600px] overflow-y-auto">
-          {displayList.length === 0 ? (
-            <p className="text-center p-8 text-slate-400">Không có dữ liệu phù hợp.</p>
-          ) : displayList.map(c => {
-            return (
-            <div key={c.id} className="p-4 border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
-              <div className="flex justify-between items-start mb-2">
-                  <div className="flex items-center gap-3">
-                    <div className="pt-1">
-                      <input 
-                        type="checkbox"
-                        className="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer"
-                        checked={selectedForCompare.includes(c.id)}
-                        onChange={() => handleToggleCompare(c.id)}
-                      />
-                    </div>
-                    <div>
-                    <p className="font-semibold text-slate-800 text-lg">{c.fullName} <span className="text-sm font-normal text-slate-500">({c.cccd})</span></p>
-                    <div className="flex flex-wrap items-center gap-2 mt-1 mb-2">
-                      {settings?.use_scoring !== false && (
-                        <span className="text-sm font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Điểm: {c.score}</span>
-                      )}
-                      <span className="text-sm text-slate-600 font-medium">{c.unit}</span>
-                      <StatusBadge status={c.status} />
-                      {c.eligibility.isValid ? (
-                        <span className="inline-flex text-xs bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded-md font-medium">
-                          Hệ thống: Đủ điều kiện ban đầu
-                        </span>
-                      ) : (
-                        <span className="inline-flex text-xs bg-rose-50 text-rose-600 border border-rose-100 px-2 py-0.5 rounded-md font-medium" title={c.eligibility.missing?.join('\n')}>
-                          Hệ thống: Thiếu thông tin
-                        </span>
-                      )}
-                      {c.phone && (
-                        <button 
-                          onClick={() => {
-                            const missingDocs = c.eligibility && !c.eligibility.isValid ? c.eligibility.missing.map(m => `- ${m}`).join('\n') : '';
-                            const msg = missingDocs 
-                              ? `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô trên hệ thống đang thiếu các thông tin/giấy tờ sau:\n${missingDocs}\n\nThầy/cô vui lòng bổ sung sớm nhé!`
-                              : `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô đã được tiếp nhận.`;
-                            navigator.clipboard.writeText(msg).then(() => {
-                              showAlert('Thông báo', "Đã copy sẵn tin nhắn báo thiếu hồ sơ!\nBạn chỉ cần ấn Ctrl+V (Dán) vào khung chat Zalo nhé.");
-                              window.location.href = `zalo://conversation?phone=${c.phone}`;
-                            });
-                          }}
-                          className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded border border-blue-200 hover:bg-blue-100 transition-colors"
-                        >
-                          <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M21.2 5.54C20.66 4.3 19.8 3.2 18.66 2.45C17.06 1.4 14.86 0.7 12 0.7C9.14 0.7 6.94 1.4 5.34 2.45C4.2 3.2 3.34 4.3 2.8 5.54C2.26 6.8 2 8.18 2 9.7C2 11.22 2.26 12.6 2.8 13.86C3.34 15.1 4.2 16.2 5.34 16.95C6.38 17.65 7.6 18.15 8.95 18.42C8.86 18.73 8.7 19.12 8.44 19.55C8.04 20.24 7.54 20.9 7 21.46L6.82 21.65C6.73 21.75 6.64 21.86 6.55 21.98C6.32 22.25 6.42 22.65 6.72 22.78C6.88 22.84 7.05 22.85 7.22 22.78C9.56 22 11.4 20.88 12.86 19.62C14 19.53 15.1 19.26 16.1 18.84C18.25 17.9 19.98 16.42 21.1 14.48C21.7 13.4 22 12.24 22 10.98C22 9.15 21.7 7.34 21.2 5.54Z"/></svg>
-                          Zalo: {c.phone}
-                        </button>
-                      )}
-                    </div>
-                    
-                    {!c.eligibility.isValid && (
-                      <div className="flex flex-wrap gap-1">
-                        {c.eligibility.missing.map((err, i) => (
-                          <span key={i} className="inline-flex text-xs bg-rose-50 text-rose-600 border border-rose-100 px-2 py-0.5 rounded-md font-medium">
-                            {err}
-                          </span>
-                        ))}
-                      </div>
+      </div>
+
+      {/* Candidate Flex/Grid Cards */}
+      <div className="flex flex-col gap-4">
+        {displayList.length === 0 ? (
+          <p className="text-center p-8 text-slate-400 bg-white rounded-xl border border-slate-200 border-dashed">Không có dữ liệu hồ sơ phù hợp.</p>
+        ) : displayList.map(c => (
+          <div key={c.id} className="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-slate-200 hover:border-blue-300 transition-all flex flex-col md:flex-row gap-4 md:gap-6 items-start md:items-center">
+            
+            {/* Column 1: Info */}
+            <div className="flex-1 min-w-0 w-full">
+              <div className="flex items-start gap-3">
+                <input 
+                  type="checkbox" 
+                  className="mt-1.5 w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer" 
+                  checked={selectedForCompare.includes(c.id)} 
+                  onChange={() => handleToggleCompare(c.id)}
+                />
+                <div>
+                  <h4 className="font-bold text-slate-800 text-lg uppercase leading-tight mb-1 truncate">{c.fullName}</h4>
+                  <p className="text-sm text-slate-500 mb-2 flex items-center gap-2">
+                    <span>CCCD: {c.cccd}</span>
+                    <span className="text-slate-300">|</span>
+                    <span>Nộp: {new Date(c.created_at).toLocaleDateString('vi-VN')}</span>
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="px-2.5 py-1 bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold rounded-md">{c.unit}</span>
+                    {settings?.use_scoring !== false && (
+                      <span className="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 text-xs font-bold rounded-md shadow-sm">Điểm: {c.score}</span>
                     )}
+                    {c.phone && (
+                      <button 
+                        onClick={() => {
+                          const missingDocs = c.eligibility && !c.eligibility.isValid ? c.eligibility.missing.map(m => `- ${m}`).join('\n') : '';
+                          const msg = missingDocs 
+                            ? `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô trên hệ thống đang thiếu các thông tin/giấy tờ sau:\n${missingDocs}\n\nThầy/cô vui lòng bổ sung sớm nhé!`
+                            : `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô đã được tiếp nhận.`;
+                          navigator.clipboard.writeText(msg).then(() => {
+                            showAlert('Thông báo', "Đã copy sẵn tin nhắn báo thiếu hồ sơ!\nBạn chỉ cần ấn Ctrl+V (Dán) vào khung chat Zalo nhé.");
+                            window.location.href = `zalo://conversation?phone=${c.phone}`;
+                          });
+                        }}
+                        className="flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 text-xs font-semibold rounded-md transition-colors"
+                      >
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M21.2 5.54C20.66 4.3 19.8 3.2 18.66 2.45C17.06 1.4 14.86 0.7 12 0.7C9.14 0.7 6.94 1.4 5.34 2.45C4.2 3.2 3.34 4.3 2.8 5.54C2.26 6.8 2 8.18 2 9.7C2 11.22 2.26 12.6 2.8 13.86C3.34 15.1 4.2 16.2 5.34 16.95C6.38 17.65 7.6 18.15 8.95 18.42C8.86 18.73 8.7 19.12 8.44 19.55C8.04 20.24 7.54 20.9 7 21.46L6.82 21.65C6.73 21.75 6.64 21.86 6.55 21.98C6.32 22.25 6.42 22.65 6.72 22.78C6.88 22.84 7.05 22.85 7.22 22.78C9.56 22 11.4 20.88 12.86 19.62C14 19.53 15.1 19.26 16.1 18.84C18.25 17.9 19.98 16.42 21.1 14.48C21.7 13.4 22 12.24 22 10.98C22 9.15 21.7 7.34 21.2 5.54Z"/></svg>
+                        Zalo: {c.phone}
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <button 
-                  onClick={() => setTimelineCandId(c.id)}
-                  className="inline-flex items-center gap-1 text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded hover:bg-slate-200 mt-2 shadow-sm"
-                >
-                  <History size={14} /> Xem lịch sử thao tác
+              </div>
+            </div>
+
+            {/* Column 2: Missing Warning */}
+            <div className="w-full md:w-64 flex flex-col shrink-0">
+              {c.eligibility.isValid ? (
+                <div className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-lg">
+                  <CheckCircle size={16} />
+                  <span className="text-xs font-semibold">Đủ điều kiện ban đầu</span>
+                </div>
+              ) : (
+                <div className="px-3 py-2 bg-rose-50 border border-rose-100 rounded-lg">
+                  <div className="flex items-center gap-1.5 text-rose-600 mb-1.5">
+                    <AlertTriangle size={16} />
+                    <span className="text-xs font-bold">Thiếu sót:</span>
+                  </div>
+                  <ul className="list-disc pl-5 text-xs text-rose-600 space-y-0.5 font-medium">
+                    {c.eligibility.missing.map((err, i) => <li key={i}>{err}</li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {/* Column 3: Status & Action Buttons */}
+            <div className="w-full md:w-48 flex flex-col md:items-end gap-2 shrink-0 border-t md:border-t-0 md:border-l border-slate-100 pt-3 md:pt-0 md:pl-6">
+              <div className="w-full flex justify-between md:justify-end items-center gap-3">
+                <StatusBadge status={c.status} />
+                <button onClick={() => setTimelineCandId(c.id)} className="text-xs text-slate-500 hover:text-blue-600 flex items-center gap-1 font-medium bg-slate-50 px-2 py-1 rounded">
+                  <History size={14} /> Lịch sử
                 </button>
               </div>
-              
-              {/* Vùng thao tác của Admin */}
-              <div className="flex flex-col gap-2 min-w-[200px]">
-                <button 
-                  onClick={() => setViewCand(c)}
-                  className="flex items-center justify-center gap-1 text-sm bg-blue-50 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-100 shadow-sm mb-1"
-                >
-                  <Eye size={16} /> Xem Chi Tiết Hồ Sơ
+
+              <div className="w-full grid grid-cols-2 gap-2 mt-2">
+                <button onClick={() => setViewCand(c)} className="col-span-2 flex items-center justify-center gap-1 px-3 py-1.5 text-sm font-medium bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-100 hover:border-blue-200 rounded-lg transition-colors shadow-sm">
+                  <Eye size={16} /> Xem Chi Tiết
                 </button>
-                
+
                 {c.status === 'head_approved' && (
-                  <button onClick={() => updateStatus(c.id, 'admin_reviewing')} className="flex items-center justify-center gap-1 text-sm bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 shadow-sm">
+                  <button onClick={() => updateStatus(c.id, 'admin_reviewing')} className="col-span-2 flex items-center justify-center gap-1 px-3 py-1.5 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors shadow-sm">
                     <Search size={16} /> Bắt đầu rà soát
                   </button>
                 )}
-                
+
                 {c.status === 'admin_reviewing' && (
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => updateStatus(c.id, 'admin_approved')} className="flex-1 flex items-center justify-center gap-1 text-sm bg-emerald-600 text-white px-2 py-2 rounded-lg hover:bg-emerald-700 shadow-sm">
-                      <ThumbsUp size={16} /> Đủ ĐK
+                  <>
+                    <button onClick={() => updateStatus(c.id, 'admin_approved')} className="flex items-center justify-center gap-1 px-2 py-1.5 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg shadow-sm transition-colors">
+                      <ThumbsUp size={14} /> Duyệt
                     </button>
-                    <button onClick={() => updateStatus(c.id, 'admin_rejected')} className="flex-1 flex items-center justify-center gap-1 text-sm bg-white border border-rose-300 text-rose-600 px-2 py-2 rounded-lg hover:bg-rose-50 shadow-sm">
-                      <ThumbsDown size={16} /> Loại
+                    <button onClick={() => updateStatus(c.id, 'admin_rejected')} className="flex items-center justify-center gap-1 px-2 py-1.5 text-sm font-medium bg-white border border-rose-300 text-rose-600 hover:bg-rose-50 rounded-lg shadow-sm transition-colors">
+                      <ThumbsDown size={14} /> Loại
                     </button>
-                  </div>
+                  </>
                 )}
-                
-                {['admin_approved', 'admin_rejected', 'ranked', 'finalized'].includes(c.status) && (
-                  <button onClick={() => updateStatus(c.id, 'admin_reviewing')} className="text-xs text-slate-500 hover:text-blue-600 underline text-right">
+              </div>
+
+              <div className="w-full flex justify-between items-center mt-1">
+                {['admin_approved', 'admin_rejected', 'ranked', 'finalized'].includes(c.status) ? (
+                  <button onClick={() => updateStatus(c.id, 'admin_reviewing')} className="text-xs text-slate-400 hover:text-blue-600 underline">
                     Rà soát lại
                   </button>
-                )}
+                ) : <span />}
                 
-                <button 
-                  onClick={() => handleDeleteCandidate(c.id, c.fullName)}
-                  className="mt-2 text-xs text-rose-500 hover:text-rose-700 underline text-right flex items-center justify-end gap-1"
-                >
-                  <Trash2 size={12} /> Xóa hồ sơ
+                <button onClick={() => handleDeleteCandidate(c.id, c.fullName)} className="text-xs text-rose-400 hover:text-rose-600 underline flex items-center gap-1">
+                  <Trash2 size={12} /> Xóa
                 </button>
               </div>
-              </div>
             </div>
-          )})}
-        </div>
+
+          </div>
+        ))}
       </div>
 
       {timelineCandId && (
@@ -438,7 +483,3 @@ const StatCard = ({ title, value, icon, bgColor, active, onClick, pulse }) => (
     </div>
   </div>
 );
-
-
-
-
