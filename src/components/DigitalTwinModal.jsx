@@ -195,8 +195,8 @@ export const DigitalTwinModal = ({ candidate, onClose, onReject }) => {
                     
                     {/* Bằng cấp */}
                     <div className="flex items-start gap-2">
-                      {eligibility.warnings.some(w => w.includes('Văn bằng')) ? <XCircle size={14} className="text-rose-500 mt-0.5 shrink-0" /> : <CheckCircle size={14} className="text-emerald-500 mt-0.5 shrink-0" />}
-                      <span className={eligibility.warnings.some(w => w.includes('Văn bằng')) ? 'text-rose-700' : 'text-slate-600'}>
+                      {eligibility.missing && eligibility.missing.some(w => w.includes('Văn bằng')) ? <XCircle size={14} className="text-rose-500 mt-0.5 shrink-0" /> : <CheckCircle size={14} className="text-emerald-500 mt-0.5 shrink-0" />}
+                      <span className={eligibility.missing && eligibility.missing.some(w => w.includes('Văn bằng')) ? 'text-rose-700' : 'text-slate-600'}>
                         Điều kiện Văn bằng: {candidate.degrees?.length > 0 ? 'Đã cung cấp đủ' : 'Chưa nhập văn bằng'}
                       </span>
                     </div>
@@ -209,14 +209,14 @@ export const DigitalTwinModal = ({ candidate, onClose, onReject }) => {
 
                     {/* Thành tích */}
                     <div className="flex items-start gap-2">
-                      {eligibility.warnings.some(w => w.includes('Thiếu minh chứng')) ? <XCircle size={14} className="text-rose-500 mt-0.5 shrink-0" /> : <CheckCircle size={14} className="text-emerald-500 mt-0.5 shrink-0" />}
-                      <span className={eligibility.warnings.some(w => w.includes('Thiếu minh chứng')) ? 'text-rose-700' : 'text-slate-600'}>
+                      {eligibility.missing && eligibility.missing.some(w => w.includes('minh chứng')) ? <XCircle size={14} className="text-rose-500 mt-0.5 shrink-0" /> : <CheckCircle size={14} className="text-emerald-500 mt-0.5 shrink-0" />}
+                      <span className={eligibility.missing && eligibility.missing.some(w => w.includes('minh chứng')) ? 'text-rose-700' : 'text-slate-600'}>
                         Minh chứng Đánh giá CBNV: {candidate.evalMinute ? 'Đã đính kèm' : 'Thiếu minh chứng'}
                       </span>
                     </div>
 
                     {/* Errors if any */}
-                    {eligibility.errors.map((err, i) => (
+                    {eligibility.missing && eligibility.missing.map((err, i) => (
                       <div key={i} className="flex items-start gap-2 text-rose-600 font-medium">
                         <XCircle size={14} className="mt-0.5 shrink-0" />
                         <span>{err}</span>
