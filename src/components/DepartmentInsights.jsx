@@ -3,7 +3,7 @@ import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, Tooltip, Cell, Legend
 } from 'recharts';
-import { Trophy, Medal, Star, Shield, Award, Lightbulb, GraduationCap, Target, Users, BookOpen, Clock, AlertTriangle, FileText, CheckCircle, Activity } from 'lucide-react';
+import { Trophy, Medal, Star, Shield, Award, Lightbulb, GraduationCap, Target, Users, BookOpen, Clock, AlertTriangle, FileText, CheckCircle, Activity, Sparkles, Eye } from 'lucide-react';
 import { ACHIEVEMENT_LEVELS } from '../data/config';
 
 // Logic cấp danh hiệu
