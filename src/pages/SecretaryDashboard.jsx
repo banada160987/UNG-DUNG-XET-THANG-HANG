@@ -5,7 +5,7 @@ import { calculateTotalScore } from '../utils/ranking';
 import { logAction } from '../utils/logger';
 import { StatusBadge } from '../components/StatusBadge';
 import { CandidateTimeline } from '../components/CandidateTimeline';
-import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
+import { DigitalTwinModal } from '../components/DigitalTwinModal';
 import { CompareModal } from '../components/CompareModal';
 import { StatisticsModal } from '../components/StatisticsModal';
 import { AIReportModal } from '../components/AIReportModal';
@@ -422,7 +422,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
       )}
 
       {viewCand && (
-        <CandidateDetailsModal 
+        <DigitalTwinModal 
           candidate={viewCand} 
           onClose={() => setViewCand(null)} 
           onReject={(candidate, msg) => {

@@ -5,7 +5,7 @@ import { calculateTotalScore } from '../utils/ranking';
 import { StatusBadge } from '../components/StatusBadge';
 import { logAction } from '../utils/logger';
 import { CandidateTimeline } from '../components/CandidateTimeline';
-import { CandidateDetailsModal } from '../components/CandidateDetailsModal';
+import { DigitalTwinModal } from '../components/DigitalTwinModal';
 import { CompareModal } from '../components/CompareModal';
 import { SettingsModal } from '../components/SettingsModal';
 import { StatisticsModal } from '../components/StatisticsModal';
@@ -456,7 +456,7 @@ export const Dashboard = ({ candidates, onRefresh }) => {
       )}
 
       {viewCand && (
-        <CandidateDetailsModal 
+        <DigitalTwinModal 
           candidate={viewCand} 
           onClose={() => setViewCand(null)} 
           onReject={(candidate, msg) => {
