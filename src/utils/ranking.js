@@ -84,15 +84,21 @@ export const compareCandidatesWithReason = (a, b) => {
   const evalB = evaluateAchievements(b.achievements);
 
   if (evalA.highestScore !== evalB.highestScore) {
+    const betterScore = Math.min(evalA.highestScore, evalB.highestScore);
+    const achievement = ACHIEVEMENT_LEVELS.find(ach => ach.score === betterScore);
+    const achName = achievement ? achievement.name : `Top #${betterScore}`;
+    
     return {
       result: evalA.highestScore - evalB.highestScore,
-      reason: `Có thành tích cao hơn (Top #${Math.min(evalA.highestScore, evalB.highestScore)})`
+      reason: `Có thành tích cao hơn: ${achName}`
     }; 
   }
   if (evalA.highestCount !== evalB.highestCount) {
+    const achievement = ACHIEVEMENT_LEVELS.find(ach => ach.score === evalA.highestScore);
+    const achName = achievement ? achievement.name : `Top #${evalA.highestScore}`;
     return {
       result: evalB.highestCount - evalA.highestCount,
-      reason: `Nhiều thành tích cao nhất hơn (${Math.max(evalA.highestCount, evalB.highestCount)} so với ${Math.min(evalA.highestCount, evalB.highestCount)})`
+      reason: `Nhiều thành tích cao nhất hơn (${Math.max(evalA.highestCount, evalB.highestCount)} so với ${Math.min(evalA.highestCount, evalB.highestCount)} - ${achName})`
     };
   }
   if (evalA.individualCount !== evalB.individualCount) {
