@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { checkEligibility } from '../utils/validation';
-import { calculateTotalScore } from '../utils/ranking';
+import { calculateTotalScore, rankCandidates } from '../utils/ranking';
 import { StatusBadge } from '../components/StatusBadge';
 import { logAction } from '../utils/logger';
 import { CandidateTimeline } from '../components/CandidateTimeline';
@@ -10,8 +10,9 @@ import { CompareModal } from '../components/CompareModal';
 import { SettingsModal } from '../components/SettingsModal';
 import { StatisticsModal } from '../components/StatisticsModal';
 import { AIReportModal } from '../components/AIReportModal';
+import { ExplainRankingModal } from '../components/ExplainRankingModal';
 import { useSettings } from '../contexts/SettingsContext';
-import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye, Trash2, Scale, Settings, FileSpreadsheet, BarChart2, Sparkles, AlertTriangle, CheckCircle, Award, Table as TableIcon } from 'lucide-react';
+import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye, EyeOff, Trash2, Scale, Settings, FileSpreadsheet, BarChart2, Sparkles, AlertTriangle, CheckCircle, Award, Table as TableIcon, Target } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import { showAlert, showConfirm, showPrompt } from '../utils/alert';
 import { exportStatisticsWord } from '../utils/exportStatistics';
@@ -29,6 +30,11 @@ export const Dashboard = ({ candidates, onRefresh }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [showStatistics, setShowStatistics] = useState(false);
   const [showAIReport, setShowAIReport] = useState(false);
+  const [explainCandidate, setExplainCandidate] = useState(null);
+  
+  // Simulation Mode States
+  const [quota, setQuota] = useState(8);
+  const [excludedIds, setExcludedIds] = useState([]);
 
   const { settings } = useSettings();
 
@@ -91,9 +97,24 @@ export const Dashboard = ({ candidates, onRefresh }) => {
     return true; 
   });
 
-  if (sortByScore) {
-    displayList = [...displayList].sort((a, b) => b.score - a.score);
-  }
+  const rankedDisplayList = useMemo(() => {
+    // 1. Chia ra list active và excluded
+    const active = displayList.filter(c => !excludedIds.includes(c.id));
+    const excluded = displayList.filter(c => excludedIds.includes(c.id));
+
+    // 2. Sắp xếp list active
+    if (sortByScore) {
+      active.sort((a, b) => b.score - a.score);
+    } else {
+      active.sort((a, b) => rankCandidates(a, b));
+    }
+
+    // 3. Đánh số rank cho list active
+    const activeWithRank = active.map((c, idx) => ({ ...c, simRank: idx + 1 }));
+    const excludedWithRank = excluded.map(c => ({ ...c, simRank: -1 }));
+
+    return [...activeWithRank, ...excludedWithRank];
+  }, [displayList, sortByScore, excludedIds]);
 
   const handleToggleCompare = (candidateId) => {
     setSelectedForCompare(prev => {
@@ -276,7 +297,7 @@ export const Dashboard = ({ candidates, onRefresh }) => {
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 h-80 flex flex-col">
           <h3 className="font-semibold text-slate-800 mb-2">Thiếu sót phổ biến (Top 5)</h3>
           <div className="flex-1 min-h-0">
-            {missingData.length === 0 ? <div className="h-full flex items-center justify-center text-emerald-500">Tuyệt vời! Không có thiếu sót nào.</div> :
+{missingData.length === 0 ? <div className="h-full flex items-center justify-center text-emerald-500">Tuyệt vời! Không có thiếu sót nào.</div> :
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={missingData} layout="vertical" margin={{ left: 10, right: 20 }}>
                   <XAxis type="number" hide />
@@ -294,7 +315,7 @@ export const Dashboard = ({ candidates, onRefresh }) => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mt-8 mb-4">
         <h3 className="font-bold text-xl text-slate-800 flex items-center gap-2">
           <FileText className="text-blue-500" />
-          Danh sách hồ sơ ({displayList.length})
+          Danh sách hồ sơ ({rankedDisplayList.length})
         </h3>
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           <select 
@@ -316,13 +337,13 @@ export const Dashboard = ({ candidates, onRefresh }) => {
           <button onClick={() => setShowAIReport(true)} className="flex items-center justify-center gap-2 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none">
             <Sparkles size={16} /> Báo cáo AI
           </button>
-          <button onClick={() => exportStatisticsExcel(displayList, selectedUnit === 'all' ? "Toàn trường" : selectedUnit)} className="flex items-center justify-center gap-2 text-sm text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none" title="Xuất dữ liệu ra file Excel">
+          <button onClick={() => exportStatisticsExcel(rankedDisplayList, selectedUnit === 'all' ? "Toàn trường" : selectedUnit)} className="flex items-center justify-center gap-2 text-sm text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none" title="Xuất dữ liệu ra file Excel">
             <TableIcon size={16} /> Xuất Excel
           </button>
-          <button onClick={() => exportStatisticsWord(displayList, selectedUnit === 'all' ? "Toàn trường" : selectedUnit)} className="flex items-center justify-center gap-2 text-sm text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none">
+          <button onClick={() => exportStatisticsWord(rankedDisplayList, selectedUnit === 'all' ? "Toàn trường" : selectedUnit)} className="flex items-center justify-center gap-2 text-sm text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none">
             <FileSpreadsheet size={16} /> Xuất Word
           </button>
-          <button onClick={() => exportGoldenRollWord(displayList, selectedUnit === 'all' ? "Toàn trường" : selectedUnit)} className="flex items-center justify-center gap-2 text-sm text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none" title="Xuất Bảng vàng danh dự">
+          <button onClick={() => exportGoldenRollWord(rankedDisplayList, selectedUnit === 'all' ? "Toàn trường" : selectedUnit)} className="flex items-center justify-center gap-2 text-sm text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none" title="Xuất Bảng vàng danh dự">
             <Award size={16} /> Bảng vàng
           </button>
           <button onClick={() => setShowSettings(true)} className="flex items-center justify-center gap-2 text-sm bg-slate-800 text-white hover:bg-slate-700 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none">
@@ -331,24 +352,75 @@ export const Dashboard = ({ candidates, onRefresh }) => {
         </div>
       </div>
 
+      {/* Simulation / What-if Analysis Area */}
+      <div className="bg-white p-4 md:p-5 rounded-xl border border-blue-200 shadow-sm flex flex-col md:flex-row gap-6 items-center bg-gradient-to-r from-blue-50 to-white mb-6">
+        <div className="flex-1">
+          <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-1"><Target size={18} className="text-blue-600"/> Mô phỏng Chỉ tiêu (What-if Analysis)</h3>
+          <p className="text-xs text-slate-500">Điều chỉnh thanh trượt để xem danh sách trúng tuyển thay đổi. Nhấn nút Tạm loại để thử xem thứ hạng những người phía sau nhảy như thế nào.</p>
+        </div>
+        <div className="w-full md:w-1/3 flex items-center gap-4">
+          <input 
+            type="range" 
+            min="1" 
+            max={totalCount || 10} 
+            value={quota} 
+            onChange={(e) => setQuota(parseInt(e.target.value))}
+            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+          />
+          <div className="bg-blue-600 text-white font-bold px-3 py-1.5 rounded-lg text-lg min-w-[3rem] text-center shadow-inner">
+            {quota}
+          </div>
+        </div>
+      </div>
+
       {/* Candidate Flex/Grid Cards */}
       <div className="flex flex-col gap-4">
-        {displayList.length === 0 ? (
+        {rankedDisplayList.length === 0 ? (
           <p className="text-center p-8 text-slate-400 bg-white rounded-xl border border-slate-200 border-dashed">Không có dữ liệu hồ sơ phù hợp.</p>
-        ) : displayList.map(c => (
-          <div key={c.id} className="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-slate-200 hover:border-blue-300 transition-all flex flex-col md:flex-row gap-4 md:gap-6 items-start md:items-center">
+        ) : rankedDisplayList.map(c => {
+          const isSafe = c.simRank > 0 && c.simRank <= quota;
+          const isExcluded = c.simRank === -1;
+
+          return (
+          <div key={c.id} className={`bg-white p-4 md:p-5 rounded-xl shadow-sm border transition-all flex flex-col md:flex-row gap-4 md:gap-6 items-start md:items-center relative overflow-hidden ${isExcluded ? 'opacity-50 border-slate-200' : (isSafe ? 'border-emerald-400 shadow-emerald-500/10 shadow-lg' : 'border-slate-200 hover:border-blue-300')}`}>
             
+            {isSafe && !isExcluded && (
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500" />
+            )}
+            {isExcluded && (
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-400" />
+            )}
+
             {/* Column 1: Info */}
             <div className="flex-1 min-w-0 w-full">
               <div className="flex items-start gap-3">
+                {c.simRank > 0 ? (
+                  <button onClick={() => setExplainCandidate(c)} className={`mt-1 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-black text-sm shadow-sm hover:scale-110 transition-transform ${isSafe ? 'bg-emerald-100 text-emerald-700 ring-2 ring-emerald-400 ring-offset-1' : 'bg-slate-100 text-slate-600'}`} title="Tại sao xếp hạng này?">
+                    #{c.simRank}
+                  </button>
+                ) : (
+                  <div className="mt-1 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-black text-sm shadow-sm bg-slate-200 text-slate-400">
+                    -
+                  </div>
+                )}
                 <input 
                   type="checkbox" 
-                  className="mt-1.5 w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer" 
+                  className="mt-2.5 w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer" 
                   checked={selectedForCompare.includes(c.id)} 
                   onChange={() => handleToggleCompare(c.id)}
                 />
-                <div>
-                  <h4 className="font-bold text-slate-800 text-lg uppercase leading-tight mb-1 truncate">{c.fullName}</h4>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="font-bold text-slate-800 text-lg uppercase leading-tight truncate">{c.fullName}</h4>
+                    <button 
+                      onClick={() => setExcludedIds(prev => prev.includes(c.id) ? prev.filter(id => id !== c.id) : [...prev, c.id])}
+                      className={`text-xs px-2 py-0.5 rounded-full font-bold flex items-center gap-1 transition-colors ${isExcluded ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-slate-100 text-slate-500 hover:bg-rose-100 hover:text-rose-600'}`}
+                      title={isExcluded ? "Khôi phục hồ sơ này" : "Tạm loại hồ sơ này để mô phỏng"}
+                    >
+                      {isExcluded ? <Eye size={12}/> : <EyeOff size={12}/>}
+                      {isExcluded ? 'Đang loại trừ' : 'Tạm loại'}
+                    </button>
+                  </div>
                   <p className="text-sm text-slate-500 mb-2 flex items-center gap-2">
                     <span>CCCD: {c.cccd}</span>
                     <span className="text-slate-300">|</span>
@@ -448,7 +520,7 @@ export const Dashboard = ({ candidates, onRefresh }) => {
             </div>
 
           </div>
-        ))}
+        )})}
       </div>
 
       {timelineCandId && (
@@ -466,6 +538,14 @@ export const Dashboard = ({ candidates, onRefresh }) => {
         />
       )}
 
+      {explainCandidate && (
+        <ExplainRankingModal 
+          candidate={explainCandidate} 
+          rankedList={rankedDisplayList.filter(c => c.simRank > 0)}
+          onClose={() => setExplainCandidate(null)}
+        />
+      )}
+
       {showCompare && (
         <CompareModal 
           candidates={getCompareCandidates()} 
@@ -473,8 +553,8 @@ export const Dashboard = ({ candidates, onRefresh }) => {
         />
       )}
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
-      {showStatistics && <StatisticsModal candidates={displayList} unitName={selectedUnit === 'all' ? "Toàn trường" : selectedUnit} onClose={() => setShowStatistics(false)} />}
-      {showAIReport && <AIReportModal candidates={displayList} unitName={selectedUnit === 'all' ? "Toàn trường" : selectedUnit} onClose={() => setShowAIReport(false)} />}
+      {showStatistics && <StatisticsModal candidates={rankedDisplayList} unitName={selectedUnit === 'all' ? "Toàn trường" : selectedUnit} onClose={() => setShowStatistics(false)} />}
+      {showAIReport && <AIReportModal candidates={rankedDisplayList} unitName={selectedUnit === 'all' ? "Toàn trường" : selectedUnit} onClose={() => setShowAIReport(false)} />}
     </div>
   );
 };

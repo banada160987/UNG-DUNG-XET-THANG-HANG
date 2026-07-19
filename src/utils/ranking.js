@@ -76,42 +76,64 @@ export const evaluateAchievements = (achievements) => {
 };
 
 export const rankCandidates = (a, b) => {
+  return compareCandidatesWithReason(a, b).result;
+};
+
+export const compareCandidatesWithReason = (a, b) => {
   const evalA = evaluateAchievements(a.achievements);
   const evalB = evaluateAchievements(b.achievements);
 
   if (evalA.highestScore !== evalB.highestScore) {
-    return evalA.highestScore - evalB.highestScore; 
+    return {
+      result: evalA.highestScore - evalB.highestScore,
+      reason: `Có thành tích cao hơn (Top #${Math.min(evalA.highestScore, evalB.highestScore)})`
+    }; 
   }
   if (evalA.highestCount !== evalB.highestCount) {
-    return evalB.highestCount - evalA.highestCount; 
+    return {
+      result: evalB.highestCount - evalA.highestCount,
+      reason: `Nhiều thành tích cao nhất hơn (${Math.max(evalA.highestCount, evalB.highestCount)} so với ${Math.min(evalA.highestCount, evalB.highestCount)})`
+    };
   }
   if (evalA.individualCount !== evalB.individualCount) {
-    return evalB.individualCount - evalA.individualCount;
+    return {
+      result: evalB.individualCount - evalA.individualCount,
+      reason: `Nhiều thành tích cá nhân hơn (${Math.max(evalA.individualCount, evalB.individualCount)} so với ${Math.min(evalA.individualCount, evalB.individualCount)})`
+    };
   }
 
-  if (a.gender === 'Nữ' && b.gender !== 'Nữ') return -1;
-  if (a.gender !== 'Nữ' && b.gender === 'Nữ') return 1;
+  if (a.gender === 'Nữ' && b.gender !== 'Nữ') return { result: -1, reason: 'Ưu tiên giới tính Nữ' };
+  if (a.gender !== 'Nữ' && b.gender === 'Nữ') return { result: 1, reason: 'Ưu tiên giới tính Nữ' };
 
   const isMinorityA = a.ethnicity && a.ethnicity.toLowerCase() !== 'kinh';
   const isMinorityB = b.ethnicity && b.ethnicity.toLowerCase() !== 'kinh';
-  if (isMinorityA && !isMinorityB) return -1;
-  if (!isMinorityA && isMinorityB) return 1;
+  if (isMinorityA && !isMinorityB) return { result: -1, reason: 'Ưu tiên Dân tộc thiểu số' };
+  if (!isMinorityA && isMinorityB) return { result: 1, reason: 'Ưu tiên Dân tộc thiểu số' };
 
   if (a.dob && b.dob) {
     const timeA = new Date(a.dob).getTime();
     const timeB = new Date(b.dob).getTime();
-    if (timeA !== timeB) return timeA - timeB; 
+    if (timeA !== timeB) {
+      return {
+        result: timeA - timeB,
+        reason: 'Ưu tiên người lớn tuổi hơn'
+      };
+    }
   }
 
-  // Dùng ngày ký quyết định tuyển dụng để tính thâm niên
-  const dateRecA = a.decisionRecruitment?.date;
-  const dateRecB = b.decisionRecruitment?.date;
+  const dateRecA = a.decisionRecruitment?.date || a.decisionProbation?.date;
+  const dateRecB = b.decisionRecruitment?.date || b.decisionProbation?.date;
   
   if (dateRecA && dateRecB) {
     const timeA = new Date(dateRecA).getTime();
     const timeB = new Date(dateRecB).getTime();
-    if (timeA !== timeB) return timeA - timeB; 
+    if (timeA !== timeB) {
+      return {
+        result: timeA - timeB,
+        reason: 'Ưu tiên người có thâm niên công tác lâu hơn'
+      };
+    }
   }
 
-  return 0;
+  return { result: 0, reason: 'Cùng hạng' };
 };
