@@ -160,8 +160,10 @@ export const exportStatisticsWord = async (candidates, unitName = "Toàn trườ
         if (ach.id === 'bk_ubnd_tinh' || textIncludes(ach, ['ubnd tỉnh'])) counts.bk_ubndt++;
         else if (ach.id === 'cstd_cap_tinh' || textIncludes(ach, ['cstđ cấp tỉnh', 'cstđ tỉnh', 'chiến sĩ thi đua cấp tỉnh'])) counts.cstd_tinh++;
         else if (ach.id === 'cstd_co_so' || textIncludes(ach, ['cstđ cơ sở', 'chiến sĩ thi đua cơ sở'])) counts.cstd_cs++;
-        else if (ach.id === 'gk_so_nganh_xa' || textIncludes(ach, ['sở giáo dục', 'giám đốc sở'])) counts.gk_so++;
-        else if (textIncludes(ach, ['giấy khen của thủ trưởng', 'chủ tịch ubnd', 'ngành', 'ban', 'gk ban'])) counts.gk_ban++;
+        else if (ach.id === 'gk_sgd' || ach.id === 'gk_so_nganh_xa' || textIncludes(ach, ['sở giáo dục', 'giám đốc sở'])) counts.gk_so++;
+        else if (ach.id === 'gk_bannganh' || ach.id === 'gk_xa' || ach.id === 'gk_dang_uy_xa' || textIncludes(ach, ['giấy khen của thủ trưởng', 'chủ tịch ubnd', 'ngành', 'ban', 'gk ban'])) counts.gk_ban++;
+        else if (ach.id === 'bk_ldld') counts.bk_ldld++;
+        else if (ach.id === 'bk_tinhdoan') counts.bk_tinhdoan++;
         else if (ach.id === 'bk_ldld_tinhdoan' || textIncludes(ach, ['lđlđ', 'liên đoàn lao động', 'tỉnh đoàn', 'thành đoàn', 'đoàn thanh niên'])) {
           if (textIncludes(ach, ['đoàn', 'đtn', 'thanh niên', 'tn'])) counts.bk_tinhdoan++;
           else counts.bk_ldld++;

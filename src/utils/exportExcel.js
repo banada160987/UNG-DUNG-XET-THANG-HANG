@@ -19,26 +19,55 @@ export const exportStatisticsExcel = (candidates, unitName = "Toàn trường") 
   // Map data to Excel rows
   const data = candidates.map((c, index) => {
     
-    // Xử lý thành tích chính
+    // Đếm thành tích
+    let countUbnd = 0;
+    let countLdld = 0;
+    let countTinhDoan = 0;
+    let countCstdTinh = 0;
+    let countCstdCs = 0;
+    let countGkSgd = 0;
+    let countGkBanNganh = 0;
+    
+    // Tương thích ngược (Legacy)
+    let countLegacyLdldTinhDoan = 0;
+    let countLegacySgdBanNganh = 0;
+
     const mainAchList = [];
     if (c.achievements && c.achievements.length > 0) {
       c.achievements.forEach(ach => {
         const official = ACHIEVEMENT_LEVELS.find(l => l.id === ach.id);
         const name = official ? official.name : ach.id;
-        mainAchList.push(`${name} (${ach.decisionNo})`);
+        mainAchList.push(`${name} (${ach.decisionNo || ''})`);
+
+        // Matrix counters
+        if (['bk_ubnd_tinh', 'bk_thu_tuong', 'bk_tinh_uy_5nam', 'bk_bo_nganh', 'bk_tinh_uy_dotxuat'].includes(ach.id)) countUbnd++;
+        if (ach.id === 'bk_ldld') countLdld++;
+        if (ach.id === 'bk_tinhdoan') countTinhDoan++;
+        if (ach.id === 'bk_ldld_tinhdoan') countLegacyLdldTinhDoan++;
+        if (['cstd_toan_quoc', 'cstd_cap_tinh'].includes(ach.id)) countCstdTinh++;
+        if (ach.id === 'cstd_co_so') countCstdCs++;
+        if (ach.id === 'gk_sgd') countGkSgd++;
+        if (['gk_bannganh', 'gk_dang_uy_xa', 'gk_xa'].includes(ach.id)) countGkBanNganh++;
+        if (ach.id === 'gk_so_nganh_xa') countLegacySgdBanNganh++;
       });
     }
 
-    // Xử lý thành tích khác
+    // Đếm thành tích khác (GVDG, GVCNG)
+    let countGvdg = 0;
+    let countGvcng = 0;
     const otherAchList = [];
     if (c.otherAchievements && c.otherAchievements.length > 0) {
       c.otherAchievements.forEach(ach => {
-        const name = ach.name || ach.id;
-        otherAchList.push(`${name} (${ach.decisionNo})`);
+        const name = ach.name || ach.id || '';
+        otherAchList.push(`${name} (${ach.decisionNo || ''})`);
+        
+        const nameLower = name.toLowerCase();
+        if (nameLower.includes('dạy giỏi') || nameLower.includes('gvdg')) countGvdg++;
+        if (nameLower.includes('chủ nhiệm') || nameLower.includes('gvcng')) countGvcng++;
       });
     }
 
-    // Xử lý chứng chỉ, bằng cấp
+    // Bằng cấp, chứng chỉ
     const certList = [];
     if (c.certificates && c.certificates.length > 0) {
       c.certificates.forEach(cert => {
@@ -55,17 +84,25 @@ export const exportStatisticsExcel = (candidates, unitName = "Toàn trường") 
     return {
       "STT": index + 1,
       "Họ và tên": c.fullName,
-      "CCCD": c.cccd,
-      "Ngày sinh": c.dob || "",
-      "Giới tính": c.gender === 'male' ? 'Nam' : c.gender === 'female' ? 'Nữ' : c.gender || '',
+      "Ngáy sinh": c.dob || "",
       "Đơn vị": c.unit || "",
-      "Số điện thoại": c.phone || "",
       "Chức danh đang giữ": c.currentTitle || "",
-      "Chức danh đăng ký": c.targetTitle || "",
-      "Điểm số": c.score || 0,
-      "Trạng thái hồ sơ": STATUS_MAP[c.status] || c.status,
-      "Thành tích chính": mainAchList.join('\n'),
-      "Thành tích khác": otherAchList.join('\n'),
+      "Điểm xét duyệt": c.score || 0,
+      "Trạng thái": STATUS_MAP[c.status] || c.status,
+      
+      // Các cột ma trận
+      "BK UBND/Bộ": countUbnd > 0 ? countUbnd : "",
+      "BK LĐLĐ": countLdld > 0 || countLegacyLdldTinhDoan > 0 ? (countLdld || countLegacyLdldTinhDoan) : "",
+      "BK Tỉnh đoàn": countTinhDoan > 0 ? countTinhDoan : "",
+      "CSTĐ Tỉnh": countCstdTinh > 0 ? countCstdTinh : "",
+      "CSTĐ Cơ sở": countCstdCs > 0 ? countCstdCs : "",
+      "GK Sở GD": countGkSgd > 0 || countLegacySgdBanNganh > 0 ? (countGkSgd || countLegacySgdBanNganh) : "",
+      "GK Ban Ngành": countGkBanNganh > 0 ? countGkBanNganh : "",
+      "GVDG": countGvdg > 0 ? countGvdg : "",
+      "GVCNG": countGvcng > 0 ? countGvcng : "",
+      
+      "Chi tiết TT chính": mainAchList.join('\n'),
+      "Chi tiết TT khác": otherAchList.join('\n'),
       "Bằng cấp chuyên môn": degList.join('\n'),
       "Chứng chỉ bồi dưỡng": certList.join('\n'),
     };
@@ -77,19 +114,24 @@ export const exportStatisticsExcel = (candidates, unitName = "Toàn trường") 
   const colWidths = [
     { wch: 5 },   // STT
     { wch: 25 },  // Họ và tên
-    { wch: 15 },  // CCCD
     { wch: 12 },  // Ngày sinh
-    { wch: 10 },  // Giới tính
     { wch: 20 },  // Đơn vị
-    { wch: 15 },  // Số điện thoại
-    { wch: 25 },  // Chức danh đang giữ
-    { wch: 25 },  // Chức danh đăng ký
+    { wch: 25 },  // Chức danh
     { wch: 10 },  // Điểm số
-    { wch: 25 },  // Trạng thái hồ sơ
-    { wch: 40 },  // Thành tích chính
-    { wch: 40 },  // Thành tích khác
-    { wch: 30 },  // Bằng cấp
-    { wch: 30 }   // Chứng chỉ
+    { wch: 20 },  // Trạng thái
+    { wch: 12 },  // BK UBND
+    { wch: 10 },  // BK LĐLĐ
+    { wch: 12 },  // BK Tỉnh đoàn
+    { wch: 10 },  // CSTĐ Tỉnh
+    { wch: 10 },  // CSTĐ CS
+    { wch: 10 },  // GK Sở GD
+    { wch: 12 },  // GK Ban Ngành
+    { wch: 10 },  // GVDG
+    { wch: 10 },  // GVCNG
+    { wch: 30 },  // TT chính
+    { wch: 30 },  // TT khác
+    { wch: 20 },  // Bằng cấp
+    { wch: 20 }   // Chứng chỉ
   ];
   worksheet['!cols'] = colWidths;
 
