@@ -15,6 +15,7 @@ import { showAlert, showConfirm } from '../utils/alert';
 import { exportStatisticsWord } from '../utils/exportStatistics';
 import { ActionHistory } from '../components/ActionHistory';
 import { UserGuideModal } from '../components/UserGuideModal';
+import { DepartmentInsights, getBadges } from '../components/DepartmentInsights';
 
 export const HeadDashboard = ({ department, onLogout }) => {
   const [candidates, setCandidates] = useState([]);
@@ -42,16 +43,19 @@ export const HeadDashboard = ({ department, onLogout }) => {
   // Trạng thái modal xem chi tiết
   const [viewCand, setViewCand] = useState(null);
 
+  const [activeBatch, setActiveBatch] = useState(null);
+
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
     setLoading(true);
-    const { data: batches } = await supabase.from('batches').select('id').eq('isActive', true).order('created_at', { ascending: false }).limit(1);
+    const { data: batches } = await supabase.from('batches').select('*').eq('isActive', true).order('created_at', { ascending: false }).limit(1);
     
     if (batches && batches.length > 0) {
       setActiveBatchId(batches[0].id);
+      setActiveBatch(batches[0]);
       const { data: cands } = await supabase
         .from('candidates')
         .select('*')
@@ -213,6 +217,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
           </div>
         ) : (
           <div className="space-y-6">
+            <DepartmentInsights candidates={candidates} department={department} quota={activeBatch?.quota || 0} />
             {/* Thống kê */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <StatCard 
@@ -316,6 +321,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
                     {displayCandidates.map(c => {
                       const eligibility = checkEligibility(c);
                       const canAct = ['submitted_to_head', 'resubmitted', 'head_rejected'].includes(c.status);
+                      const badges = getBadges(c);
                       
                       return (
                         <tr key={c.id} className="hover:bg-slate-50/50">
@@ -330,11 +336,19 @@ export const HeadDashboard = ({ department, onLogout }) => {
                           <td className="p-4">
                             <p className="font-semibold text-slate-800">{c.fullName}</p>
                             <p className="text-xs text-slate-500">CCCD: {c.cccd}</p>
-                            {settings?.use_scoring !== false && (
-                              <div className="mt-1">
-                                <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Điểm: {c.score}</span>
-                              </div>
-                            )}
+                            <div className="flex flex-wrap gap-1 mt-1.5">
+                              {settings?.use_scoring !== false && (
+                                <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">Điểm: {c.score}</span>
+                              )}
+                              {badges.map(b => {
+                                const Icon = b.icon;
+                                return (
+                                  <span key={b.id} className={`flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded border border-white/50 ${b.color}`} title={b.name}>
+                                    <Icon size={10} /> {b.name}
+                                  </span>
+                                );
+                              })}
+                            </div>
                           </td>
                           <td className="p-4 align-top">
                             <StatusBadge status={eligibility.isValid ? 'eligible' : 'ineligible'} />

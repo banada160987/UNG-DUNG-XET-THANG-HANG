@@ -3,9 +3,12 @@ import { XCircle, FileText, Download, MessageSquareWarning } from 'lucide-react'
 import { CandidateForm } from '../pages/CandidateForm';
 import { exportCandidateToWord } from '../utils/exportWord';
 import { showPrompt } from '../utils/alert';
+import { getBadges } from './DepartmentInsights';
 
 export const CandidateDetailsModal = ({ candidate, onClose, onReject }) => {
   const [fieldComments, setFieldComments] = useState({});
+
+  const badges = getBadges(candidate);
 
   const handleCommentChange = (fieldName, comment) => {
     setFieldComments(prev => {
@@ -32,11 +35,25 @@ export const CandidateDetailsModal = ({ candidate, onClose, onReject }) => {
   return (
     <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-50 overflow-y-auto">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-5xl my-8 flex flex-col max-h-[90vh]">
-        <div className="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center sticky top-0 z-20 rounded-t-xl">
-          <h3 className="font-bold text-slate-800 flex items-center gap-2 text-lg">
-            <FileText size={20} className="text-blue-500" />
-            Chi tiết hồ sơ: {candidate.fullName} ({candidate.cccd})
-          </h3>
+        <div className="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center sticky top-0 z-20 rounded-t-xl flex-wrap gap-2">
+          <div className="flex flex-col gap-1">
+            <h3 className="font-bold text-slate-800 flex items-center gap-2 text-lg">
+              <FileText size={20} className="text-blue-500" />
+              Chi tiết hồ sơ: {candidate.fullName} ({candidate.cccd})
+            </h3>
+            {badges.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 ml-7">
+                {badges.map(b => {
+                  const Icon = b.icon;
+                  return (
+                    <span key={b.id} className={`flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md shadow-sm border border-white/50 ${b.color}`} title={b.name}>
+                      <Icon size={12} /> {b.name}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-3">
             <button 
               onClick={() => exportCandidateToWord(candidate)} 
