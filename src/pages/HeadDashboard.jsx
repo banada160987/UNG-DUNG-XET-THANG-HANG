@@ -440,9 +440,9 @@ export const HeadDashboard = ({ department, onLogout }) => {
         />
       )}
       
-      {showStatistics && <StatisticsModal candidates={displayCandidates} unitName={user.unit || "Tổ"} onClose={() => setShowStatistics(false)} />}
+      {showStatistics && <StatisticsModal candidates={displayCandidates} unitName={department || "Tổ"} onClose={() => setShowStatistics(false)} />}
       
-      {showAIReport && <AIReportModal candidates={displayCandidates} unitName={user.unit || "Tổ"} onClose={() => setShowAIReport(false)} />}
+      {showAIReport && <AIReportModal candidates={displayCandidates} unitName={department || "Tổ"} onClose={() => setShowAIReport(false)} />}
 
       {showGuide && (
         <UserGuideModal role="head" onClose={() => setShowGuide(false)} />
