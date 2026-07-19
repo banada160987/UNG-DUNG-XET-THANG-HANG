@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { 
   XCircle, FileText, Download, CheckCircle, AlertTriangle, User, 
-  Award, Briefcase, GraduationCap, Calendar, ShieldCheck, Activity, Star
+  Award, Briefcase, GraduationCap, Calendar, ShieldCheck, Activity, Star, Eye
 } from 'lucide-react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { exportCandidateToWord } from '../utils/exportWord';
@@ -323,7 +323,14 @@ export const DigitalTwinModal = ({ candidate, onClose, onReject }) => {
                   <ul className="space-y-3">
                     {candidate.achievements.map((a, i) => (
                       <li key={i} className="flex flex-col bg-amber-50/50 p-3 rounded-lg border border-amber-100">
-                        <span className="font-bold text-amber-800 text-sm">{a.name || a.id}</span>
+                        <div className="flex justify-between items-start">
+                          <span className="font-bold text-amber-800 text-sm">{a.name || a.id}</span>
+                          {a.link && (
+                            <a href={a.link} target="_blank" rel="noreferrer" className="text-xs flex items-center gap-1 bg-amber-100 text-amber-700 px-2 py-1 rounded hover:bg-amber-200 transition-colors">
+                              <Eye size={12} /> Xem
+                            </a>
+                          )}
+                        </div>
                         <div className="flex items-center gap-4 mt-1 text-xs text-amber-600/80">
                           <span>Quyết định: {a.decisionNumber}</span>
                           <span>Năm: {a.year}</span>
@@ -332,6 +339,72 @@ export const DigitalTwinModal = ({ candidate, onClose, onReject }) => {
                     ))}
                   </ul>
                 ) : <p className="text-sm text-slate-500 italic">Không có thành tích nào.</p>}
+              </div>
+
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h3 className="font-bold text-slate-800 border-b pb-2 mb-4">Văn bằng & Chứng chỉ</h3>
+                
+                <h4 className="text-sm font-bold text-slate-700 mt-2 mb-2">1. Văn bằng chuyên môn</h4>
+                {candidate.degrees?.length > 0 ? (
+                  <ul className="space-y-2 mb-4">
+                    {candidate.degrees.map((d, i) => (
+                      <li key={i} className="flex items-center justify-between bg-slate-50 p-2 rounded border border-slate-100">
+                        <div>
+                          <p className="text-sm font-medium text-slate-700">{d.level} - Năm: {d.year}</p>
+                          <p className="text-xs text-slate-500">Nơi cấp: {d.issuer}</p>
+                        </div>
+                        {d.link && (
+                          <a href={d.link} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                            <Eye size={12}/> Xem
+                          </a>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                ) : <p className="text-sm text-slate-500 italic mb-4">Chưa cập nhật văn bằng.</p>}
+
+                <h4 className="text-sm font-bold text-slate-700 mb-2">2. Chứng chỉ bồi dưỡng</h4>
+                {candidate.certificates?.length > 0 ? (
+                  <ul className="space-y-2">
+                    {candidate.certificates.map((c, i) => (
+                      <li key={i} className="flex items-center justify-between bg-slate-50 p-2 rounded border border-slate-100">
+                        <div>
+                          <p className="text-sm font-medium text-slate-700">{c.name}</p>
+                          <p className="text-xs text-slate-500">Năm: {c.year} - Nơi cấp: {c.issuer}</p>
+                        </div>
+                        {c.link && (
+                          <a href={c.link} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                            <Eye size={12}/> Xem
+                          </a>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                ) : <p className="text-sm text-slate-500 italic">Chưa cập nhật chứng chỉ.</p>}
+              </div>
+
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h3 className="font-bold text-slate-800 border-b pb-2 mb-4">Các tài liệu khác (Hồ sơ giấy)</h3>
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between p-3 border border-slate-100 rounded bg-slate-50">
+                    <span className="text-sm font-medium text-slate-700">Sơ yếu lý lịch (HS02)</span>
+                    {candidate.resumeDoc ? (
+                      <span className="text-xs flex items-center gap-1 text-emerald-600 font-bold bg-emerald-100 px-2 py-1 rounded"><CheckCircle size={14}/> Đã có</span>
+                    ) : <span className="text-xs text-rose-500 italic">Thiếu</span>}
+                  </div>
+                  <div className="flex items-center justify-between p-3 border border-slate-100 rounded bg-slate-50">
+                    <span className="text-sm font-medium text-slate-700">Bản nhận xét đánh giá của thủ trưởng</span>
+                    {candidate.reviewDoc ? (
+                      <span className="text-xs flex items-center gap-1 text-emerald-600 font-bold bg-emerald-100 px-2 py-1 rounded"><CheckCircle size={14}/> Đã có</span>
+                    ) : <span className="text-xs text-rose-500 italic">Thiếu</span>}
+                  </div>
+                  <div className="flex items-center justify-between p-3 border border-slate-100 rounded bg-slate-50">
+                    <span className="text-sm font-medium text-slate-700">Biên bản đánh giá CBNV của Tổ</span>
+                    {candidate.evalMinute ? (
+                      <span className="text-xs flex items-center gap-1 text-emerald-600 font-bold bg-emerald-100 px-2 py-1 rounded"><CheckCircle size={14}/> Đã có</span>
+                    ) : <span className="text-xs text-rose-500 italic">Thiếu</span>}
+                  </div>
+                </div>
               </div>
             </div>
           )}
