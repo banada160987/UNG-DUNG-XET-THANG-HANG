@@ -64,7 +64,8 @@ export const DigitalTwinModal = ({ candidate, onClose, onReject }) => {
     
     // Giả định năm bổ nhiệm từ số quyết định (nếu có regex tìm năm)
     if (candidate.decisionAppointment) {
-      const yearMatch = candidate.decisionAppointment.match(/\b(19|20)\d{2}\b/);
+      const dateStr = candidate.decisionAppointment.date || candidate.decisionAppointment.number || '';
+      const yearMatch = typeof dateStr === 'string' ? dateStr.match(/\b(19|20)\d{2}\b/) : null;
       if (yearMatch) {
         events.push({ year: yearMatch[0], title: `Bổ nhiệm ${candidate.currentTitle}`, type: 'career', icon: Briefcase, color: 'bg-blue-100 text-blue-600' });
       }
