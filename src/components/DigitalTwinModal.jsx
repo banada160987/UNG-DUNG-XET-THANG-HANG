@@ -312,7 +312,7 @@ export const DigitalTwinModal = ({ candidate, onClose, onReject }) => {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div><span className="text-slate-500">CCCD:</span> <span className="font-medium">{candidate.cccd}</span></div>
                   <div><span className="text-slate-500">Ngày sinh:</span> <span className="font-medium">{candidate.dob}</span></div>
-                  <div><span className="text-slate-500">Giới tính:</span> <span className="font-medium">{candidate.gender === 'male' ? 'Nam' : 'Nữ'}</span></div>
+                  <div><span className="text-slate-500">Giới tính:</span> <span className="font-medium">{candidate.gender === 'male' ? 'Nam' : candidate.gender === 'female' ? 'Nữ' : candidate.gender || 'Chưa cập nhật'}</span></div>
                   <div><span className="text-slate-500">Số điện thoại:</span> <span className="font-medium">{candidate.phone}</span></div>
                 </div>
               </div>
