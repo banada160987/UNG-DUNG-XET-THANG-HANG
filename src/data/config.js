@@ -23,19 +23,17 @@ export const ACHIEVEMENT_LEVELS = [
   { id: 'bk_tinh_uy_dotxuat', name: 'Bằng khen của BTV Tỉnh ủy (đột xuất, chuyên đề, hằng năm)', score: 9 },
   { id: 'bk_ubnd_tinh', name: 'Bằng khen của UBND tỉnh (công trạng, đột xuất, phong trào)', score: 10 },
   
-  // Legacy grouped ID for compatibility
-  { id: 'bk_ldld_tinhdoan', name: 'Bằng khen LĐLĐ, tỉnh Đoàn', score: 11 },
-  // Split IDs for precise reporting
-  { id: 'bk_ldld', name: 'Bằng khen Liên đoàn Lao động', score: 11 },
-  { id: 'bk_tinhdoan', name: 'Bằng khen Tỉnh đoàn', score: 11 },
+  { id: 'cstd_co_so', name: 'Danh hiệu Chiến sĩ thi đua cơ sở', score: 11 },
+  { id: 'gk_dang_uy_xa', name: 'Giấy khen của Ban Thường vụ Đảng uỷ xã, phường', score: 12 },
   
-  { id: 'cstd_co_so', name: 'Danh hiệu Chiến sĩ thi đua cơ sở', score: 12 },
-  { id: 'gk_dang_uy_xa', name: 'Giấy khen của Ban Thường vụ Đảng uỷ xã, phường', score: 13 },
-  
-  // Legacy grouped ID for compatibility
-  { id: 'gk_so_nganh_xa', name: 'Giấy khen của Thủ trưởng Sở, ban, ngành, UB MTTQ tỉnh, Chủ tịch UBND cấp xã', score: 14 },
-  // Split IDs for precise reporting
-  { id: 'gk_sgd', name: 'Giấy khen Sở Giáo dục và Đào tạo', score: 14 },
-  { id: 'gk_bannganh', name: 'Giấy khen Ban, ngành, đoàn thể, UB MTTQ tỉnh', score: 14 },
-  { id: 'gk_xa', name: 'Giấy khen Chủ tịch UBND cấp xã', score: 14 }
+  // Mức 13: Giấy khen Sở, ban, ngành, MTTQ...
+  { id: 'gk_so_nganh_xa', name: 'Giấy khen của Thủ trưởng Sở, ban, ngành, UB MTTQ tỉnh, Chủ tịch UBND cấp xã', score: 13 },
+  { id: 'gk_sgd', name: 'Giấy khen Sở Giáo dục và Đào tạo', score: 13 },
+  { id: 'gk_bannganh', name: 'Giấy khen Ban, ngành, đoàn thể, UB MTTQ tỉnh', score: 13 },
+  { id: 'gk_xa', name: 'Giấy khen Chủ tịch UBND cấp xã', score: 13 },
+
+  // Các bằng khen không có tên trong danh sách ưu tiên của KH125 (Điểm 99 = Không ưu tiên)
+  { id: 'bk_ldld_tinhdoan', name: 'Bằng khen LĐLĐ, tỉnh Đoàn', score: 99 },
+  { id: 'bk_ldld', name: 'Bằng khen Liên đoàn Lao động', score: 99 },
+  { id: 'bk_tinhdoan', name: 'Bằng khen Tỉnh đoàn', score: 99 }
 ];
