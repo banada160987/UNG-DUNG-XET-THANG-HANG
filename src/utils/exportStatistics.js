@@ -136,7 +136,7 @@ export const exportStatisticsWord = async (candidates, unitName = "Toàn trườ
       const t1 = {
         resume: cand.resumeDoc ? 'X' : '',
         review: cand.reviewDoc ? 'X' : '',
-        eval: 'X', // auto
+        eval: cand.ratingSheets ? 'X' : '',
         decision: (cand.decisionRecruitment?.date || cand.decisionProbation?.date || cand.decisionAppointment?.date || cand.decisionSalary?.date) ? 'X' : '',
         ccbd: 'X', // auto
         dh: (cand.degrees || []).some(d => d.level === 'Tiến sĩ') ? 'X(TS)' : (cand.degrees || []).some(d => d.level === 'Thạc sĩ') ? 'X(ThS)' : (cand.degrees || []).some(d => d.level === 'Đại học') ? 'X' : '',

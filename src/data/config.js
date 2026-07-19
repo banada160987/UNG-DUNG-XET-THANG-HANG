@@ -32,8 +32,8 @@ export const ACHIEVEMENT_LEVELS = [
   { id: 'gk_bannganh', name: 'Giấy khen Ban, ngành, đoàn thể, UB MTTQ tỉnh', score: 13 },
   { id: 'gk_xa', name: 'Giấy khen Chủ tịch UBND cấp xã', score: 13 },
 
-  // Các bằng khen không có tên trong danh sách ưu tiên của KH125 (Điểm 99 = Không ưu tiên)
-  { id: 'bk_ldld_tinhdoan', name: 'Bằng khen LĐLĐ, tỉnh Đoàn', score: 99 },
-  { id: 'bk_ldld', name: 'Bằng khen Liên đoàn Lao động', score: 99 },
-  { id: 'bk_tinhdoan', name: 'Bằng khen Tỉnh đoàn', score: 99 }
+  // Nhóm Bằng khen Đoàn thể cấp tỉnh (Theo luật TĐKT, tương đương Giấy khen cấp Sở/Ngành - Mức 13)
+  { id: 'bk_ldld_tinhdoan', name: 'Bằng khen LĐLĐ, tỉnh Đoàn (Tương đương Mức 13: Giấy khen cấp Sở)', score: 13 },
+  { id: 'bk_ldld', name: 'Bằng khen Liên đoàn Lao động (Tương đương Mức 13: Giấy khen cấp Sở)', score: 13 },
+  { id: 'bk_tinhdoan', name: 'Bằng khen Tỉnh đoàn (Tương đương Mức 13: Giấy khen cấp Sở)', score: 13 }
 ];

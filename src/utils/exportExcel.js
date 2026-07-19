@@ -90,6 +90,12 @@ export const exportStatisticsExcel = (candidates, unitName = "Toàn trường") 
       "Điểm xét duyệt": c.score || 0,
       "Trạng thái": STATUS_MAP[c.status] || c.status,
       
+      // Thành phần hồ sơ
+      "Sơ yếu LL": c.resumeDoc ? 'X' : '',
+      "Bản nhận xét": c.reviewDoc ? 'X' : '',
+      "Phiếu đánh giá": c.ratingSheets ? 'X' : '',
+      "Các quyết định": (c.decisionRecruitment?.date || c.decisionProbation?.date || c.decisionAppointment?.date || c.decisionSalary?.date) ? 'X' : '',
+      
       // Các cột ma trận
       "BK UBND/Bộ": countUbnd > 0 ? countUbnd : "",
       "BK LĐLĐ": countLdld > 0 || countLegacyLdldTinhDoan > 0 ? (countLdld || countLegacyLdldTinhDoan) : "",
@@ -119,6 +125,10 @@ export const exportStatisticsExcel = (candidates, unitName = "Toàn trường") 
     { wch: 25 },  // Chức danh
     { wch: 10 },  // Điểm số
     { wch: 20 },  // Trạng thái
+    { wch: 10 },  // Sơ yếu LL
+    { wch: 12 },  // Bản nhận xét
+    { wch: 12 },  // Phiếu đánh giá
+    { wch: 12 },  // Các quyết định
     { wch: 12 },  // BK UBND
     { wch: 10 },  // BK LĐLĐ
     { wch: 12 },  // BK Tỉnh đoàn

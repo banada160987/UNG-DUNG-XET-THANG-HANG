@@ -34,6 +34,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
       degrees: [],
       certificates: [],
       resumeDoc: false,
+      ratingSheets: false,
       certIT: false,
       certLanguage: false,
       certEthnic: false,
@@ -641,12 +642,12 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
       </section>
 
       {/* 5. Thành phần hồ sơ khác (Sơ yếu lý lịch, Nhận xét) */}
-      {/* 5. Thành phần hồ sơ khác (Sơ yếu lý lịch, Nhận xét) */}
       <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <h3 className="text-lg font-semibold border-b pb-2 mb-4 text-slate-800">V. Thành phần hồ sơ khác</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg">
           <Checkbox disabled={isReadOnly} label="Đã có Sơ yếu lý lịch (Mẫu HS02-VC/BNV)" name="resumeDoc" checked={formData.resumeDoc} onChange={handleChange} />
           <Checkbox disabled={isReadOnly} label="Đã có Bản nhận xét, đánh giá của thủ trưởng" name="reviewDoc" checked={formData.reviewDoc} onChange={handleChange} />
+          <Checkbox disabled={isReadOnly} label="Phiếu đánh giá, xếp loại các năm trong thời gian công tác được tính xét thăng hạng" name="ratingSheets" checked={formData.ratingSheets} onChange={handleChange} />
           <Checkbox disabled={isReadOnly} label="Tin học (Có chứng chỉ hoặc xác nhận)" name="certIT" checked={formData.certIT} onChange={handleChange} />
           <Checkbox disabled={isReadOnly} label="Ngoại ngữ (Có chứng chỉ hoặc xác nhận)" name="certLanguage" checked={formData.certLanguage} onChange={handleChange} />
           <Checkbox disabled={isReadOnly} label="Tiếng dân tộc thiểu số (Có chứng chỉ hoặc xác nhận)" name="certEthnic" checked={formData.certEthnic} onChange={handleChange} />
