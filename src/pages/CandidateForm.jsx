@@ -255,6 +255,11 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
   const handleSubmitFinal = async (e) => {
     e.preventDefault();
     
+    if (!formData.ratingSheets) {
+      showAlert('Thiếu thông tin', 'Bắt buộc phải tick chọn "Phiếu đánh giá, xếp loại các năm trong thời gian công tác được tính xét thăng hạng" ở mục V.', 'warning');
+      return;
+    }
+
     if (!formData.certificates || formData.certificates.length === 0) {
       showAlert('Thiếu thông tin', 'Bắt buộc phải có Chứng chỉ theo yêu cầu của chức danh nghề nghiệp để đủ điều kiện xét thăng hạng.', 'warning');
       return;
@@ -647,7 +652,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg">
           <Checkbox disabled={isReadOnly} label="Đã có Sơ yếu lý lịch (Mẫu HS02-VC/BNV)" name="resumeDoc" checked={formData.resumeDoc} onChange={handleChange} />
           <Checkbox disabled={isReadOnly} label="Đã có Bản nhận xét, đánh giá của thủ trưởng" name="reviewDoc" checked={formData.reviewDoc} onChange={handleChange} />
-          <Checkbox disabled={isReadOnly} label="Phiếu đánh giá, xếp loại các năm trong thời gian công tác được tính xét thăng hạng" name="ratingSheets" checked={formData.ratingSheets} onChange={handleChange} />
+          <Checkbox required disabled={isReadOnly} label="Phiếu đánh giá, xếp loại các năm trong thời gian công tác được tính xét thăng hạng" name="ratingSheets" checked={formData.ratingSheets} onChange={handleChange} />
           <Checkbox disabled={isReadOnly} label="Tin học (Có chứng chỉ hoặc xác nhận)" name="certIT" checked={formData.certIT} onChange={handleChange} />
           <Checkbox disabled={isReadOnly} label="Ngoại ngữ (Có chứng chỉ hoặc xác nhận)" name="certLanguage" checked={formData.certLanguage} onChange={handleChange} />
           <Checkbox disabled={isReadOnly} label="Tiếng dân tộc thiểu số (Có chứng chỉ hoặc xác nhận)" name="certEthnic" checked={formData.certEthnic} onChange={handleChange} />
@@ -912,7 +917,7 @@ export const Input = ({ label, ...props }) => {
   );
 };
 
-export const Checkbox = ({ label, name, checked, onChange, disabled }) => {
+export const Checkbox = ({ label, name, checked, onChange, disabled, required }) => {
   const { fields = {}, mode, onCommentChange } = useContext(CommentContext);
   const error = fields[name];
 
@@ -920,8 +925,10 @@ export const Checkbox = ({ label, name, checked, onChange, disabled }) => {
     <div className="flex flex-col gap-1">
       <div className="flex justify-between items-center">
         <label className={`flex items-center gap-2 group ${disabled ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}>
-          <input disabled={disabled} type="checkbox" name={name} checked={checked} onChange={onChange} className="w-5 h-5 border-2 border-slate-300 rounded text-blue-600 focus:ring-blue-500 peer disabled:bg-slate-100" />
-          <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">{label}</span>
+          <input required={required} disabled={disabled} type="checkbox" name={name} checked={checked} onChange={onChange} className="w-5 h-5 border-2 border-slate-300 rounded text-blue-600 focus:ring-blue-500 peer disabled:bg-slate-100" />
+          <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">
+            {label} {required && <span className="text-rose-500">*</span>}
+          </span>
         </label>
         {mode === 'review' && (
           <button 
