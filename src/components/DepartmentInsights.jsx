@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import { Trophy, Medal, Star, Shield, Award, Lightbulb, GraduationCap, Target, Users, BookOpen, Clock, AlertTriangle, FileText, CheckCircle, Activity, Sparkles, Eye } from 'lucide-react';
 import { ACHIEVEMENT_LEVELS } from '../data/config';
+import { rankCandidates } from '../utils/ranking';
 
 // Logic cấp danh hiệu
 export const getBadges = (candidate) => {
@@ -72,14 +73,20 @@ export const DepartmentInsights = ({ department, candidates, quota = 0 }) => {
 
   // 3. Dữ liệu Top 3 Podium
   const top3 = useMemo(() => {
-    return [...candidates].sort((a, b) => (b.score || 0) - (a.score || 0)).slice(0, 3);
+    return [...candidates].sort((a, b) => {
+      if (a.score && b.score && a.score !== b.score) return b.score - a.score;
+      return rankCandidates(a, b);
+    }).slice(0, 3);
   }, [candidates]);
 
   // 4. Dự đoán Chỉ tiêu (Top N)
   const topQuota = useMemo(() => {
     return [...candidates]
       .filter(c => ['head_approved', 'admin_reviewing', 'admin_approved', 'ranked', 'finalized'].includes(c.status))
-      .sort((a, b) => (b.score || 0) - (a.score || 0));
+      .sort((a, b) => {
+        if (a.score && b.score && a.score !== b.score) return b.score - a.score;
+        return rankCandidates(a, b);
+      });
   }, [candidates]);
 
   // 5. Cây thành tích
@@ -116,7 +123,11 @@ export const DepartmentInsights = ({ department, candidates, quota = 0 }) => {
             <Icon size={20} />
           </div>
           <div className="font-bold text-slate-800 text-xs md:text-sm line-clamp-1" title={cand.fullName}>{cand.fullName}</div>
-          <div className="text-[10px] text-slate-500">{cand.score} điểm</div>
+          {cand.score != null ? (
+            <div className="text-[10px] text-slate-500">{cand.score} điểm</div>
+          ) : (
+            <div className="text-[10px] text-slate-500 italic">Xét ưu tiên</div>
+          )}
           <div className="text-[10px] text-slate-400 mt-0.5">{cand.achievements?.length || 0} thành tích</div>
         </div>
         <div className={`w-full ${bgClass} ${height} rounded-t-lg border-t-4 shadow-inner relative flex justify-center`}>
