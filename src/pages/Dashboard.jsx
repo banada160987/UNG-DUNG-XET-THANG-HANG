@@ -11,10 +11,11 @@ import { SettingsModal } from '../components/SettingsModal';
 import { StatisticsModal } from '../components/StatisticsModal';
 import { AIReportModal } from '../components/AIReportModal';
 import { useSettings } from '../contexts/SettingsContext';
-import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye, Trash2, Scale, Settings, FileSpreadsheet, BarChart2, Sparkles, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye, Trash2, Scale, Settings, FileSpreadsheet, BarChart2, Sparkles, AlertTriangle, CheckCircle, Award } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import { showAlert, showConfirm, showPrompt } from '../utils/alert';
 import { exportStatisticsWord } from '../utils/exportStatistics';
+import { exportGoldenRollWord } from '../utils/exportGoldenRoll';
 
 export const Dashboard = ({ candidates, onRefresh }) => {
   const [selectedFilter, setSelectedFilter] = useState('all');
@@ -316,6 +317,9 @@ export const Dashboard = ({ candidates, onRefresh }) => {
           </button>
           <button onClick={() => exportStatisticsWord(displayList, selectedUnit === 'all' ? "Toàn trường" : selectedUnit)} className="flex items-center justify-center gap-2 text-sm text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none">
             <FileSpreadsheet size={16} /> Xuất Word
+          </button>
+          <button onClick={() => exportGoldenRollWord(displayList, selectedUnit === 'all' ? "Toàn trường" : selectedUnit)} className="flex items-center justify-center gap-2 text-sm text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none" title="Xuất Bảng vàng danh dự">
+            <Award size={16} /> Bảng vàng
           </button>
           <button onClick={() => setShowSettings(true)} className="flex items-center justify-center gap-2 text-sm bg-slate-800 text-white hover:bg-slate-700 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none">
             <Settings size={16} /> Cấu hình
