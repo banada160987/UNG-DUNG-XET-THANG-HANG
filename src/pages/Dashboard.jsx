@@ -11,11 +11,12 @@ import { SettingsModal } from '../components/SettingsModal';
 import { StatisticsModal } from '../components/StatisticsModal';
 import { AIReportModal } from '../components/AIReportModal';
 import { useSettings } from '../contexts/SettingsContext';
-import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye, Trash2, Scale, Settings, FileSpreadsheet, BarChart2, Sparkles, AlertTriangle, CheckCircle, Award } from 'lucide-react';
+import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye, Trash2, Scale, Settings, FileSpreadsheet, BarChart2, Sparkles, AlertTriangle, CheckCircle, Award, Table as TableIcon } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import { showAlert, showConfirm, showPrompt } from '../utils/alert';
 import { exportStatisticsWord } from '../utils/exportStatistics';
 import { exportGoldenRollWord } from '../utils/exportGoldenRoll';
+import { exportStatisticsExcel } from '../utils/exportExcel';
 
 export const Dashboard = ({ candidates, onRefresh }) => {
   const [selectedFilter, setSelectedFilter] = useState('all');
@@ -314,6 +315,9 @@ export const Dashboard = ({ candidates, onRefresh }) => {
           </button>
           <button onClick={() => setShowAIReport(true)} className="flex items-center justify-center gap-2 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none">
             <Sparkles size={16} /> Báo cáo AI
+          </button>
+          <button onClick={() => exportStatisticsExcel(displayList, selectedUnit === 'all' ? "Toàn trường" : selectedUnit)} className="flex items-center justify-center gap-2 text-sm text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none" title="Xuất dữ liệu ra file Excel">
+            <TableIcon size={16} /> Xuất Excel
           </button>
           <button onClick={() => exportStatisticsWord(displayList, selectedUnit === 'all' ? "Toàn trường" : selectedUnit)} className="flex items-center justify-center gap-2 text-sm text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none">
             <FileSpreadsheet size={16} /> Xuất Word

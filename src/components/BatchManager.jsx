@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
-import { Plus, Check, Save, Edit2, Trash2 } from 'lucide-react';
-import { showAlert, showConfirm } from '../utils/alert';
+import { Plus, Check, Save, Edit2, Trash2, ArrowRightLeft } from 'lucide-react';
+import { showAlert, showConfirm, showPrompt } from '../utils/alert';
 
 export const BatchManager = ({ activeBatchId, onSelectBatch }) => {
   const [batches, setBatches] = useState([]);
@@ -69,16 +69,104 @@ export const BatchManager = ({ activeBatchId, onSelectBatch }) => {
     }
   };
 
+  const handleTransitionYear = async () => {
+    if (!activeBatchId) {
+      showAlert('Thông báo', 'Vui lòng chọn một đợt xét duyệt hiện tại để chuyển giao.');
+      return;
+    }
+
+    const currentBatch = batches.find(b => b.id === activeBatchId);
+    if (!currentBatch) return;
+
+    const confirmed = await showConfirm(
+      'CẢNH BÁO CHUYỂN GIAO NĂM HỌC',
+      'Tính năng này sẽ "Đóng băng" đợt xét duyệt hiện tại và Tạo ra một đợt xét duyệt mới.\n\nTOÀN BỘ GIÁO VIÊN sẽ được chuyển sang đợt mới nhưng MỌI THÀNH TÍCH VÀ ĐIỂM SỐ SẼ BỊ XÓA SẠCH để bắt đầu lại từ đầu.\n\nBạn có chắc chắn muốn thực hiện?',
+      'warning'
+    );
+    if (!confirmed) return;
+
+    const newBatchName = await showPrompt(
+      'Tạo đợt xét duyệt mới',
+      'Nhập tên đợt xét duyệt mới...',
+      `Đợt xét thăng hạng năm ${new Date().getFullYear() + 1}`
+    );
+
+    if (!newBatchName) return;
+
+    // 1. Create new batch
+    const { data: newBatchData, error: newBatchError } = await supabase.from('batches').insert([{
+      name: newBatchName,
+      type: currentBatch.type,
+      quota: currentBatch.quota,
+      deadline: currentBatch.deadline,
+      isActive: true
+    }]).select();
+
+    if (newBatchError || !newBatchData) {
+      showAlert('Thông báo', 'Lỗi khi tạo đợt mới!');
+      return;
+    }
+
+    const newBatchId = newBatchData[0].id;
+
+    // 2. Fetch all candidates from current batch
+    const { data: oldCands } = await supabase.from('candidates').select('*').eq('batch_id', activeBatchId);
+    
+    // 3. Map candidates to new batch (clearing achievements)
+    if (oldCands && oldCands.length > 0) {
+      const newCands = oldCands.map(c => ({
+        batch_id: newBatchId,
+        cccd: c.cccd,
+        fullName: c.fullName,
+        dob: c.dob,
+        gender: c.gender,
+        ethnicity: c.ethnicity,
+        phone: c.phone,
+        unit: c.unit,
+        currentTitle: c.currentTitle,
+        targetTitle: c.targetTitle,
+        status: 'draft',
+        score: 0,
+        achievements: [],
+        otherAchievements: [],
+        degrees: [],
+        certificates: [],
+        evalMinute: null,
+        decisionAppointment: null,
+        feedback_message: null
+      }));
+
+      const { error: insertError } = await supabase.from('candidates').insert(newCands);
+      if (insertError) {
+        console.error('Error migrating candidates:', insertError);
+        showAlert('Thông báo', 'Đã tạo đợt mới nhưng lỗi khi sao chép danh sách giáo viên!');
+      }
+    }
+
+    // 4. Set current batch to inactive
+    await supabase.from('batches').update({ isActive: false }).eq('id', activeBatchId);
+
+    showAlert('Thành công', `Đã chuyển giao sang đợt mới: ${newBatchName}. Danh sách giáo viên đã được reset!`, 'success');
+    
+    fetchBatches();
+    onSelectBatch(newBatchId);
+  };
+
   return (
     <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-6">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold text-slate-800">Đợt xét thăng hạng</h2>
-        <button onClick={() => {
-          setNewBatch({ name: '', type: 'III -> II', quota: 1, deadline: '' });
-          setIsCreating(!isCreating);
-        }} className="text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-100">
-          <Plus size={16} className="inline mr-1" /> Tạo đợt mới
-        </button>
+        <div className="flex gap-2">
+          <button onClick={handleTransitionYear} className="text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-amber-100 border border-amber-200 transition-colors" title="Chuyển sang năm học mới (Xóa thành tích, giữ nguyên danh sách)">
+            <ArrowRightLeft size={16} className="inline mr-1" /> Chuyển giao năm học
+          </button>
+          <button onClick={() => {
+            setNewBatch({ name: '', type: 'III -> II', quota: 1, deadline: '' });
+            setIsCreating(!isCreating);
+          }} className="text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors">
+            <Plus size={16} className="inline mr-1" /> Tạo đợt mới
+          </button>
+        </div>
       </div>
 
       {isCreating && (
