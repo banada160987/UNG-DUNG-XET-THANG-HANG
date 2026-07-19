@@ -427,7 +427,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
           candidate={viewCand} 
           onClose={() => setViewCand(null)} 
           onReject={(candidate, msg) => {
-            handleReject(candidate.id, msg);
+            updateStatus(candidate, 'head_rejected', msg);
             setViewCand(null);
           }}
         />

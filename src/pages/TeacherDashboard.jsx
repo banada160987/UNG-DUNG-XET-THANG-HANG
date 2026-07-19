@@ -160,12 +160,12 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
               </div>
             )}
 
-            {candidate?.status === 'admin_rejected' && (
+            {['admin_rejected', 'returned'].includes(candidate?.status) && (
               <div className="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-lg mb-6 flex items-start gap-3 shadow-sm">
                 <AlertCircle className="shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-bold">Hồ sơ không đủ điều kiện (Bị từ chối)</p>
-                  <p className="text-sm mt-1">Ban Giám Hiệu đã rà soát và xác định hồ sơ của bạn chưa đủ điều kiện. Tuy nhiên, nếu bạn có bổ sung thông tin hoặc minh chứng mới, bạn có thể chỉnh sửa và nộp lại.</p>
+                  <p className="font-bold">Yêu cầu bổ sung hồ sơ (Từ Thư ký/Ban Giám Hiệu)</p>
+                  <p className="text-sm mt-1">Hồ sơ của bạn cần được bổ sung hoặc chỉnh sửa. Vui lòng xem chi tiết lỗi đánh dấu ở từng mục bên dưới, chỉnh sửa và nộp lại.</p>
                 </div>
               </div>
             )}
