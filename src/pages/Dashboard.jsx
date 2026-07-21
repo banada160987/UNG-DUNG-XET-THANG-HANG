@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../utils/supabaseClient';
 import { checkEligibility } from '../utils/validation';
 import { calculateTotalScore, rankCandidates } from '../utils/ranking';
@@ -374,7 +375,8 @@ export const Dashboard = ({ candidates, onRefresh }) => {
       </div>
 
       {/* Candidate Flex/Grid Cards */}
-      <div className="flex flex-col gap-4">
+      <motion.div layout className="flex flex-col gap-4">
+        <AnimatePresence>
         {rankedDisplayList.length === 0 ? (
           <p className="text-center p-8 text-slate-400 bg-white rounded-xl border border-slate-200 border-dashed">Không có dữ liệu hồ sơ phù hợp.</p>
         ) : rankedDisplayList.map(c => {
@@ -382,7 +384,14 @@ export const Dashboard = ({ candidates, onRefresh }) => {
           const isExcluded = c.simRank === -1;
 
           return (
-          <div key={c.id} className={`bg-white p-4 md:p-5 rounded-xl shadow-sm border transition-all flex flex-col md:flex-row gap-4 md:gap-6 items-start md:items-center relative overflow-hidden ${isExcluded ? 'opacity-50 border-slate-200' : (isSafe ? 'border-emerald-400 shadow-emerald-500/10 shadow-lg' : 'border-slate-200 hover:border-blue-300')}`}>
+          <motion.div 
+            layout
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.3 }}
+            key={c.id} 
+            className={`bg-white p-4 md:p-5 rounded-xl shadow-sm border transition-all flex flex-col md:flex-row gap-4 md:gap-6 items-start md:items-center relative overflow-hidden ${isExcluded ? 'opacity-50 border-slate-200' : (isSafe ? 'border-emerald-400 shadow-emerald-500/10 shadow-lg' : 'border-slate-200 hover:border-blue-300')}`}>
             
             {isSafe && !isExcluded && (
               <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500" />
@@ -519,9 +528,10 @@ export const Dashboard = ({ candidates, onRefresh }) => {
               </div>
             </div>
 
-          </div>
+          </motion.div>
         )})}
-      </div>
+        </AnimatePresence>
+      </motion.div>
 
       {timelineCandId && (
         <CandidateTimeline candidateId={timelineCandId} onClose={() => setTimelineCandId(null)} />

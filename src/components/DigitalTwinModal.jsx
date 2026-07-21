@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { exportCandidateToWord } from '../utils/exportWord';
+import { exportDetailedChecklistWord } from '../utils/exportDetailedChecklistWord';
 import { showPrompt } from '../utils/alert';
 import { getBadges } from './DepartmentInsights';
 import { checkEligibility } from '../utils/validation';
@@ -123,8 +124,11 @@ export const DigitalTwinModal = ({ candidate, onClose, onReject }) => {
               <XCircle size={24} />
             </button>
             <div className="flex items-center gap-2">
-              <button onClick={() => exportCandidateToWord(candidate)} className="flex items-center gap-2 text-sm bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-100 font-bold transition-colors">
-                <Download size={16} /> Xuất Hồ sơ
+              <button onClick={() => exportCandidateToWord(candidate)} className="flex items-center gap-2 text-sm bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-100 font-bold transition-colors" title="Mẫu cũ">
+                <Download size={16} /> Xuất Bìa
+              </button>
+              <button onClick={() => exportDetailedChecklistWord(candidate)} className="flex items-center gap-2 text-sm bg-green-50 text-green-700 px-3 py-1.5 rounded-lg hover:bg-green-100 font-bold transition-colors" title="Mẫu mới chi tiết">
+                <Download size={16} /> Xuất Danh Mục
               </button>
               {onReject && (
                 <button onClick={handleRejectClick} className="flex items-center gap-2 text-sm bg-rose-50 text-rose-700 px-3 py-1.5 rounded-lg hover:bg-rose-100 font-bold transition-colors">

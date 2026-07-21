@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { XCircle, FileText, Download, MessageSquareWarning } from 'lucide-react';
 import { CandidateForm } from '../pages/CandidateForm';
 import { exportCandidateToWord } from '../utils/exportWord';
+import { exportDetailedChecklistWord } from '../utils/exportDetailedChecklistWord';
 import { showPrompt } from '../utils/alert';
 import { getBadges } from './DepartmentInsights';
 
@@ -58,10 +59,18 @@ export const CandidateDetailsModal = ({ candidate, onClose, onReject }) => {
             <button 
               onClick={() => exportCandidateToWord(candidate)} 
               className="flex items-center gap-2 text-sm bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-200 shadow-sm font-medium"
-              title="Tải Danh mục hồ sơ bản Word"
+              title="Tải Danh mục hồ sơ bản Word (Mẫu cũ)"
             >
               <Download size={16} />
-              Xuất Bìa & Danh Mục
+              Xuất File Word (Mẫu cũ)
+            </button>
+            <button 
+              onClick={() => exportDetailedChecklistWord(candidate)} 
+              className="flex items-center gap-2 text-sm bg-green-100 text-green-700 px-3 py-1.5 rounded-lg hover:bg-green-200 shadow-sm font-medium"
+              title="Tải Danh mục và Bìa bản Word (Mẫu mới)"
+            >
+              <Download size={16} />
+              Xuất Danh Mục
             </button>
             {onReject && (
               <button 

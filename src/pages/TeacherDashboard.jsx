@@ -4,6 +4,7 @@ import { CandidateForm } from './CandidateForm';
 import { StatusBadge } from '../components/StatusBadge';
 import { AlertCircle, FileCheck, Search, Download, PenTool, HelpCircle } from 'lucide-react';
 import { exportCandidateToWord } from '../utils/exportWord';
+import { exportDetailedChecklistWord } from '../utils/exportDetailedChecklistWord';
 import { SignatureModal } from '../components/SignatureModal';
 import { UserGuideModal } from '../components/UserGuideModal';
 import { showAlert } from '../utils/alert';
@@ -119,10 +120,18 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
               <button 
                 onClick={() => exportCandidateToWord(candidate, signature)} 
                 className="flex items-center gap-2 text-sm bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 shadow-sm font-medium"
-                title="Tải Danh mục hồ sơ bản Word"
+                title="Tải Danh mục hồ sơ bản Word (Mẫu cũ)"
               >
                 <Download size={16} />
-                Xuất Bìa & Danh Mục
+                Xuất File Word (Mẫu cũ)
+              </button>
+              <button 
+                onClick={() => exportDetailedChecklistWord(candidate)} 
+                className="flex items-center gap-2 text-sm bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700 shadow-sm font-medium"
+                title="Tải Danh mục và Bìa bản Word (Mẫu mới)"
+              >
+                <Download size={16} />
+                Xuất Danh Mục
               </button>
             </>
           )}
