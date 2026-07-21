@@ -41,6 +41,9 @@ export const exportDetailedChecklistWord = async (candidate) => {
     resumeDoc = false,
     reviewDoc = false,
     ratingSheets = false,
+    certIT = false,
+    certLanguage = false,
+    certEthnic = false,
     degrees = [],
     certificates = [],
     achievements = [],
@@ -174,10 +177,14 @@ export const exportDetailedChecklistWord = async (candidate) => {
 
   // Row 4a
   const degreeParas = degrees.map(d => createPara([createText(`- 01 Bản sao Bằng ${d.level} ${d.major}`)]));
+  if (certIT) degreeParas.push(createPara([createText("+ Bản sao Chứng chỉ Tin học ứng dụng")]));
+  if (certLanguage) degreeParas.push(createPara([createText("+ Bản sao Chứng chỉ Ngoại ngữ")]));
+  if (certEthnic) degreeParas.push(createPara([createText("+ Bản sao Chứng chỉ Tiếng dân tộc thiểu số")]));
+
   tableRows.push(createRow(
     "a",
     "- Bản sao các văn bằng, chứng chỉ",
-    degrees.length > 0 ? "X" : "",
+    (degrees.length > 0 || certIT || certLanguage || certEthnic) ? "X" : "",
     "",
     degreeParas
   ));
