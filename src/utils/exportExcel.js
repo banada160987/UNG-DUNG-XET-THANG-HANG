@@ -1,157 +1,214 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
-import { ACHIEVEMENT_LEVELS } from '../data/config';
+import { format } from 'date-fns';
 
-const STATUS_MAP = {
-  'draft': 'Nháp / Đang cập nhật',
-  'submitted_to_head': 'Chờ Tổ trưởng duyệt',
-  'head_approved': 'Tổ trưởng đã duyệt',
-  'head_rejected': 'Tổ trưởng yêu cầu bổ sung',
-  'admin_reviewing': 'Đang rà soát',
-  'admin_approved': 'Đủ điều kiện',
-  'admin_rejected': 'Không đủ điều kiện',
-  'returned': 'Thư ký yêu cầu bổ sung',
-  'ranked': 'Đã xếp hạng',
-  'finalized': 'Hoàn tất'
-};
+export const exportStatisticsExcel = async (candidates) => {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet('Danh sách');
 
-export const exportStatisticsExcel = (candidates, unitName = "Toàn trường") => {
-  // Map data to Excel rows
-  const data = candidates.map((c, index) => {
-    
-    // Đếm thành tích
-    let countUbnd = 0;
-    let countLdld = 0;
-    let countTinhDoan = 0;
-    let countCstdTinh = 0;
-    let countCstdCs = 0;
-    let countGkSgd = 0;
-    let countGkBanNganh = 0;
-    
-    // Tương thích ngược (Legacy)
-    let countLegacyLdldTinhDoan = 0;
-    let countLegacySgdBanNganh = 0;
+  // Set default font
+  sheet.properties.defaultRowHeight = 25;
 
-    const mainAchList = [];
-    if (c.achievements && c.achievements.length > 0) {
-      c.achievements.forEach(ach => {
-        const official = ACHIEVEMENT_LEVELS.find(l => l.id === ach.id);
-        const name = official ? official.name : ach.id;
-        mainAchList.push(`${name} (${ach.decisionNo || ''})`);
+  // Header rows
+  sheet.mergeCells('A1:D1');
+  sheet.getCell('A1').value = 'SỞ GIÁO DỤC VÀ ĐÀO TẠO ĐẮK LẮK\nĐƠN VỊ: TRƯỜNG THPT CAO BÁ QUÁT';
+  sheet.getCell('A1').font = { name: 'Times New Roman', bold: true, size: 11 };
+  sheet.getCell('A1').alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
 
-        // Matrix counters
-        if (['bk_ubnd_tinh', 'bk_thu_tuong', 'bk_tinh_uy_5nam', 'bk_bo_nganh', 'bk_tinh_uy_dotxuat'].includes(ach.id)) countUbnd++;
-        if (ach.id === 'bk_ldld') countLdld++;
-        if (ach.id === 'bk_tinhdoan') countTinhDoan++;
-        if (ach.id === 'bk_ldld_tinhdoan') countLegacyLdldTinhDoan++;
-        if (['cstd_toan_quoc', 'cstd_cap_tinh'].includes(ach.id)) countCstdTinh++;
-        if (ach.id === 'cstd_co_so') countCstdCs++;
-        if (ach.id === 'gk_sgd') countGkSgd++;
-        if (['gk_bannganh', 'gk_dang_uy_xa', 'gk_xa'].includes(ach.id)) countGkBanNganh++;
-        if (ach.id === 'gk_so_nganh_xa') countLegacySgdBanNganh++;
-      });
+  sheet.mergeCells('J1:W1');
+  sheet.getCell('J1').value = 'CỘNG HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM\nĐộc lập - Tự do - Hạnh phúc';
+  sheet.getCell('J1').font = { name: 'Times New Roman', bold: true, size: 11 };
+  sheet.getCell('J1').alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+
+  sheet.mergeCells('A2:W2');
+  sheet.getCell('A2').value = 'DANH SÁCH VIÊN CHỨC ĐĂNG KÝ THĂNG HẠNG CHỨC DANH NGHỀ NGHIỆP VIÊN CHỨC NĂM 2026';
+  sheet.getCell('A2').font = { name: 'Times New Roman', bold: true, size: 12 };
+  sheet.getCell('A2').alignment = { vertical: 'middle', horizontal: 'center' };
+
+  sheet.mergeCells('A3:W3');
+  sheet.getCell('A3').value = '(Kèm theo Công văn số ......../SGDĐT-TCCB ngày .../.../2026 của Sở Giáo dục và Đào tạo)';
+  sheet.getCell('A3').font = { name: 'Times New Roman', italic: true, size: 11 };
+  sheet.getCell('A3').alignment = { vertical: 'middle', horizontal: 'center' };
+
+  // Define Columns and Headers
+  const headerRow4 = sheet.getRow(4);
+  const headerRow5 = sheet.getRow(5);
+
+  const columns = [
+    { header: 'Stt', key: 'stt', width: 5 },
+    { header: 'Họ và tên', key: 'name', width: 22 },
+    { header: 'Nam', key: 'dob_nam', width: 12 },
+    { header: 'Nữ', key: 'dob_nu', width: 12 },
+    { header: 'Chức vụ, chức danh', key: 'jobTitle', width: 15 },
+    { header: 'Huân chương các loại', key: 'huan_chuong', width: 10 },
+    { header: 'Danh hiệu vinh dự nhà nước: Anh hùng Lao động, Nhà giáo Nhân dân...', key: 'danh_hieu_nn', width: 12 },
+    { header: 'Giải thưởng Hồ Chí Minh; Giải thưởng Nhà nước', key: 'giai_thuong_hcm', width: 12 },
+    { header: 'Danh hiệu Chiến sĩ thi đua toàn quốc', key: 'cstd_toan_quoc', width: 12 },
+    { header: 'Bằng khen của Thủ tướng Chính phủ', key: 'bk_thu_tuong', width: 12 },
+    { header: 'Danh hiệu Chiến sĩ thi đua cấp tỉnh', key: 'cstd_cap_tinh', width: 12 },
+    { header: 'Bằng khen của Ban Thường vụ Tỉnh uỷ (khen thưởng đột xuất, chuyên đề, hàng năm)', key: 'bk_tinh_uy', width: 15 },
+    { header: 'Bằng khen của Bộ, ban, ngành trung ương', key: 'bk_bo_nganh', width: 15 },
+    { header: 'Bằng khen của Uỷ ban nhân dân tỉnh (khen thưởng thành tích công trạng, đột xuất, phong trào)', key: 'bk_ubnd_tinh', width: 15 },
+    { header: 'Danh hiệu Chiến sĩ thi đua cơ sở', key: 'cstd_co_so', width: 12 },
+    { header: 'Giấy khen của Ban Thường vụ Đảng ủy xã, phường', key: 'gk_dang_uy_xa', width: 12 },
+    { header: 'Giấy khen của Thủ trưởng Sở, ban, ngành, Uỷ ban Mặt trận Tổ quốc Việt Nam tỉnh và tương đương, Chủ tịch Uỷ ban nhân dân cấp xã...', key: 'gk_so_nganh_xa', width: 15 },
+    { header: 'Giáo viên dạy giỏi, giáo viên chủ nhiệm lớp giỏi từ cấp tỉnh', key: 'gvdg_tinh', width: 12 },
+    { header: 'Giáo viên dạy giỏi, giáo viên chủ nhiệm lớp giỏi... cấp huyện', key: 'gvdg_huyen', width: 12 },
+    { header: 'Giáo viên dạy giỏi, giáo viên chủ nhiệm lớp giỏi cấp trường', key: 'gvdg_truong', width: 12 },
+    { header: 'Đạt giải trong Hội thi giáo viên dạy giỏi cấp tỉnh', key: 'gvdg_giai_tinh', width: 12 },
+    { header: 'Thành tích khác', key: 'other', width: 15 },
+    { header: 'Ghi chú', key: 'note', width: 10 },
+  ];
+
+  sheet.columns = columns.map(c => ({ key: c.key, width: c.width }));
+
+  // Set values
+  columns.forEach((col, index) => {
+    const colNumber = index + 1;
+    if (col.key === 'dob_nam') {
+      headerRow5.getCell(colNumber).value = 'Nam';
+    } else if (col.key === 'dob_nu') {
+      headerRow5.getCell(colNumber).value = 'Nữ';
+    } else {
+      headerRow4.getCell(colNumber).value = col.header;
     }
-
-    // Đếm thành tích khác (GVDG, GVCNG)
-    let countGvdg = 0;
-    let countGvcng = 0;
-    const otherAchList = [];
-    if (c.otherAchievements && c.otherAchievements.length > 0) {
-      c.otherAchievements.forEach(ach => {
-        const name = ach.name || ach.id || '';
-        otherAchList.push(`${name} (${ach.decisionNo || ''})`);
-        
-        const nameLower = name.toLowerCase();
-        if (nameLower.includes('dạy giỏi') || nameLower.includes('gvdg')) countGvdg++;
-        if (nameLower.includes('chủ nhiệm') || nameLower.includes('gvcng')) countGvcng++;
-      });
-    }
-
-    // Bằng cấp, chứng chỉ
-    const certList = [];
-    if (c.certificates && c.certificates.length > 0) {
-      c.certificates.forEach(cert => {
-        certList.push(`${cert.name} (${cert.year})`);
-      });
-    }
-    const degList = [];
-    if (c.degrees && c.degrees.length > 0) {
-      c.degrees.forEach(deg => {
-        degList.push(`${deg.level} - ${deg.major} (${deg.year})`);
-      });
-    }
-
-    return {
-      "STT": index + 1,
-      "Họ và tên": c.fullName,
-      "Ngáy sinh": c.dob || "",
-      "Đơn vị": c.unit || "",
-      "Chức danh đang giữ": c.currentTitle || "",
-      "Điểm xét duyệt": c.score || 0,
-      "Trạng thái": STATUS_MAP[c.status] || c.status,
-      
-      // Thành phần hồ sơ
-      "Sơ yếu LL": c.resumeDoc ? 'X' : '',
-      "Bản nhận xét": c.reviewDoc ? 'X' : '',
-      "Phiếu đánh giá": c.ratingSheets ? 'X' : '',
-      "Các quyết định": (c.decisionRecruitment?.date || c.decisionProbation?.date || c.decisionAppointment?.date || c.decisionSalary?.date) ? 'X' : '',
-      
-      // Các cột ma trận
-      "BK UBND/Bộ": countUbnd > 0 ? countUbnd : "",
-      "BK LĐLĐ": countLdld > 0 || countLegacyLdldTinhDoan > 0 ? (countLdld || countLegacyLdldTinhDoan) : "",
-      "BK Tỉnh đoàn": countTinhDoan > 0 ? countTinhDoan : "",
-      "CSTĐ Tỉnh": countCstdTinh > 0 ? countCstdTinh : "",
-      "CSTĐ Cơ sở": countCstdCs > 0 ? countCstdCs : "",
-      "GK Sở GD": countGkSgd > 0 || countLegacySgdBanNganh > 0 ? (countGkSgd || countLegacySgdBanNganh) : "",
-      "GK Ban Ngành": countGkBanNganh > 0 ? countGkBanNganh : "",
-      "GVDG": countGvdg > 0 ? countGvdg : "",
-      "GVCNG": countGvcng > 0 ? countGvcng : "",
-      
-      "Chi tiết TT chính": mainAchList.join('\n'),
-      "Chi tiết TT khác": otherAchList.join('\n'),
-      "Bằng cấp chuyên môn": degList.join('\n'),
-      "Chứng chỉ bồi dưỡng": certList.join('\n'),
-    };
   });
 
-  const worksheet = XLSX.utils.json_to_sheet(data);
+  sheet.mergeCells('C4:D4');
+  headerRow4.getCell(3).value = 'Ngày tháng năm sinh';
 
-  // Đặt chiều rộng cột (Column Widths)
-  const colWidths = [
-    { wch: 5 },   // STT
-    { wch: 25 },  // Họ và tên
-    { wch: 12 },  // Ngày sinh
-    { wch: 20 },  // Đơn vị
-    { wch: 25 },  // Chức danh
-    { wch: 10 },  // Điểm số
-    { wch: 20 },  // Trạng thái
-    { wch: 10 },  // Sơ yếu LL
-    { wch: 12 },  // Bản nhận xét
-    { wch: 12 },  // Phiếu đánh giá
-    { wch: 12 },  // Các quyết định
-    { wch: 12 },  // BK UBND
-    { wch: 10 },  // BK LĐLĐ
-    { wch: 12 },  // BK Tỉnh đoàn
-    { wch: 10 },  // CSTĐ Tỉnh
-    { wch: 10 },  // CSTĐ CS
-    { wch: 10 },  // GK Sở GD
-    { wch: 12 },  // GK Ban Ngành
-    { wch: 10 },  // GVDG
-    { wch: 10 },  // GVCNG
-    { wch: 30 },  // TT chính
-    { wch: 30 },  // TT khác
-    { wch: 20 },  // Bằng cấp
-    { wch: 20 }   // Chứng chỉ
-  ];
-  worksheet['!cols'] = colWidths;
+  // Merge vertical for others
+  const mergeKeys = ['A', 'B', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W'];
+  mergeKeys.forEach(key => {
+    sheet.mergeCells(`${key}4:${key}5`);
+  });
 
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "DanhSach");
+  // Style headers
+  [headerRow4, headerRow5].forEach(row => {
+    row.eachCell(cell => {
+      cell.font = { name: 'Times New Roman', bold: true, size: 10 };
+      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+      cell.border = {
+        top: { style: 'thin' }, left: { style: 'thin' },
+        bottom: { style: 'thin' }, right: { style: 'thin' }
+      };
+    });
+  });
   
-  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-  const dataBlob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  headerRow4.height = 120;
+
+  // Process data
+  const groupedData = {};
   
-  const today = new Date();
-  const dateStr = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}`;
-  saveAs(dataBlob, `ThongKe_XetThangHang_${unitName.replace(/\s+/g, '_')}_${dateStr}.xlsx`);
+  candidates.forEach(c => {
+    if (!c.targetTitle || !c.currentTitle) return;
+    const groupKey = `Đăng ký xét thăng hạng từ ${c.currentTitle} lên ${c.targetTitle}`;
+    if (!groupedData[groupKey]) groupedData[groupKey] = { manager: [], staff: [] };
+    
+    const isManager = ['ban giám hiệu', 'lãnh đạo'].some(k => (c.unit || '').toLowerCase().includes(k));
+    if (isManager) {
+      groupedData[groupKey].manager.push(c);
+    } else {
+      groupedData[groupKey].staff.push(c);
+    }
+  });
+
+  // Add school header
+  const schoolRow = sheet.addRow(['Trường THPT Cao Bá Quát']);
+  sheet.mergeCells(`A${schoolRow.number}:W${schoolRow.number}`);
+  schoolRow.getCell(1).font = { name: 'Times New Roman', bold: true, color: { argb: 'FFFF0000' } };
+  schoolRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
+  schoolRow.getCell(1).border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+  
+  Object.keys(groupedData).forEach(groupName => {
+    const groupRow = sheet.addRow([groupName.toUpperCase()]);
+    sheet.mergeCells(`A${groupRow.number}:W${groupRow.number}`);
+    groupRow.getCell(1).font = { name: 'Times New Roman', bold: true, color: { argb: 'FFFF0000' } };
+    groupRow.getCell(1).border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+
+    const renderCandidates = (list, title) => {
+      if (list.length === 0) return;
+      const titleRow = sheet.addRow([title]);
+      sheet.mergeCells(`A${titleRow.number}:W${titleRow.number}`);
+      titleRow.getCell(1).font = { name: 'Times New Roman', bold: true };
+      titleRow.getCell(1).border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+      
+      list.forEach((c, idx) => {
+        const allAch = [...(c.achievements||[]), ...(c.otherAchievements||[])];
+        const count = (ids) => {
+          if (!Array.isArray(ids)) ids = [ids];
+          let cnt = 0;
+          allAch.forEach(a => {
+            if (ids.includes(a.id)) cnt++;
+          });
+          return cnt > 0 ? cnt : '';
+        };
+
+        const cnt_tinh_uy = count(['bk_tinh_uy_5nam', 'bk_tinh_uy_dotxuat']);
+        const cnt_gk_so = count(['gk_so_nganh_xa', 'gk_sgd', 'gk_bannganh', 'gk_xa']);
+        
+        let gvdg_tinh = '';
+        let gvdg_huyen = '';
+        let gvdg_truong = '';
+        let gvdg_giai_tinh = '';
+
+        allAch.forEach(a => {
+           const name = (a.name || '').toLowerCase();
+           if (name.includes('giáo viên dạy giỏi') || name.includes('chủ nhiệm') || name.includes('tổng phụ trách')) {
+              if (name.includes('tỉnh')) gvdg_tinh = 'x';
+              if (name.includes('huyện') || name.includes('thành phố')) gvdg_huyen = 'x';
+              if (name.includes('trường')) gvdg_truong = 'x';
+           }
+        });
+
+        let dob = '';
+        if (c.dob) {
+           try {
+              dob = format(new Date(c.dob), 'dd/MM/yyyy');
+           } catch(e) {}
+        }
+        
+        const rowData = {
+          stt: idx + 1,
+          name: c.fullName,
+          dob_nam: c.gender === 'Nam' ? dob : '',
+          dob_nu: c.gender === 'Nữ' ? dob : '',
+          jobTitle: c.currentTitle,
+          huan_chuong: count('huan_chuong'),
+          danh_hieu_nn: count('danh_hieu_nn'),
+          giai_thuong_hcm: count('giai_thuong_hcm'),
+          cstd_toan_quoc: count('cstd_toan_quoc'),
+          bk_thu_tuong: count('bk_thu_tuong'),
+          cstd_cap_tinh: count('cstd_cap_tinh'),
+          bk_tinh_uy: cnt_tinh_uy,
+          bk_bo_nganh: count('bk_bo_nganh'),
+          bk_ubnd_tinh: count('bk_ubnd_tinh'),
+          cstd_co_so: count('cstd_co_so'),
+          gk_dang_uy_xa: count('gk_dang_uy_xa'),
+          gk_so_nganh_xa: cnt_gk_so,
+          gvdg_tinh,
+          gvdg_huyen,
+          gvdg_truong,
+          gvdg_giai_tinh,
+          other: '',
+          note: ''
+        };
+        const r = sheet.addRow(rowData);
+        r.eachCell(cell => {
+           cell.font = { name: 'Times New Roman', size: 11 };
+           cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+           cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+        });
+        r.getCell(2).alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+      });
+    };
+
+    renderCandidates(groupedData[groupName].manager, 'VIÊN CHỨC QUẢN LÝ');
+    renderCandidates(groupedData[groupName].staff, 'VIÊN CHỨC KHÔNG QUẢN LÝ');
+  });
+
+  // Export
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  saveAs(blob, 'ThongKeXetThangHang.xlsx');
 };

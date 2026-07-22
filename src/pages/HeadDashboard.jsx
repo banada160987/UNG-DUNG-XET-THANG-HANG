@@ -13,6 +13,7 @@ import { useSettings } from '../contexts/SettingsContext';
 import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle, Send, History, Eye, Scale, Users, FileText, CheckSquare, FileSpreadsheet, Clock, HelpCircle, BarChart2, Sparkles } from 'lucide-react';
 import { showAlert, showConfirm } from '../utils/alert';
 import { exportStatisticsWord } from '../utils/exportStatistics';
+import { exportStatisticsExcel } from '../utils/exportExcel';
 import { ActionHistory } from '../components/ActionHistory';
 import { UserGuideModal } from '../components/UserGuideModal';
 import { DepartmentInsights, getBadges } from '../components/DepartmentInsights';
@@ -184,7 +185,13 @@ export const HeadDashboard = ({ department, onLogout }) => {
               onClick={() => exportStatisticsWord(displayCandidates, department)} 
               className="flex items-center gap-2 text-sm text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-lg border border-green-200 font-medium transition-colors"
             >
-              <FileSpreadsheet size={16} /> Xuất thống kê
+              <FileText size={16} /> Xuất thống kê (Word)
+            </button>
+            <button 
+              onClick={() => exportStatisticsExcel(displayCandidates)} 
+              className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg border border-emerald-200 font-medium transition-colors"
+            >
+              <FileSpreadsheet size={16} /> Xuất báo cáo Sở (Excel)
             </button>
             <button 
               onClick={() => setShowStatistics(true)} 
