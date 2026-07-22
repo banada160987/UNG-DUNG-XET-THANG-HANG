@@ -11,9 +11,11 @@ import { StatisticsModal } from '../components/StatisticsModal';
 import { AIReportModal } from '../components/AIReportModal';
 import { UserGuideModal } from '../components/UserGuideModal';
 import { useSettings } from '../contexts/SettingsContext';
-import { Users, FileText, CheckSquare, Search, ThumbsUp, ThumbsDown, LogOut, XCircle, Send, History, Eye, Scale, HelpCircle, BarChart2, FileSpreadsheet, Sparkles } from 'lucide-react';
+import { Users, FileText, CheckSquare, Search, ThumbsUp, ThumbsDown, LogOut, XCircle, Send, History, Eye, Scale, HelpCircle, BarChart2, FileSpreadsheet, Sparkles, Award } from 'lucide-react';
 import { showAlert } from '../utils/alert';
 import { exportStatisticsWord } from '../utils/exportStatistics';
+import { exportStatisticsExcel } from '../utils/exportExcel';
+import { exportGoldenRollWord } from '../utils/exportGoldenRoll';
 
 export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
   const [candidates, setCandidates] = useState([]);
@@ -193,21 +195,33 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
             </button>
             <button 
               onClick={() => exportStatisticsWord(displayList, "Danh sách phụ trách")} 
+              className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg border border-emerald-200 font-medium transition-colors"
+            >
+              <FileText size={16} /> Xuất Word
+            </button>
+            <button 
+              onClick={() => exportStatisticsExcel(displayList, "Danh sách phụ trách")} 
               className="flex items-center gap-2 text-sm text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-lg border border-green-200 font-medium transition-colors"
             >
-              <FileSpreadsheet size={16} /> Xuất thống kê
+              <FileSpreadsheet size={16} /> Xuất báo cáo Sở
+            </button>
+            <button 
+              onClick={() => exportGoldenRollWord(displayList, "Danh sách phụ trách")} 
+              className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-lg border border-amber-200 font-medium transition-colors"
+            >
+              <Award size={16} /> Bảng vàng
             </button>
             <button 
               onClick={() => setShowStatistics(true)} 
               className="flex items-center gap-2 text-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg border border-indigo-200 font-medium transition-colors"
             >
-              <BarChart2 size={16} /> Chi tiết thành tích
+              <BarChart2 size={16} /> Chi tiết
             </button>
             <button 
               onClick={() => setShowAIReport(true)} 
               className="flex items-center gap-2 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-lg border border-purple-200 font-medium transition-colors"
             >
-              <Sparkles size={16} /> Phân tích AI
+              <Sparkles size={16} /> Báo cáo AI
             </button>
           </div>
         </header>
