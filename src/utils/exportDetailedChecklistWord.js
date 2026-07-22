@@ -1,6 +1,6 @@
 import { 
   Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, 
-  WidthType, BorderStyle, AlignmentType, VerticalAlign
+  WidthType, BorderStyle, AlignmentType, VerticalAlign, PageOrientation
 } from "docx";
 import { saveAs } from "file-saver";
 import { format } from "date-fns";
@@ -301,6 +301,9 @@ export const exportDetailedChecklistWord = async (candidate) => {
       {
         properties: {
           page: {
+            size: {
+              orientation: PageOrientation.LANDSCAPE,
+            },
             margin: { top: 1440, right: 1440, bottom: 1440, left: 1700 }, // 1 inch top/bottom/right, 1.2 inch left
           }
         },
