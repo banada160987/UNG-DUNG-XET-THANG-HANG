@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../utils/supabaseClient';
 import { checkEligibility } from '../utils/validation';
@@ -12,8 +12,9 @@ import { SettingsModal } from '../components/SettingsModal';
 import { StatisticsModal } from '../components/StatisticsModal';
 import { AIReportModal } from '../components/AIReportModal';
 import { ExplainRankingModal } from '../components/ExplainRankingModal';
+import { ZaloReminderModal } from '../components/ZaloReminderModal';
 import { useSettings } from '../contexts/SettingsContext';
-import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye, EyeOff, Trash2, Scale, Settings, FileSpreadsheet, BarChart2, Sparkles, AlertTriangle, CheckCircle, Award, Table as TableIcon, Target } from 'lucide-react';
+import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye, EyeOff, Trash2, Scale, Settings, FileSpreadsheet, BarChart2, Sparkles, AlertTriangle, CheckCircle, Award, Table as TableIcon, Target, Bell } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import { showAlert, showConfirm, showPrompt } from '../utils/alert';
 import { exportStatisticsWord } from '../utils/exportStatistics';
@@ -31,13 +32,23 @@ export const Dashboard = ({ candidates, onRefresh }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [showStatistics, setShowStatistics] = useState(false);
   const [showAIReport, setShowAIReport] = useState(false);
+  const [showZaloModal, setShowZaloModal] = useState(false);
   const [explainCandidate, setExplainCandidate] = useState(null);
+  const [activeBatch, setActiveBatch] = useState(null);
   
   // Simulation Mode States
   const [quota, setQuota] = useState(8);
   const [excludedIds, setExcludedIds] = useState([]);
 
   const { settings } = useSettings();
+
+  useEffect(() => {
+    const fetchBatch = async () => {
+      const { data } = await supabase.from('batches').select('*').eq('isActive', true).order('created_at', { ascending: false }).limit(1);
+      if (data && data.length > 0) setActiveBatch(data[0]);
+    };
+    fetchBatch();
+  }, []);
 
   const evaluated = useMemo(() => {
     return candidates.map(c => ({
@@ -298,7 +309,7 @@ export const Dashboard = ({ candidates, onRefresh }) => {
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 h-80 flex flex-col">
           <h3 className="font-semibold text-slate-800 mb-2">Thiếu sót phổ biến (Top 5)</h3>
           <div className="flex-1 min-h-0">
-{missingData.length === 0 ? <div className="h-full flex items-center justify-center text-emerald-500">Tuyệt vời! Không có thiếu sót nào.</div> :
+            {missingData.length === 0 ? <div className="h-full flex items-center justify-center text-emerald-500">Tuyệt vời! Không có thiếu sót nào.</div> :
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={missingData} layout="vertical" margin={{ left: 10, right: 20 }}>
                   <XAxis type="number" hide />
@@ -327,6 +338,9 @@ export const Dashboard = ({ candidates, onRefresh }) => {
             <option value="all">Tất cả Tổ</option>
             {barData.map(u => <option key={u.name} value={u.name}>{u.name}</option>)}
           </select>
+          <button onClick={() => setShowZaloModal(true)} className="flex items-center justify-center gap-2 text-sm bg-amber-50 border border-amber-200 hover:bg-amber-100 text-amber-700 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none">
+            <Bell size={16} /> Đôn đốc
+          </button>
           {selectedForCompare.length >= 2 && (
             <button onClick={() => setShowCompare(true)} className="flex items-center justify-center gap-2 text-sm bg-orange-50 border border-orange-200 hover:bg-orange-100 text-orange-700 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none">
               <Scale size={16} /> Đối sánh ({selectedForCompare.length})
@@ -565,6 +579,14 @@ export const Dashboard = ({ candidates, onRefresh }) => {
       {showSettings && <SettingsModal isOpen={true} onClose={() => setShowSettings(false)} />}
       {showStatistics && <StatisticsModal candidates={rankedDisplayList} unitName={selectedUnit === 'all' ? "Toàn trường" : selectedUnit} onClose={() => setShowStatistics(false)} />}
       {showAIReport && <AIReportModal candidates={rankedDisplayList} unitName={selectedUnit === 'all' ? "Toàn trường" : selectedUnit} onClose={() => setShowAIReport(false)} />}
+      
+      <ZaloReminderModal 
+        isOpen={showZaloModal} 
+        onClose={() => setShowZaloModal(false)} 
+        candidates={candidates} 
+        scope="school" 
+        activeBatch={activeBatch}
+      />
     </div>
   );
 };

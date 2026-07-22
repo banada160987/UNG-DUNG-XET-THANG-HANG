@@ -83,7 +83,7 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
 
   if (loading) return <div className="p-8 text-center">Đang tải dữ liệu...</div>;
 
-  const isPastDeadline = activeBatch && activeBatch.deadline && new Date() > new Date(activeBatch.deadline);
+  const isPastDeadline = activeBatch && activeBatch.deadline && new Date() > new Date(`${activeBatch.deadline}T23:59:59`);
   const isReadOnly = (candidate && !['draft', 'head_rejected', 'returned', 'admin_rejected'].includes(candidate.status)) || isPastDeadline;
 
   return (
