@@ -100,9 +100,19 @@ export const exportStatisticsExcel = async (candidates) => {
   // Process data
   const groupedData = {};
   
+  const extractRank = (title) => {
+    const t = (title || '').toLowerCase();
+    if (t.includes('iii') || t.includes('3')) return 'hạng III';
+    if (t.includes('ii') || t.includes('2')) return 'hạng II';
+    if (t.includes('i') || t.includes('1')) return 'hạng I';
+    return 'hạng (không xác định)';
+  };
+  
   candidates.forEach(c => {
     if (!c.targetTitle || !c.currentTitle) return;
-    const groupKey = `Đăng ký xét thăng hạng từ ${c.currentTitle} lên ${c.targetTitle}`;
+    const currentRank = extractRank(c.currentTitle);
+    const targetRank = extractRank(c.targetTitle);
+    const groupKey = `Đăng ký xét thăng hạng từ ${currentRank} lên ${targetRank}`;
     if (!groupedData[groupKey]) groupedData[groupKey] = { manager: [], staff: [] };
     
     const isManager = ['ban giám hiệu', 'lãnh đạo'].some(k => (c.unit || '').toLowerCase().includes(k));
@@ -121,7 +131,7 @@ export const exportStatisticsExcel = async (candidates) => {
   schoolRow.getCell(1).border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
   
   Object.keys(groupedData).forEach(groupName => {
-    const groupRow = sheet.addRow([groupName.toUpperCase()]);
+    const groupRow = sheet.addRow([groupName]);
     sheet.mergeCells(`A${groupRow.number}:W${groupRow.number}`);
     groupRow.getCell(1).font = { name: 'Times New Roman', bold: true, color: { argb: 'FFFF0000' } };
     groupRow.getCell(1).border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
