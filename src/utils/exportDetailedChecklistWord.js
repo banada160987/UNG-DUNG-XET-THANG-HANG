@@ -84,7 +84,14 @@ export const exportDetailedChecklistWord = async (candidate) => {
   });
 
   const achRows = [];
-  Object.keys(groupedAchievements).forEach(key => {
+  // Sort the keys based on score in ACHIEVEMENT_LEVELS
+  const sortedKeys = Object.keys(groupedAchievements).sort((a, b) => {
+    const scoreA = ACHIEVEMENT_LEVELS.find(lvl => lvl.id === a)?.score || 999;
+    const scoreB = ACHIEVEMENT_LEVELS.find(lvl => lvl.id === b)?.score || 999;
+    return scoreA - scoreB;
+  });
+
+  sortedKeys.forEach(key => {
     const list = groupedAchievements[key];
     const achName = getAchName(key);
     
@@ -95,16 +102,35 @@ export const exportDetailedChecklistWord = async (candidate) => {
        achRows.push(createPara([createText(`* ${achName}: ${list.length} bản sao, cụ thể:`, true)]));
     }
 
+    // Sort items within the group by year
+    list.sort((a, b) => {
+      const yearA = a.year ? parseInt(a.year) : 0;
+      const yearB = b.year ? parseInt(b.year) : 0;
+      return yearA - yearB;
+    });
+
     list.forEach(item => {
-       let suffix = "";
-       if (item.year) suffix += ` năm ${item.year}`;
-       if (item.decisionNo) suffix += ` số QĐ: ${item.decisionNo}`;
-       if (item.date) {
-           try {
-               suffix += ` ngày ${format(new Date(item.date), 'dd/MM/yyyy')}`;
-           } catch(e) {}
+       if (list.length === 1) {
+         let suffix = "";
+         if (item.year) suffix += ` năm ${item.year}`;
+         if (item.decisionNo) suffix += ` số QĐ: ${item.decisionNo}`;
+         if (item.date) {
+             try {
+                 suffix += `, ngày ${format(new Date(item.date), 'dd/MM/yyyy')}`;
+             } catch(e) {}
+         }
+         achRows.push(createPara([createText(`- 01 Bản sao ${achName}${suffix}`)]));
+       } else {
+         let prefix = item.year ? `- Năm học ${item.year}:` : `-`;
+         let body = "";
+         if (item.decisionNo) body += ` QĐ Số: ${item.decisionNo}`;
+         if (item.date) {
+             try {
+                 body += `, ngày ${format(new Date(item.date), 'dd/MM/yyyy')}`;
+             } catch(e) {}
+         }
+         achRows.push(createPara([createText(`${prefix}${body}`)]));
        }
-       achRows.push(createPara([createText(`- 01 Bản sao ${achName}${suffix}`)]));
     });
   });
 
