@@ -338,8 +338,8 @@ export const Dashboard = ({ candidates, onRefresh }) => {
           <button onClick={() => setShowAIReport(true)} className="flex items-center justify-center gap-2 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none">
             <Sparkles size={16} /> Báo cáo AI
           </button>
-          <button onClick={() => exportStatisticsExcel(rankedDisplayList, selectedUnit === 'all' ? "Toàn trường" : selectedUnit)} className="flex items-center justify-center gap-2 text-sm text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none" title="Xuất dữ liệu ra file Excel">
-            <TableIcon size={16} /> Xuất Excel
+          <button onClick={() => exportStatisticsExcel(rankedDisplayList, selectedUnit === 'all' ? "Toàn trường" : selectedUnit)} className="flex items-center justify-center gap-2 text-sm text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none" title="Xuất dữ liệu ra file Excel theo mẫu Sở">
+            <FileSpreadsheet size={16} /> Xuất báo cáo Sở (Excel)
           </button>
           <button onClick={() => exportStatisticsWord(rankedDisplayList, selectedUnit === 'all' ? "Toàn trường" : selectedUnit)} className="flex items-center justify-center gap-2 text-sm text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none">
             <FileSpreadsheet size={16} /> Xuất Word
@@ -562,7 +562,7 @@ export const Dashboard = ({ candidates, onRefresh }) => {
           onClose={() => setShowCompare(false)} 
         />
       )}
-      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+      {showSettings && <SettingsModal isOpen={true} onClose={() => setShowSettings(false)} />}
       {showStatistics && <StatisticsModal candidates={rankedDisplayList} unitName={selectedUnit === 'all' ? "Toàn trường" : selectedUnit} onClose={() => setShowStatistics(false)} />}
       {showAIReport && <AIReportModal candidates={rankedDisplayList} unitName={selectedUnit === 'all' ? "Toàn trường" : selectedUnit} onClose={() => setShowAIReport(false)} />}
     </div>
