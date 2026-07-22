@@ -121,7 +121,12 @@ export const exportDetailedChecklistWord = async (candidate) => {
          }
          achRows.push(createPara([createText(`- 01 Bản sao ${achName}${suffix}`)]));
        } else {
-         let prefix = item.year ? `- Năm học ${item.year}:` : `-`;
+         let formattedYear = item.year;
+         if (formattedYear && /^\d{4}$/.test(String(formattedYear).trim())) {
+             const y = parseInt(String(formattedYear).trim());
+             formattedYear = `${y - 1} - ${y}`;
+         }
+         let prefix = formattedYear ? `- Năm học ${formattedYear}:` : `-`;
          let body = "";
          if (item.decisionNo) body += ` QĐ Số: ${item.decisionNo}`;
          if (item.date) {
