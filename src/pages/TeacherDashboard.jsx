@@ -143,11 +143,13 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
       </header>
 
       {isPastDeadline && (
-        <div className="max-w-4xl mx-auto mt-6 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-lg flex items-center gap-3">
-          <AlertCircle />
-          <div>
-            <div className="font-bold">Đã hết hạn nộp/sửa hồ sơ</div>
-            <div className="text-sm">Đợt xét này đã kết thúc thời gian tiếp nhận vào ngày {new Date(activeBatch.deadline).toLocaleDateString('vi-VN')}. Bạn chỉ có thể xem lại thông tin.</div>
+        <div className="max-w-4xl mx-auto mt-6 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-lg">
+          <div className="flex items-start gap-4">
+            <AlertCircle size={32} className="shrink-0 mt-1" />
+            <div>
+              <div className="font-bold">Đã hết hạn nộp/sửa hồ sơ</div>
+              <div className="text-sm">Đợt xét này đã kết thúc thời gian tiếp nhận vào 23h59 phút ngày {new Date(activeBatch.deadline).toLocaleDateString('vi-VN')}. Bạn chỉ có thể xem lại thông tin.</div>
+            </div>
           </div>
         </div>
       )}

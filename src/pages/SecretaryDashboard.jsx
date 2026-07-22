@@ -10,8 +10,9 @@ import { CompareModal } from '../components/CompareModal';
 import { StatisticsModal } from '../components/StatisticsModal';
 import { AIReportModal } from '../components/AIReportModal';
 import { UserGuideModal } from '../components/UserGuideModal';
+import { ZaloReminderModal } from '../components/ZaloReminderModal';
 import { useSettings } from '../contexts/SettingsContext';
-import { Users, FileText, CheckSquare, Search, ThumbsUp, ThumbsDown, LogOut, XCircle, Send, History, Eye, Scale, HelpCircle, BarChart2, FileSpreadsheet, Sparkles, Award } from 'lucide-react';
+import { Users, FileText, CheckSquare, Search, ThumbsUp, ThumbsDown, LogOut, XCircle, Send, History, Eye, Scale, HelpCircle, BarChart2, FileSpreadsheet, Sparkles, Award, Bell } from 'lucide-react';
 import { showAlert } from '../utils/alert';
 import { exportStatisticsWord } from '../utils/exportStatistics';
 import { exportStatisticsExcel } from '../utils/exportExcel';
@@ -20,11 +21,13 @@ import { exportGoldenRollWord } from '../utils/exportGoldenRoll';
 export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeBatch, setActiveBatch] = useState(null);
   const [activeBatchId, setActiveBatchId] = useState(null);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [sortByScore, setSortByScore] = useState(false);
   const [showStatistics, setShowStatistics] = useState(false);
   const [showAIReport, setShowAIReport] = useState(false);
+  const [showZaloModal, setShowZaloModal] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
@@ -47,9 +50,10 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
 
   const loadData = async () => {
     setLoading(true);
-    const { data: batches } = await supabase.from('batches').select('id').eq('isActive', true).order('created_at', { ascending: false }).limit(1);
+    const { data: batches } = await supabase.from('batches').select('*').eq('isActive', true).order('created_at', { ascending: false }).limit(1);
     
     if (batches && batches.length > 0) {
+      setActiveBatch(batches[0]);
       setActiveBatchId(batches[0].id);
       
       const managedDepts = secretaryInfo.departments || [];
@@ -192,6 +196,13 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
             >
               <HelpCircle size={16} />
               Hướng dẫn
+            </button>
+            <button 
+              onClick={() => setShowZaloModal(true)}
+              className="flex items-center gap-2 text-sm bg-amber-50 text-amber-700 px-3 py-1.5 rounded-lg hover:bg-amber-100 shadow-sm font-medium border border-amber-200 transition-colors"
+            >
+              <Bell size={16} />
+              Đôn đốc
             </button>
             <button 
               onClick={() => exportStatisticsWord(displayList, "Danh sách phụ trách")} 
@@ -458,6 +469,13 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
       {showGuide && (
         <UserGuideModal role="secretary" onClose={() => setShowGuide(false)} />
       )}
+      <ZaloReminderModal 
+        isOpen={showZaloModal} 
+        onClose={() => setShowZaloModal(false)} 
+        candidates={candidates} 
+        scope="school" 
+        activeBatch={activeBatch}
+      />
     </div>
   );
 };

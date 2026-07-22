@@ -205,7 +205,7 @@ export const BatchManager = ({ activeBatchId, onSelectBatch }) => {
             </div>
             {b.deadline && (
               <div className="text-[10px] text-rose-500 mt-1 flex items-center gap-1">
-                <span className="font-semibold">Hạn nộp:</span> {new Date(b.deadline).toLocaleDateString('vi-VN')}
+                <span className="font-semibold">Hạn nộp:</span> 23h59 phút ngày {new Date(b.deadline).toLocaleDateString('vi-VN')}
               </div>
             )}
             {/* Các nút sửa xóa hiển thị khi hover */}

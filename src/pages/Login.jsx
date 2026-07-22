@@ -185,7 +185,7 @@ export const Login = ({ onLogin }) => {
         
         {activeBatch && activeBatch.deadline && (
           <div className="bg-amber-100 text-amber-800 text-center py-2 text-sm font-semibold border-b border-amber-200 shadow-inner">
-            Hạn chót nộp hồ sơ đợt này: {new Date(activeBatch.deadline).toLocaleDateString('vi-VN')}
+            Hạn chót nộp hồ sơ đợt này: 23h59 phút ngày {new Date(activeBatch.deadline).toLocaleDateString('vi-VN')}
           </div>
         )}
         

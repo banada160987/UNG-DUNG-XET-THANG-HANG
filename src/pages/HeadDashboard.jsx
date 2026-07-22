@@ -9,8 +9,9 @@ import { DigitalTwinModal } from '../components/DigitalTwinModal';
 import { CompareModal } from '../components/CompareModal';
 import { StatisticsModal } from '../components/StatisticsModal';
 import { AIReportModal } from '../components/AIReportModal';
+import { ZaloReminderModal } from '../components/ZaloReminderModal';
 import { useSettings } from '../contexts/SettingsContext';
-import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle, Send, History, Eye, Scale, Users, FileText, CheckSquare, FileSpreadsheet, Clock, HelpCircle, BarChart2, Sparkles } from 'lucide-react';
+import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle, Send, History, Eye, Scale, Users, FileText, CheckSquare, FileSpreadsheet, Clock, HelpCircle, BarChart2, Sparkles, Bell } from 'lucide-react';
 import { showAlert, showConfirm } from '../utils/alert';
 import { exportStatisticsWord } from '../utils/exportStatistics';
 import { exportStatisticsExcel } from '../utils/exportExcel';
@@ -31,6 +32,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
   const [showHistory, setShowHistory] = useState(false);
   const [showStatistics, setShowStatistics] = useState(false);
   const [showAIReport, setShowAIReport] = useState(false);
+  const [showZaloModal, setShowZaloModal] = useState(false);
   
   const { settings } = useSettings();
   
@@ -174,6 +176,13 @@ export const HeadDashboard = ({ department, onLogout }) => {
             >
               <HelpCircle size={16} />
               Hướng dẫn
+            </button>
+            <button 
+              onClick={() => setShowZaloModal(true)}
+              className="flex items-center gap-2 text-sm bg-amber-50 text-amber-700 px-3 py-1.5 rounded-lg hover:bg-amber-100 shadow-sm font-medium border border-amber-200 transition-colors"
+            >
+              <Bell size={16} />
+              Đôn đốc
             </button>
             <button 
               onClick={() => setShowHistory(!showHistory)} 
@@ -468,6 +477,15 @@ export const HeadDashboard = ({ department, onLogout }) => {
       {showGuide && (
         <UserGuideModal role="head" onClose={() => setShowGuide(false)} />
       )}
+      
+      <ZaloReminderModal 
+        isOpen={showZaloModal} 
+        onClose={() => setShowZaloModal(false)} 
+        candidates={candidates} 
+        scope="head" 
+        departmentName={department}
+        activeBatch={activeBatch}
+      />
     </div>
   );
 };
