@@ -10,15 +10,23 @@ export const exportStatisticsExcel = async (candidates) => {
   sheet.properties.defaultRowHeight = 25;
 
   // Header rows
-  sheet.mergeCells('A1:D1');
-  sheet.getCell('A1').value = 'SỞ GIÁO DỤC VÀ ĐÀO TẠO ĐẮK LẮK\nĐƠN VỊ: TRƯỜNG THPT CAO BÁ QUÁT';
-  sheet.getCell('A1').font = { name: 'Times New Roman', bold: true, size: 11 };
+  sheet.mergeCells('A1:F1');
+  sheet.getCell('A1').value = {
+    richText: [
+      { font: { name: 'Times New Roman', size: 11 }, text: 'SỞ GIÁO DỤC VÀ ĐÀO TẠO ĐẮK LẮK\n' },
+      { font: { name: 'Times New Roman', size: 11, bold: true, underline: true }, text: 'ĐƠN VỊ: TRƯỜNG THPT CAO BÁ QUÁT' }
+    ]
+  };
   sheet.getCell('A1').alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
 
-  sheet.mergeCells('J1:W1');
-  sheet.getCell('J1').value = 'CỘNG HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM\nĐộc lập - Tự do - Hạnh phúc';
-  sheet.getCell('J1').font = { name: 'Times New Roman', bold: true, size: 11 };
-  sheet.getCell('J1').alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+  sheet.mergeCells('N1:W1');
+  sheet.getCell('N1').value = {
+    richText: [
+      { font: { name: 'Times New Roman', size: 11, bold: true }, text: 'CỘNG HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM\n' },
+      { font: { name: 'Times New Roman', size: 12, bold: true, underline: true }, text: 'Độc lập - Tự do - Hạnh phúc' }
+    ]
+  };
+  sheet.getCell('N1').alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
 
   sheet.mergeCells('A2:W2');
   sheet.getCell('A2').value = 'DANH SÁCH VIÊN CHỨC ĐĂNG KÝ THĂNG HẠNG CHỨC DANH NGHỀ NGHIỆP VIÊN CHỨC NĂM 2026';
@@ -100,19 +108,18 @@ export const exportStatisticsExcel = async (candidates) => {
   // Process data
   const groupedData = {};
   
-  const extractRank = (title) => {
-    const t = (title || '').toLowerCase();
-    if (t.includes('iii') || t.includes('3')) return 'hạng III';
-    if (t.includes('ii') || t.includes('2')) return 'hạng II';
-    if (t.includes('i') || t.includes('1')) return 'hạng I';
-    return 'hạng (không xác định)';
-  };
-  
   candidates.forEach(c => {
-    if (!c.targetTitle || !c.currentTitle) return;
-    const currentRank = extractRank(c.currentTitle);
-    const targetRank = extractRank(c.targetTitle);
-    const groupKey = `Đăng ký xét thăng hạng từ ${currentRank} lên ${targetRank}`;
+    if (!c.targetTitle) return;
+    const t = c.targetTitle.toLowerCase();
+    let groupKey = '';
+    if (t.includes('ii') || t.includes('2')) {
+      groupKey = 'Đăng ký xét thăng hạng từ hạng III lên hạng II';
+    } else if (t.includes('i') || t.includes('1')) {
+      groupKey = 'Đăng ký xét thăng hạng từ hạng II lên hạng I';
+    } else {
+      groupKey = `Đăng ký xét thăng hạng lên ${c.targetTitle}`;
+    }
+
     if (!groupedData[groupKey]) groupedData[groupKey] = { manager: [], staff: [] };
     
     const isManager = ['ban giám hiệu', 'lãnh đạo'].some(k => (c.unit || '').toLowerCase().includes(k));
@@ -180,7 +187,7 @@ export const exportStatisticsExcel = async (candidates) => {
         
         const rowData = {
           stt: idx + 1,
-          name: c.fullName,
+          name: (c.fullName || c.name || '').toUpperCase(),
           dob_nam: c.gender === 'Nam' ? dob : '',
           dob_nu: c.gender === 'Nữ' ? dob : '',
           jobTitle: c.currentTitle,
