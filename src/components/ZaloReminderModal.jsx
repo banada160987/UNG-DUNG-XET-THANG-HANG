@@ -13,12 +13,24 @@ export const ZaloReminderModal = ({ isOpen, onClose, candidates, scope, departme
 
   const deadlineText = activeBatch?.deadline ? `23h59 phút ngày ${new Date(activeBatch.deadline).toLocaleDateString('vi-VN')}` : 'thời hạn quy định';
 
+  // Nhóm theo Tổ (dành cho Admin)
+  const groupedByUnit = pendingCandidates.reduce((acc, c) => {
+    const unit = c.unit || 'Chưa rõ Tổ';
+    if (!acc[unit]) acc[unit] = [];
+    acc[unit].push(c);
+    return acc;
+  }, {});
+
   let messageTemplate = '';
 
   if (scope === 'head') {
     messageTemplate = `Kính gửi các thầy cô trong Tổ ${departmentName},\n\nHiện tại trên hệ thống Đăng ký xét thăng hạng vẫn còn ${count} hồ sơ chưa hoàn thành hoặc đang bị trả lại yêu cầu bổ sung.\n\nĐề nghị các thầy cô có tên sau khẩn trương hoàn thiện và nhấn nút "Nộp cho Tổ trưởng" trước ${deadlineText}:\n${pendingCandidates.map((c, i) => `${i + 1}. ${c.fullName || c.name}`).join('\n')}\n\nTrân trọng!`;
   } else {
-    messageTemplate = `Kính gửi các đồng chí Tổ trưởng chuyên môn,\n\nHiện tại trên hệ thống Đăng ký xét thăng hạng toàn trường vẫn còn ${count} hồ sơ chưa hoàn thành (đang lưu nháp hoặc bị trả lại).\n\nĐề nghị các đ/c Tổ trưởng khẩn trương đôn đốc, nhắc nhở giáo viên thuộc tổ mình hoàn thiện và nộp hồ sơ trên hệ thống trước ${deadlineText}.\n\nTrân trọng!`;
+    let listStr = Object.keys(groupedByUnit).map(unit => {
+      return `- ${unit} (${groupedByUnit[unit].length} hồ sơ):\n  ${groupedByUnit[unit].map(c => c.fullName || c.name).join(', ')}`;
+    }).join('\n');
+    
+    messageTemplate = `Kính gửi các đồng chí Tổ trưởng chuyên môn,\n\nHiện tại trên hệ thống Đăng ký xét thăng hạng toàn trường vẫn còn ${count} hồ sơ chưa hoàn thành (đang lưu nháp hoặc bị trả lại).\n\nChi tiết theo Tổ:\n${listStr}\n\nĐề nghị các đ/c Tổ trưởng khẩn trương đôn đốc, nhắc nhở giáo viên thuộc tổ mình hoàn thiện và nộp hồ sơ trên hệ thống trước ${deadlineText}.\n\nTrân trọng!`;
   }
 
   if (count === 0) {
@@ -55,6 +67,21 @@ export const ZaloReminderModal = ({ isOpen, onClose, candidates, scope, departme
                     <li key={c.id || idx}>{c.fullName || c.name} - Trạng thái: {c.status === 'draft' ? 'Lưu nháp' : 'Bị trả lại'}</li>
                   ))}
                 </ul>
+              </div>
+            )}
+            
+            {count > 0 && scope === 'school' && (
+              <div className="bg-slate-100 p-3 rounded-lg text-sm text-slate-700 max-h-48 overflow-y-auto mb-4 space-y-3">
+                {Object.keys(groupedByUnit).map(unit => (
+                  <div key={unit}>
+                    <div className="font-bold text-blue-800 border-b border-blue-200 pb-1 mb-1">{unit} ({groupedByUnit[unit].length})</div>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {groupedByUnit[unit].map((c, idx) => (
+                        <li key={c.id || idx}>{c.fullName || c.name} <span className="text-slate-500 text-xs">- {c.status === 'draft' ? 'Lưu nháp' : 'Bị trả lại'}</span></li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
               </div>
             )}
           </div>
