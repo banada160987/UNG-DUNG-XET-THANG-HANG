@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { GraduationCap, User, Users, ShieldAlert, Eye, EyeOff } from 'lucide-react';
 import { showAlert } from '../utils/alert';
@@ -162,7 +162,18 @@ export const Login = ({ onLogin }) => {
       onLogin({ role: 'secretary', info: data });
     }
     else if (role === 'admin') {
-      if (adminPass !== import.meta.env.VITE_ADMIN_PASS) {
+      const { data: adminConfig } = await supabase.from('settings').select('points').eq('id', 'admin_config').maybeSingle();
+      const defaultAdminPass = import.meta.env.VITE_ADMIN_PASS;
+      
+      let isValid = false;
+      if (adminConfig && adminConfig.points && adminConfig.points.password) {
+        const hashedPass = await hashPassword(adminPass);
+        isValid = (adminConfig.points.password === hashedPass);
+      } else {
+        isValid = (adminPass === defaultAdminPass);
+      }
+
+      if (!isValid) {
         await logAccess('admin', 'admin', 'FAILED');
         showAlert('Thông báo', 'Sai mật khẩu Quản trị!');
         return;
