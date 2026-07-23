@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { Home, List, Settings, GraduationCap, LogOut, Users, Clock, HelpCircle } from 'lucide-react';
+import { Home, List, Settings, GraduationCap, LogOut, Users, Clock, HelpCircle, KeyRound } from 'lucide-react';
 import { UserGuideModal } from './UserGuideModal';
+import { ChangePasswordModal } from './ChangePasswordModal';
 
 export const Layout = ({ children, currentPage, setCurrentPage, onLogout }) => {
   const [showGuide, setShowGuide] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
       <aside className="w-full md:w-72 bg-slate-900 text-slate-300 flex flex-col shadow-xl flex-shrink-0 z-20">
@@ -50,7 +53,13 @@ export const Layout = ({ children, currentPage, setCurrentPage, onLogout }) => {
           />
         </nav>
         
-        <div className="p-4 border-t border-slate-800">
+        <div className="p-4 border-t border-slate-800 flex flex-col gap-2">
+          <button 
+            onClick={() => setShowChangePassword(true)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 hover:text-white rounded-lg text-sm transition-colors text-slate-400"
+          >
+            <KeyRound size={18} /> Đổi mật khẩu
+          </button>
           <button 
             onClick={onLogout}
             className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 hover:bg-rose-600 hover:text-white rounded-lg text-sm transition-colors text-slate-400"
@@ -92,6 +101,15 @@ export const Layout = ({ children, currentPage, setCurrentPage, onLogout }) => {
 
       {showGuide && (
         <UserGuideModal role="admin" onClose={() => setShowGuide(false)} />
+      )}
+      
+      {showChangePassword && (
+        <ChangePasswordModal 
+          isOpen={showChangePassword} 
+          onClose={() => setShowChangePassword(false)} 
+          role="admin" 
+          identifier="admin" 
+        />
       )}
     </div>
   );

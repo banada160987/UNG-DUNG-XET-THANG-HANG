@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { GraduationCap, User, Users, ShieldAlert, Eye, EyeOff } from 'lucide-react';
 import { showAlert } from '../utils/alert';
@@ -47,25 +47,25 @@ export const Login = ({ onLogin }) => {
     
     if (role === 'teacher') {
       if (cccd.length !== 12 || !/^\d{12}$/.test(cccd)) {
-        showAlert('Thông báo', 'Vui lòng nhập đúng 12 số CCCD!');
+        showAlert('ThÃ´ng bÃ¡o', 'Vui lÃ²ng nháº­p Ä‘Ãºng 12 sá»‘ CCCD!');
         return;
       }
       
       const { data: teacher, error } = await supabase.from('teachers').select('*').eq('cccd', cccd).maybeSingle();
       if (error) {
-        showAlert('Thông báo', 'Lỗi kết nối cơ sở dữ liệu!');
+        showAlert('ThÃ´ng bÃ¡o', 'Lá»—i káº¿t ná»‘i cÆ¡ sá»Ÿ dá»¯ liá»‡u!');
         return;
       }
 
       if (!teacher) {
         if (!teacherPass) {
-          showAlert('Thông báo', 'Đây là lần đăng nhập đầu tiên, vui lòng nhập Mật khẩu để tạo tài khoản!');
+          showAlert('ThÃ´ng bÃ¡o', 'ÄÃ¢y lÃ  láº§n Ä‘Äƒng nháº­p Ä‘áº§u tiÃªn, vui lÃ²ng nháº­p Máº­t kháº©u Ä‘á»ƒ táº¡o tÃ i khoáº£n!');
           return;
         }
         const hashedPass = await hashPassword(teacherPass);
         const { error: insertError } = await supabase.from('teachers').insert([{ cccd, password: hashedPass }]);
         if (insertError) {
-          showAlert('Thông báo', 'Lỗi tạo tài khoản!');
+          showAlert('ThÃ´ng bÃ¡o', 'Lá»—i táº¡o tÃ i khoáº£n!');
           return;
         }
         await logAccess(cccd, 'teacher', 'SUCCESS');
@@ -73,13 +73,13 @@ export const Login = ({ onLogin }) => {
       } else {
         const lockMins = getRemainingLockMinutes(teacher.locked_until);
         if (lockMins) {
-          showAlert('Lỗi', `Tài khoản đã bị khoá tạm thời do nhập sai quá nhiều lần. Vui lòng thử lại sau ${lockMins} phút.`);
+          showAlert('Lá»—i', `TÃ i khoáº£n Ä‘Ã£ bá»‹ khoÃ¡ táº¡m thá»i do nháº­p sai quÃ¡ nhiá»u láº§n. Vui lÃ²ng thá»­ láº¡i sau ${lockMins} phÃºt.`);
           await logAccess(cccd, 'teacher', 'LOCKED');
           return;
         }
 
         if (!teacherPass) {
-          showAlert('Thông báo', 'Vui lòng nhập mật khẩu!');
+          showAlert('ThÃ´ng bÃ¡o', 'Vui lÃ²ng nháº­p máº­t kháº©u!');
           return;
         }
 
@@ -88,9 +88,9 @@ export const Login = ({ onLogin }) => {
           const isLocked = await handleFailedAttempt('teachers', 'cccd', cccd, teacher.failed_attempts || 0);
           await logAccess(cccd, 'teacher', 'FAILED');
           if (isLocked) {
-             showAlert('Lỗi', 'Bạn đã nhập sai mật khẩu quá 5 lần. Tài khoản bị khoá tạm thời 15 phút.');
+             showAlert('Lá»—i', 'Báº¡n Ä‘Ã£ nháº­p sai máº­t kháº©u quÃ¡ 5 láº§n. TÃ i khoáº£n bá»‹ khoÃ¡ táº¡m thá»i 15 phÃºt.');
           } else {
-             showAlert('Lỗi', 'Sai mật khẩu!');
+             showAlert('Lá»—i', 'Sai máº­t kháº©u!');
           }
           return;
         }
@@ -103,13 +103,13 @@ export const Login = ({ onLogin }) => {
     else if (role === 'head') {
       const { data: head, error } = await supabase.from('heads').select('*').eq('department', selectedDept).maybeSingle();
       if (!head) {
-         showAlert('Thông báo', 'Chưa có tài khoản cho Tổ trưởng tổ này. Vui lòng liên hệ Admin!');
+         showAlert('ThÃ´ng bÃ¡o', 'ChÆ°a cÃ³ tÃ i khoáº£n cho Tá»• trÆ°á»Ÿng tá»• nÃ y. Vui lÃ²ng liÃªn há»‡ Admin!');
          return;
       }
 
       const lockMins = getRemainingLockMinutes(head.locked_until);
       if (lockMins) {
-        showAlert('Lỗi', `Tài khoản đã bị khoá tạm thời. Vui lòng thử lại sau ${lockMins} phút.`);
+        showAlert('Lá»—i', `TÃ i khoáº£n Ä‘Ã£ bá»‹ khoÃ¡ táº¡m thá»i. Vui lÃ²ng thá»­ láº¡i sau ${lockMins} phÃºt.`);
         await logAccess(selectedDept, 'head', 'LOCKED');
         return;
       }
@@ -119,9 +119,9 @@ export const Login = ({ onLogin }) => {
         const isLocked = await handleFailedAttempt('heads', 'department', selectedDept, head.failed_attempts || 0);
         await logAccess(selectedDept, 'head', 'FAILED');
         if (isLocked) {
-           showAlert('Lỗi', 'Nhập sai mật khẩu quá 5 lần. Tài khoản bị khoá tạm thời 15 phút.');
+           showAlert('Lá»—i', 'Nháº­p sai máº­t kháº©u quÃ¡ 5 láº§n. TÃ i khoáº£n bá»‹ khoÃ¡ táº¡m thá»i 15 phÃºt.');
         } else {
-           showAlert('Lỗi', 'Sai mật khẩu Tổ trưởng!');
+           showAlert('Lá»—i', 'Sai máº­t kháº©u Tá»• trÆ°á»Ÿng!');
         }
         return;
       }
@@ -134,13 +134,13 @@ export const Login = ({ onLogin }) => {
       const { data } = await supabase.from('secretaries').select('*').eq('username', secUser).maybeSingle();
       if (!data) {
         await logAccess(secUser, 'secretary', 'FAILED');
-        showAlert('Thông báo', 'Sai tên đăng nhập hoặc mật khẩu Thư ký!');
+        showAlert('ThÃ´ng bÃ¡o', 'Sai tÃªn Ä‘Äƒng nháº­p hoáº·c máº­t kháº©u ThÆ° kÃ½!');
         return;
       }
 
       const lockMins = getRemainingLockMinutes(data.locked_until);
       if (lockMins) {
-        showAlert('Lỗi', `Tài khoản đã bị khoá tạm thời. Vui lòng thử lại sau ${lockMins} phút.`);
+        showAlert('Lá»—i', `TÃ i khoáº£n Ä‘Ã£ bá»‹ khoÃ¡ táº¡m thá»i. Vui lÃ²ng thá»­ láº¡i sau ${lockMins} phÃºt.`);
         await logAccess(secUser, 'secretary', 'LOCKED');
         return;
       }
@@ -150,9 +150,9 @@ export const Login = ({ onLogin }) => {
         const isLocked = await handleFailedAttempt('secretaries', 'username', secUser, data.failed_attempts || 0);
         await logAccess(secUser, 'secretary', 'FAILED');
         if (isLocked) {
-           showAlert('Lỗi', 'Nhập sai mật khẩu quá 5 lần. Tài khoản bị khoá tạm thời 15 phút.');
+           showAlert('Lá»—i', 'Nháº­p sai máº­t kháº©u quÃ¡ 5 láº§n. TÃ i khoáº£n bá»‹ khoÃ¡ táº¡m thá»i 15 phÃºt.');
         } else {
-           showAlert('Lỗi', 'Sai mật khẩu Thư ký!');
+           showAlert('Lá»—i', 'Sai máº­t kháº©u ThÆ° kÃ½!');
         }
         return;
       }
@@ -164,7 +164,7 @@ export const Login = ({ onLogin }) => {
     else if (role === 'admin') {
       if (adminPass !== import.meta.env.VITE_ADMIN_PASS) {
         await logAccess('admin', 'admin', 'FAILED');
-        showAlert('Thông báo', 'Sai mật khẩu Quản trị!');
+        showAlert('ThÃ´ng bÃ¡o', 'Sai máº­t kháº©u Quáº£n trá»‹!');
         return;
       }
       await logAccess('admin', 'admin', 'SUCCESS');
@@ -179,13 +179,13 @@ export const Login = ({ onLogin }) => {
           <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <GraduationCap size={32} />
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Hệ thống Xét thăng hạng viên chức</h1>
-          <p className="text-blue-100 mt-2 text-xs sm:text-sm font-medium">Trường THPT Cao Bá Quát - Phường Tân An - Tỉnh Đắk Lắk</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Há»‡ thá»‘ng XÃ©t thÄƒng háº¡ng viÃªn chá»©c</h1>
+          <p className="text-blue-100 mt-2 text-xs sm:text-sm font-medium">TrÆ°á»ng THPT Cao BÃ¡ QuÃ¡t - PhÆ°á»ng TÃ¢n An - Tá»‰nh Äáº¯k Láº¯k</p>
         </div>
         
         {activeBatch && activeBatch.deadline && (
           <div className="bg-amber-100 text-amber-800 text-center py-2 text-sm font-semibold border-b border-amber-200 shadow-inner">
-            Hạn chót nộp hồ sơ đợt này: 23h59 phút ngày {new Date(activeBatch.deadline).toLocaleDateString('vi-VN')}
+            Háº¡n chÃ³t ná»™p há»“ sÆ¡ Ä‘á»£t nÃ y: 23h59 phÃºt ngÃ y {new Date(activeBatch.deadline).toLocaleDateString('vi-VN')}
           </div>
         )}
         
@@ -195,32 +195,32 @@ export const Login = ({ onLogin }) => {
               onClick={() => setRole('teacher')}
               className={`flex-1 min-w-[80px] px-2 py-2 text-sm font-medium rounded-md transition-all ${role === 'teacher' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
             >
-              Giáo viên
+              GiÃ¡o viÃªn
             </button>
             <button 
               onClick={() => setRole('head')}
               className={`flex-1 min-w-[80px] px-2 py-2 text-sm font-medium rounded-md transition-all ${role === 'head' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
             >
-              Tổ trưởng
+              Tá»• trÆ°á»Ÿng
             </button>
             <button 
               onClick={() => setRole('secretary')}
               className={`flex-1 min-w-[80px] px-2 py-2 text-sm font-medium rounded-md transition-all ${role === 'secretary' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
             >
-              Thư ký
+              ThÆ° kÃ½
             </button>
             <button 
               onClick={() => setRole('admin')}
               className={`flex-1 min-w-[80px] px-2 py-2 text-sm font-medium rounded-md transition-all ${role === 'admin' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
             >
-              Quản trị
+              Quáº£n trá»‹
             </button>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             {role === 'teacher' && (
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Số CCCD của bạn</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Sá»‘ CCCD cá»§a báº¡n</label>
                 <div className="relative mb-3">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                     <User size={18} />
@@ -230,12 +230,12 @@ export const Login = ({ onLogin }) => {
                     required 
                     value={cccd} 
                     onChange={e => setCccd(e.target.value)}
-                    placeholder="Nhập 12 số CCCD..." 
+                    placeholder="Nháº­p 12 sá»‘ CCCD..." 
                     className="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                 </div>
                 
-                <label className="block text-sm font-medium text-slate-700 mb-1">Mật khẩu</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Máº­t kháº©u</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                     <ShieldAlert size={18} />
@@ -245,7 +245,7 @@ export const Login = ({ onLogin }) => {
                     required 
                     value={teacherPass} 
                     onChange={e => setTeacherPass(e.target.value)}
-                    placeholder="Mật khẩu của bạn..." 
+                    placeholder="Máº­t kháº©u cá»§a báº¡n..." 
                     className="w-full pl-10 pr-10 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                   <button 
@@ -257,7 +257,7 @@ export const Login = ({ onLogin }) => {
                   </button>
                 </div>
                 <p className="text-xs text-slate-500 mt-2">
-                  Lưu ý: Nếu chưa có tài khoản, hệ thống sẽ tự động tạo bằng CCCD và Mật khẩu bạn nhập ở trên.
+                  LÆ°u Ã½: Náº¿u chÆ°a cÃ³ tÃ i khoáº£n, há»‡ thá»‘ng sáº½ tá»± Ä‘á»™ng táº¡o báº±ng CCCD vÃ  Máº­t kháº©u báº¡n nháº­p á»Ÿ trÃªn.
                 </p>
               </div>
             )}
@@ -265,7 +265,7 @@ export const Login = ({ onLogin }) => {
             {role === 'head' && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Tổ chuyên môn</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Tá»• chuyÃªn mÃ´n</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                       <Users size={18} />
@@ -275,20 +275,20 @@ export const Login = ({ onLogin }) => {
                       onChange={e => setSelectedDept(e.target.value)}
                       className="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
                     >
-                      {departments.length === 0 && <option>Chưa có dữ liệu Tổ</option>}
+                      {departments.length === 0 && <option>ChÆ°a cÃ³ dá»¯ liá»‡u Tá»•</option>}
                       {departments.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
                     </select>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Mật khẩu duyệt</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Máº­t kháº©u duyá»‡t</label>
                   <div className="relative">
                     <input 
                       type={showPassword ? "text" : "password"}
                       required 
                       value={headPass} 
                       onChange={e => setHeadPass(e.target.value)}
-                      placeholder="Nhập mật khẩu..." 
+                      placeholder="Nháº­p máº­t kháº©u..." 
                       className="w-full px-3 py-2 pr-10 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                     />
                     <button 
@@ -306,7 +306,7 @@ export const Login = ({ onLogin }) => {
             {role === 'secretary' && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Tên đăng nhập Thư ký</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">TÃªn Ä‘Äƒng nháº­p ThÆ° kÃ½</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                       <User size={18} />
@@ -322,14 +322,14 @@ export const Login = ({ onLogin }) => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Mật khẩu</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Máº­t kháº©u</label>
                   <div className="relative">
                     <input 
                       type={showPassword ? "text" : "password"}
                       required 
                       value={secPass} 
                       onChange={e => setSecPass(e.target.value)}
-                      placeholder="Nhập mật khẩu..." 
+                      placeholder="Nháº­p máº­t kháº©u..." 
                       className="w-full px-3 py-2 pr-10 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                     />
                     <button 
@@ -346,7 +346,7 @@ export const Login = ({ onLogin }) => {
 
             {role === 'admin' && (
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Mật khẩu Quản trị</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Máº­t kháº©u Quáº£n trá»‹</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                     <ShieldAlert size={18} />
@@ -356,7 +356,7 @@ export const Login = ({ onLogin }) => {
                     required 
                     value={adminPass} 
                     onChange={e => setAdminPass(e.target.value)}
-                    placeholder="Mật khẩu Admin..." 
+                    placeholder="Máº­t kháº©u Admin..." 
                     className="w-full pl-10 pr-10 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                   <button 
@@ -371,11 +371,11 @@ export const Login = ({ onLogin }) => {
             )}
 
             <button type="submit" className="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg mt-4 hover:bg-blue-700 transition-colors">
-              Đăng nhập
+              ÄÄƒng nháº­p
             </button>
           </form>
           <div className="mt-6 text-center text-sm text-slate-500 font-medium">
-            Bản quyền thuộc về trường THPT Cao Bá Quát
+            Báº£n quyá»n thuá»™c vá» trÆ°á»ng THPT Cao BÃ¡ QuÃ¡t
           </div>
         </div>
       </div>

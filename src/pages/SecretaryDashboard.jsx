@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { checkEligibility } from '../utils/validation';
 import { calculateTotalScore } from '../utils/ranking';
@@ -10,6 +10,8 @@ import { CompareModal } from '../components/CompareModal';
 import { StatisticsModal } from '../components/StatisticsModal';
 import { AIReportModal } from '../components/AIReportModal';
 import { UserGuideModal } from '../components/UserGuideModal';
+import { ChangePasswordModal } from '../components/ChangePasswordModal';
+import { KeyRound } from 'lucide-react';
 import { ZaloReminderModal } from '../components/ZaloReminderModal';
 import { useSettings } from '../contexts/SettingsContext';
 import { Users, FileText, CheckSquare, Search, ThumbsUp, ThumbsDown, LogOut, XCircle, Send, History, Eye, Scale, HelpCircle, BarChart2, FileSpreadsheet, Sparkles, Award, Bell } from 'lucide-react';
@@ -28,20 +30,21 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
   const [showStatistics, setShowStatistics] = useState(false);
   const [showAIReport, setShowAIReport] = useState(false);
   const [showZaloModal, setShowZaloModal] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
 
   const { settings } = useSettings();
 
-  // Trạng thái modal từ chối
+  // Tráº¡ng thÃ¡i modal tá»« chá»‘i
   const [rejectingCand, setRejectingCand] = useState(null);
   const [feedback, setFeedback] = useState('');
   
-  // Trạng thái modal lịch sử
+  // Tráº¡ng thÃ¡i modal lá»‹ch sá»­
   const [timelineCandId, setTimelineCandId] = useState(null);
   
-  // Trạng thái modal xem chi tiết
+  // Tráº¡ng thÃ¡i modal xem chi tiáº¿t
   const [viewCand, setViewCand] = useState(null);
 
   useEffect(() => {
@@ -75,35 +78,35 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
   };
 
   const updateStatus = async (c, status, feedbackMsg = '') => {
-    let action = 'Bắt đầu rà soát';
-    if(status === 'admin_approved') action = 'ĐỦ ĐIỀU KIỆN';
-    if(status === 'returned') action = 'TRẢ LẠI / YÊU CẦU BỔ SUNG'; // Đổi status thành returned thay vì admin_rejected
+    let action = 'Báº¯t Ä‘áº§u rÃ  soÃ¡t';
+    if(status === 'admin_approved') action = 'Äá»¦ ÄIá»€U KIá»†N';
+    if(status === 'returned') action = 'TRáº¢ Láº I / YÃŠU Cáº¦U Bá»” SUNG'; // Äá»•i status thÃ nh returned thay vÃ¬ admin_rejected
 
     const payload = { status };
     if (feedbackMsg) payload.feedback_message = feedbackMsg;
 
     const { error } = await supabase.from('candidates').update(payload).eq('id', c.id);
     if (!error) {
-      await logAction(c.id, 'secretary', `Thư ký ${secretaryInfo.username}`, action, feedbackMsg);
+      await logAction(c.id, 'secretary', `ThÆ° kÃ½ ${secretaryInfo.username}`, action, feedbackMsg);
       loadData();
     } else {
-      showAlert('Thông báo', 'Lỗi cập nhật trạng thái!');
+      showAlert('ThÃ´ng bÃ¡o', 'Lá»—i cáº­p nháº­t tráº¡ng thÃ¡i!');
     }
   };
 
   const handleRejectSubmit = async (withZalo) => {
     if (!feedback.trim()) {
-      showAlert('Thông báo', "Vui lòng nhập lý do!");
+      showAlert('ThÃ´ng bÃ¡o', "Vui lÃ²ng nháº­p lÃ½ do!");
       return;
     }
     
     await updateStatus(rejectingCand, 'returned', feedback);
     
     if (withZalo && rejectingCand.phone) {
-      const msg = `Chào thầy/cô, hồ sơ thăng hạng của thầy/cô cần bổ sung: ${feedback}. Thầy/cô vui lòng lên hệ thống cập nhật nhé!`;
+      const msg = `ChÃ o tháº§y/cÃ´, há»“ sÆ¡ thÄƒng háº¡ng cá»§a tháº§y/cÃ´ cáº§n bá»• sung: ${feedback}. Tháº§y/cÃ´ vui lÃ²ng lÃªn há»‡ thá»‘ng cáº­p nháº­t nhÃ©!`;
       window.open(`https://zalo.me/${rejectingCand.phone}?text=${encodeURIComponent(msg)}`, '_blank');
     } else if (withZalo) {
-      showAlert('Thông báo', "Giáo viên này chưa cập nhật Số điện thoại Zalo.");
+      showAlert('ThÃ´ng bÃ¡o', "GiÃ¡o viÃªn nÃ y chÆ°a cáº­p nháº­t Sá»‘ Ä‘iá»‡n thoáº¡i Zalo.");
     }
     
     setRejectingCand(null);
@@ -118,7 +121,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
     }));
   }, [candidates, settings]);
 
-  // Thống kê
+  // Thá»‘ng kÃª
   const totalCount = evaluated.length;
   const waitingAdminCount = evaluated.filter(c => c.status === 'head_approved').length;
   const reviewingCount = evaluated.filter(c => c.status === 'admin_reviewing').length;
@@ -155,23 +158,23 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
             <Users size={24} />
           </div>
           <div>
-            <h1 className="font-bold text-white leading-tight text-base sm:text-lg whitespace-nowrap">Hệ thống Xét thăng hạng</h1>
-            <p className="text-xs text-slate-400" title="Trường THPT Cao Bá Quát - Phường Tân An - Tỉnh Đắk Lắk">THPT Cao Bá Quát</p>
+            <h1 className="font-bold text-white leading-tight text-base sm:text-lg whitespace-nowrap">Há»‡ thá»‘ng XÃ©t thÄƒng háº¡ng</h1>
+            <p className="text-xs text-slate-400" title="TrÆ°á»ng THPT Cao BÃ¡ QuÃ¡t - PhÆ°á»ng TÃ¢n An - Tá»‰nh Äáº¯k Láº¯k">THPT Cao BÃ¡ QuÃ¡t</p>
             <div className="mt-2 text-[10px] bg-emerald-600/50 px-2 py-0.5 rounded text-emerald-100 w-fit">
-              Thư ký: @{secretaryInfo.username}
+              ThÆ° kÃ½: @{secretaryInfo.username}
             </div>
           </div>
         </div>
         
         <div className="p-4 space-y-2 flex-1">
-          <div className="text-xs font-semibold uppercase text-slate-500 mb-2">Tổ phân công rà soát:</div>
+          <div className="text-xs font-semibold uppercase text-slate-500 mb-2">Tá»• phÃ¢n cÃ´ng rÃ  soÃ¡t:</div>
           {secretaryInfo.departments?.map(d => (
             <div key={d} className="px-3 py-2 bg-slate-800/50 rounded-lg border border-slate-700/50 text-sm font-medium">
               {d}
             </div>
           ))}
           {(!secretaryInfo.departments || secretaryInfo.departments.length === 0) && (
-            <div className="text-sm italic text-amber-500">Chưa được phân công tổ nào</div>
+            <div className="text-sm italic text-amber-500">ChÆ°a Ä‘Æ°á»£c phÃ¢n cÃ´ng tá»• nÃ o</div>
           )}
         </div>
         
@@ -180,71 +183,77 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
             onClick={onLogout}
             className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 hover:bg-rose-600 hover:text-white rounded-lg text-sm transition-colors text-slate-400"
           >
-            <LogOut size={18} /> Đăng xuất
+            <LogOut size={18} /> ÄÄƒng xuáº¥t
           </button>
         </div>
       </aside>
 
       <main className="flex-1 overflow-x-hidden flex flex-col h-screen overflow-y-auto bg-slate-100">
         <header className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-40 shadow-sm">
-          <h2 className="text-xl font-bold text-slate-800">Tiếp nhận & Rà soát Hồ sơ</h2>
+          <h2 className="text-xl font-bold text-slate-800">Tiáº¿p nháº­n & RÃ  soÃ¡t Há»“ sÆ¡</h2>
           <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setShowChangePassword(true)}
+              className="flex items-center gap-2 text-sm bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 shadow-sm font-medium border border-slate-200 transition-colors"
+            >
+              <KeyRound size={16} /> Đổi mật khẩu
+            </button>
             <button 
               onClick={() => setShowGuide(true)}
               className="flex items-center gap-2 text-sm bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-100 shadow-sm font-medium border border-blue-200"
-              title="Hướng dẫn sử dụng"
+              title="HÆ°á»›ng dáº«n sá»­ dá»¥ng"
             >
               <HelpCircle size={16} />
-              Hướng dẫn
+              HÆ°á»›ng dáº«n
             </button>
             <button 
               onClick={() => setShowZaloModal(true)}
               className="flex items-center gap-2 text-sm bg-amber-50 text-amber-700 px-3 py-1.5 rounded-lg hover:bg-amber-100 shadow-sm font-medium border border-amber-200 transition-colors"
             >
               <Bell size={16} />
-              Đôn đốc
+              ÄÃ´n Ä‘á»‘c
             </button>
             <button 
-              onClick={() => exportStatisticsWord(displayList, "Danh sách phụ trách")} 
+              onClick={() => exportStatisticsWord(displayList, "Danh sÃ¡ch phá»¥ trÃ¡ch")} 
               className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg border border-emerald-200 font-medium transition-colors"
             >
-              <FileText size={16} /> Xuất Word
+              <FileText size={16} /> Xuáº¥t Word
             </button>
             <button 
-              onClick={() => exportStatisticsExcel(displayList, "Danh sách phụ trách")} 
+              onClick={() => exportStatisticsExcel(displayList, "Danh sÃ¡ch phá»¥ trÃ¡ch")} 
               className="flex items-center gap-2 text-sm text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-lg border border-green-200 font-medium transition-colors"
             >
-              <FileSpreadsheet size={16} /> Xuất báo cáo Sở
+              <FileSpreadsheet size={16} /> Xuáº¥t bÃ¡o cÃ¡o Sá»Ÿ
             </button>
             <button 
-              onClick={() => exportGoldenRollWord(displayList, "Danh sách phụ trách")} 
+              onClick={() => exportGoldenRollWord(displayList, "Danh sÃ¡ch phá»¥ trÃ¡ch")} 
               className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-lg border border-amber-200 font-medium transition-colors"
             >
-              <Award size={16} /> Bảng vàng
+              <Award size={16} /> Báº£ng vÃ ng
             </button>
             <button 
               onClick={() => setShowStatistics(true)} 
               className="flex items-center gap-2 text-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg border border-indigo-200 font-medium transition-colors"
             >
-              <BarChart2 size={16} /> Chi tiết
+              <BarChart2 size={16} /> Chi tiáº¿t
             </button>
             <button 
               onClick={() => setShowAIReport(true)} 
               className="flex items-center gap-2 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-lg border border-purple-200 font-medium transition-colors"
             >
-              <Sparkles size={16} /> Báo cáo AI
+              <Sparkles size={16} /> BÃ¡o cÃ¡o AI
             </button>
           </div>
         </header>
 
         <div className="p-4 md:p-8 space-y-6 max-w-6xl mx-auto w-full">
           {!activeBatchId ? (
-            <div className="text-center p-8 text-slate-500 bg-white rounded-lg border">Chưa có đợt xét nào đang mở.</div>
+            <div className="text-center p-8 text-slate-500 bg-white rounded-lg border">ChÆ°a cÃ³ Ä‘á»£t xÃ©t nÃ o Ä‘ang má»Ÿ.</div>
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard 
-                  title="Tất cả Hồ sơ" 
+                  title="Táº¥t cáº£ Há»“ sÆ¡" 
                   value={totalCount} 
                   icon={<Users className="text-slate-500" size={24} />} 
                   bgColor="bg-slate-50"
@@ -252,7 +261,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                   onClick={() => setSelectedFilter('all')}
                 />
                 <StatCard 
-                  title="Mới nhận từ Tổ" 
+                  title="Má»›i nháº­n tá»« Tá»•" 
                   value={waitingAdminCount} 
                   icon={<FileText className="text-blue-500" size={24} />} 
                   bgColor="bg-blue-50"
@@ -261,7 +270,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                   pulse={waitingAdminCount > 0}
                 />
                 <StatCard 
-                  title="Đang Rà soát" 
+                  title="Äang RÃ  soÃ¡t" 
                   value={reviewingCount} 
                   icon={<Search className="text-amber-500" size={24} />} 
                   bgColor="bg-amber-50"
@@ -269,7 +278,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                   onClick={() => setSelectedFilter('reviewing')}
                 />
                 <StatCard 
-                  title="Đã Rà soát xong" 
+                  title="ÄÃ£ RÃ  soÃ¡t xong" 
                   value={adminFinishedCount} 
                   icon={<CheckSquare className="text-emerald-500" size={24} />} 
                   bgColor="bg-emerald-50"
@@ -282,7 +291,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                 <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
                   <h3 className="font-semibold text-slate-800 flex items-center gap-2">
                     <FileText size={18} className="text-slate-500" />
-                    Danh sách được phân công rà soát
+                    Danh sÃ¡ch Ä‘Æ°á»£c phÃ¢n cÃ´ng rÃ  soÃ¡t
                   </h3>
                   <div className="flex gap-2">
                     {settings?.use_scoring !== false && (
@@ -290,7 +299,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                         onClick={() => setSortByScore(!sortByScore)}
                         className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${sortByScore ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}
                       >
-                        {sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
+                        {sortByScore ? 'Äang xáº¿p háº¡ng theo Äiá»ƒm' : 'Sáº¯p xáº¿p theo Äiá»ƒm'}
                       </button>
                     )}
                     {selectedForCompare.length >= 2 && (
@@ -298,14 +307,14 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                         onClick={() => setShowCompare(true)}
                         className="px-3 py-1.5 text-sm font-medium rounded-lg border bg-blue-600 text-white border-blue-600 hover:bg-blue-700 flex items-center gap-1 shadow-sm"
                       >
-                        <Scale size={16} /> Bàn cân đối chiếu ({selectedForCompare.length})
+                        <Scale size={16} /> BÃ n cÃ¢n Ä‘á»‘i chiáº¿u ({selectedForCompare.length})
                       </button>
                     )}
                   </div>
                 </div>
                 <div className="divide-y divide-slate-100 max-h-[600px] overflow-y-auto">
                   {displayList.length === 0 ? (
-                    <p className="text-center p-8 text-slate-400">Không có dữ liệu phù hợp.</p>
+                    <p className="text-center p-8 text-slate-400">KhÃ´ng cÃ³ dá»¯ liá»‡u phÃ¹ há»£p.</p>
                   ) : displayList.map(c => {
                     return (
                     <div key={c.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50 transition-colors">
@@ -322,7 +331,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                           <p className="font-semibold text-slate-800 text-lg">{c.fullName} <span className="text-sm font-normal text-slate-500">({c.cccd})</span></p>
                         <div className="flex flex-wrap items-center gap-2 mt-1 mb-2">
                           {settings?.use_scoring !== false && (
-                        <span className="text-sm font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Điểm: {c.score}</span>
+                        <span className="text-sm font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Äiá»ƒm: {c.score}</span>
                       )}
                           <span className="text-sm text-slate-600 font-medium">{c.unit}</span>
                           <StatusBadge status={c.status} />
@@ -331,10 +340,10 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                               onClick={() => {
                                 const missingDocs = c.eligibility && !c.eligibility.isValid ? c.eligibility.missing.map(m => `- ${m}`).join('\n') : '';
                                 const msg = missingDocs 
-                                  ? `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô trên hệ thống đang thiếu các thông tin/giấy tờ sau:\n${missingDocs}\n\nThầy/cô vui lòng bổ sung sớm nhé!`
-                                  : `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô đã được tiếp nhận.`;
+                                  ? `ChÃ o tháº§y/cÃ´ ${c.fullName},\nHá»“ sÆ¡ xÃ©t thÄƒng háº¡ng cá»§a tháº§y/cÃ´ trÃªn há»‡ thá»‘ng Ä‘ang thiáº¿u cÃ¡c thÃ´ng tin/giáº¥y tá» sau:\n${missingDocs}\n\nTháº§y/cÃ´ vui lÃ²ng bá»• sung sá»›m nhÃ©!`
+                                  : `ChÃ o tháº§y/cÃ´ ${c.fullName},\nHá»“ sÆ¡ xÃ©t thÄƒng háº¡ng cá»§a tháº§y/cÃ´ Ä‘Ã£ Ä‘Æ°á»£c tiáº¿p nháº­n.`;
                                 navigator.clipboard.writeText(msg).then(() => {
-                                  showAlert('Thông báo', "Đã copy sẵn tin nhắn báo thiếu hồ sơ!\nBạn chỉ cần ấn Ctrl+V (Dán) vào khung chat Zalo nhé.");
+                                  showAlert('ThÃ´ng bÃ¡o', "ÄÃ£ copy sáºµn tin nháº¯n bÃ¡o thiáº¿u há»“ sÆ¡!\nBáº¡n chá»‰ cáº§n áº¥n Ctrl+V (DÃ¡n) vÃ o khung chat Zalo nhÃ©.");
                                   window.location.href = `zalo://conversation?phone=${c.phone}`;
                                 });
                               }}
@@ -357,18 +366,18 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                         )}
                         {c.eligibility.isValid ? (
                           <span className="inline-flex text-xs bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded-md font-medium">
-                            Hệ thống: Đủ điều kiện ban đầu
+                            Há»‡ thá»‘ng: Äá»§ Ä‘iá»u kiá»‡n ban Ä‘áº§u
                           </span>
                         ) : (
                           <span className="inline-flex text-xs bg-rose-50 text-rose-600 border border-rose-100 px-2 py-0.5 rounded-md font-medium" title={c.eligibility.missing?.join('\n')}>
-                            Hệ thống: Thiếu thông tin
+                            Há»‡ thá»‘ng: Thiáº¿u thÃ´ng tin
                           </span>
                         )}
                         <button 
                           onClick={() => setTimelineCandId(c.id)}
                           className="inline-flex items-center gap-1 text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded hover:bg-slate-200 mt-2 shadow-sm"
                         >
-                          <History size={14} /> Xem lịch sử thao tác
+                          <History size={14} /> Xem lá»‹ch sá»­ thao tÃ¡c
                         </button>
                       </div>
                       
@@ -377,29 +386,29 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                           onClick={() => setViewCand(c)}
                           className="flex items-center justify-center gap-1 text-sm bg-blue-50 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-100 shadow-sm mb-1"
                         >
-                          <Eye size={16} /> Xem Chi Tiết Hồ Sơ
+                          <Eye size={16} /> Xem Chi Tiáº¿t Há»“ SÆ¡
                         </button>
                         
                         {c.status === 'head_approved' && (
                           <button onClick={() => updateStatus(c, 'admin_reviewing')} className="flex items-center justify-center gap-1 text-sm bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 shadow-sm">
-                            <Search size={16} /> Bắt đầu rà soát
+                            <Search size={16} /> Báº¯t Ä‘áº§u rÃ  soÃ¡t
                           </button>
                         )}
                         
                         {c.status === 'admin_reviewing' && (
                           <div className="flex items-center gap-2">
                             <button onClick={() => updateStatus(c, 'admin_approved')} className="flex-1 flex items-center justify-center gap-1 text-sm bg-emerald-600 text-white px-2 py-2 rounded-lg hover:bg-emerald-700 shadow-sm">
-                              <ThumbsUp size={16} /> Đủ ĐK
+                              <ThumbsUp size={16} /> Äá»§ ÄK
                             </button>
                             <button onClick={() => setRejectingCand(c)} className="flex-1 flex items-center justify-center gap-1 text-sm bg-white border border-rose-300 text-rose-600 px-2 py-2 rounded-lg hover:bg-rose-50 shadow-sm">
-                              <ThumbsDown size={16} /> Loại
+                              <ThumbsDown size={16} /> Loáº¡i
                             </button>
                           </div>
                         )}
                         
                         {['admin_approved', 'returned', 'ranked', 'finalized'].includes(c.status) && (
                           <button onClick={() => updateStatus(c, 'admin_reviewing')} className="text-xs text-slate-500 hover:text-blue-600 underline text-right">
-                            Rà soát lại
+                            RÃ  soÃ¡t láº¡i
                           </button>
                         )}
                       </div>
@@ -417,24 +426,24 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
         <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
             <div className="p-4 border-b border-slate-200 bg-rose-50 text-rose-700 font-bold flex justify-between items-center">
-              <span>Yêu cầu bổ sung hồ sơ</span>
+              <span>YÃªu cáº§u bá»• sung há»“ sÆ¡</span>
               <button onClick={() => setRejectingCand(null)} className="text-rose-500 hover:text-rose-700"><XCircle size={20} /></button>
             </div>
             <div className="p-4 space-y-4">
-              <p className="text-sm text-slate-600">Giáo viên: <b>{rejectingCand.fullName}</b></p>
+              <p className="text-sm text-slate-600">GiÃ¡o viÃªn: <b>{rejectingCand.fullName}</b></p>
               <textarea 
                 className="w-full border border-slate-300 p-3 rounded-lg outline-none focus:ring-2 focus:ring-rose-500" 
                 rows="4"
-                placeholder="Nhập lý do cần bổ sung (VD: Chụp thiếu ảnh quyết định lương)..."
+                placeholder="Nháº­p lÃ½ do cáº§n bá»• sung (VD: Chá»¥p thiáº¿u áº£nh quyáº¿t Ä‘á»‹nh lÆ°Æ¡ng)..."
                 value={feedback}
                 onChange={e => setFeedback(e.target.value)}
               />
               <div className="flex gap-2 justify-end mt-4">
                 <button onClick={() => handleRejectSubmit(false)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium">
-                  Lưu (Không báo Zalo)
+                  LÆ°u (KhÃ´ng bÃ¡o Zalo)
                 </button>
                 <button onClick={() => handleRejectSubmit(true)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 text-sm font-medium shadow-sm">
-                  <Send size={16} /> Lưu & Báo Zalo
+                  <Send size={16} /> LÆ°u & BÃ¡o Zalo
                 </button>
               </div>
             </div>
@@ -464,10 +473,19 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
         />
       )}
 
-      {showStatistics && <StatisticsModal candidates={displayList} unitName={`Thư ký ${secretaryInfo?.full_name || secretaryInfo?.fullName || secretaryInfo?.username || ''}`} onClose={() => setShowStatistics(false)} />}
-      {showAIReport && <AIReportModal candidates={displayList} unitName={`Thư ký ${secretaryInfo?.full_name || secretaryInfo?.fullName || secretaryInfo?.username || ''}`} onClose={() => setShowAIReport(false)} />}
+      {showStatistics && <StatisticsModal candidates={displayList} unitName={`ThÆ° kÃ½ ${secretaryInfo?.full_name || secretaryInfo?.fullName || secretaryInfo?.username || ''}`} onClose={() => setShowStatistics(false)} />}
+      {showAIReport && <AIReportModal candidates={displayList} unitName={`ThÆ° kÃ½ ${secretaryInfo?.full_name || secretaryInfo?.fullName || secretaryInfo?.username || ''}`} onClose={() => setShowAIReport(false)} />}
       {showGuide && (
         <UserGuideModal role="secretary" onClose={() => setShowGuide(false)} />
+      )}
+      
+      {showChangePassword && (
+        <ChangePasswordModal 
+          isOpen={showChangePassword} 
+          onClose={() => setShowChangePassword(false)} 
+          role="secretary" 
+          identifier={secretaryInfo.username} 
+        />
       )}
       <ZaloReminderModal 
         isOpen={showZaloModal} 
