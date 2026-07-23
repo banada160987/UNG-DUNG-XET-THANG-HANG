@@ -1,4 +1,4 @@
-﻿import ExcelJS from 'exceljs';
+import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { format } from 'date-fns';
 import { ACHIEVEMENT_LEVELS } from '../data/config';
@@ -14,8 +14,8 @@ export const exportStatisticsExcel = async (candidates) => {
   });
 
   // --- SHEET 1 CONFIG ---
-  // Headers layout (Row 4 & Row 5)
-  // Row 4 is primary header, Row 5 is sub header.
+  // Headers layout (Row 6 & Row 7)
+  // Row 6 is primary header, Row 7 is sub header.
   
   const headersR4 = [
     'Stt', // A
@@ -83,29 +83,66 @@ export const exportStatisticsExcel = async (candidates) => {
     'Ghi chú'
   ];
 
-  const headerRow4 = sheet.getRow(4);
-  const headerRow5 = sheet.getRow(5);
+  // Add titles first (Rows 1 to 5)
+  // ROW 1
+  sheet.mergeCells('A1:G1');
+  sheet.getCell('A1').value = 'SỞ GIÁO DỤC VÀ ĐÀO TẠO ĐẮK LẮK';
+  sheet.getCell('A1').font = { name: 'Times New Roman', size: 12 };
+  sheet.getCell('A1').alignment = { vertical: 'middle', horizontal: 'center' };
+
+  sheet.mergeCells('U1:AJ1');
+  sheet.getCell('U1').value = 'CỘNG HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM';
+  sheet.getCell('U1').font = { name: 'Times New Roman', bold: true, size: 12 };
+  sheet.getCell('U1').alignment = { vertical: 'middle', horizontal: 'center' };
+
+  // ROW 2
+  sheet.mergeCells('A2:G2');
+  sheet.getCell('A2').value = 'ĐƠN VỊ: TRƯỜNG THPT CAO BÁ QUÁT';
+  sheet.getCell('A2').font = { name: 'Times New Roman', bold: true, size: 12, underline: true };
+  sheet.getCell('A2').alignment = { vertical: 'middle', horizontal: 'center' };
+
+  sheet.mergeCells('U2:AJ2');
+  sheet.getCell('U2').value = 'Độc lập - Tự do - Hạnh phúc';
+  sheet.getCell('U2').font = { name: 'Times New Roman', bold: true, size: 12, underline: true };
+  sheet.getCell('U2').alignment = { vertical: 'middle', horizontal: 'center' };
+
+  // ROW 4 (Main Title)
+  sheet.mergeCells('A4:AJ4');
+  const titleCell1 = sheet.getCell('A4');
+  titleCell1.value = 'DANH SÁCH VIÊN CHỨC ĐĂNG KÝ THĂNG HẠNG CHỨC DANH NGHỀ NGHIỆP VIÊN CHỨC NĂM 2026';
+  titleCell1.font = { name: 'Times New Roman', bold: true, size: 12 };
+  titleCell1.alignment = { vertical: 'middle', horizontal: 'center' };
+
+  // ROW 5 (Subtitle)
+  sheet.mergeCells('A5:AJ5');
+  const titleCell2 = sheet.getCell('A5');
+  titleCell2.value = '(Kèm theo Công văn số ......./SGDĐT-TCCB ngày .../.../2026 của Sở Giáo dục và Đào tạo)';
+  titleCell2.font = { name: 'Times New Roman', italic: true, size: 11 };
+  titleCell2.alignment = { vertical: 'middle', horizontal: 'center' };
+
+  const headerRow6 = sheet.getRow(6);
+  const headerRow7 = sheet.getRow(7);
 
   headersR4.forEach((val, idx) => {
-    headerRow4.getCell(idx + 1).value = val;
+    headerRow6.getCell(idx + 1).value = val;
   });
   headersR5.forEach((val, idx) => {
-    headerRow5.getCell(idx + 1).value = val;
+    headerRow7.getCell(idx + 1).value = val;
   });
 
   // Merging cells
   const mergeKeys = [
-    'A', 'B', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'AJ' // These merge Row 4 & 5
+    'A', 'B', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'AJ' // These merge Row 6 & 7
   ];
   mergeKeys.forEach(key => {
-    sheet.mergeCells(`${key}4:${key}5`);
+    sheet.mergeCells(`${key}6:${key}7`);
   });
   
   // Merge groups
-  sheet.mergeCells('C4:D4'); // Ngày sinh
-  sheet.mergeCells('M4:Q4'); // CDNN hiện giữ
-  sheet.mergeCells('R4:S4'); // CDNN đăng ký
-  sheet.mergeCells('T4:AI4'); // Thành tích
+  sheet.mergeCells('C6:D6'); // Ngày sinh
+  sheet.mergeCells('M6:Q6'); // CDNN hiện giữ
+  sheet.mergeCells('R6:S6'); // CDNN đăng ký
+  sheet.mergeCells('T6:AI6'); // Thành tích
 
   // Set column widths
   const colWidths = [
@@ -119,7 +156,7 @@ export const exportStatisticsExcel = async (candidates) => {
   });
 
   // Style headers
-  [headerRow4, headerRow5].forEach(row => {
+  [headerRow6, headerRow7].forEach(row => {
     row.eachCell({ includeEmpty: true }, cell => {
       cell.font = { name: 'Times New Roman', bold: true, size: 10 };
       cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
@@ -129,20 +166,7 @@ export const exportStatisticsExcel = async (candidates) => {
       };
     });
   });
-  headerRow5.height = 140; // Make enough room for long headers
-
-  // Add titles
-  sheet.mergeCells('A1:AJ1');
-  const titleCell1 = sheet.getCell('A1');
-  titleCell1.value = 'DANH SÁCH VIÊN CHỨC ĐỀ NGHỊ XÉT THĂNG HẠNG CHỨC DANH NGHỀ NGHIỆP';
-  titleCell1.font = { name: 'Times New Roman', bold: true, size: 14 };
-  titleCell1.alignment = { vertical: 'middle', horizontal: 'center' };
-
-  sheet.mergeCells('A2:AJ2');
-  const titleCell2 = sheet.getCell('A2');
-  titleCell2.value = '(Kèm theo Công văn số ....../........ ngày ..... tháng ..... năm ....... của .............)';
-  titleCell2.font = { name: 'Times New Roman', italic: true, size: 12 };
-  titleCell2.alignment = { vertical: 'middle', horizontal: 'center' };
+  headerRow7.height = 140; // Make enough room for long headers
 
   // --- SHEET 2 CONFIG ---
   sheet2.columns = [
