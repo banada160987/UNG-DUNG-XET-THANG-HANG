@@ -64,7 +64,7 @@ export const exportProposalWord = async (candidates, quotas = {}) => {
               new TableCell({
                 width: { size: 60, type: WidthType.PERCENTAGE },
                 children: [
-                  createPara([createText("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", true, false, 24)], AlignmentType.CENTER),
+                  createPara([createText("CỘNG HÒA XÝHỘI CHỦ NGHĨA VIỆT NAM", true, false, 24)], AlignmentType.CENTER),
                   createPara([createText("Độc lập - Tự do - Hạnh phúc", true, false, 26)], AlignmentType.CENTER),
                   createPara([createText("-----------------", false, false, 24)], AlignmentType.CENTER),
                   createPara([createText("Buôn Ma Thuột, ngày ..... tháng ..... năm .....", false, italic=true, 24)], AlignmentType.RIGHT),

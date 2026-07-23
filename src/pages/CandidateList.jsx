@@ -71,7 +71,7 @@ export const CandidateList = ({ candidates, onRefresh }) => {
     }
   };
 
-  // Chỉ lấy những hồ sơ ĐÃ ĐƯỢC QUẢN TRỊ DUYỆT (admin_approved) hoặc đã xếp hạng (ranked, finalized)
+  // Chỉ lấy những hồ sơ ĐÝĐƯỢC QUẢN TRỊ DUYỆT (admin_approved) hoặc đã xếp hạng (ranked, finalized)
   const approvedCandidates = useMemo(() => {
     return candidates
       .filter(c => ['admin_approved', 'ranked', 'finalized'].includes(c.status))
@@ -287,7 +287,7 @@ export const CandidateList = ({ candidates, onRefresh }) => {
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
         <div className="bg-blue-50 text-blue-700 px-4 py-3 text-sm font-medium border-b border-blue-100 flex items-center justify-between">
-          <span>* Lưu ý: Danh sách này chỉ bao gồm {approvedCandidates.length} hồ sơ ĐÃ ĐƯỢC TỔ RÀ SOÁT CẤP TRƯỜNG đánh giá Đủ Điều Kiện.</span>
+          <span>* Lưu ý: Danh sách này chỉ bao gồm {approvedCandidates.length} hồ sơ ĐÝĐƯỢC TỔ RÀ SOÁT CẤP TRƯỜNG đánh giá Đủ Điều Kiện.</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">

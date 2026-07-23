@@ -66,7 +66,7 @@ export const exportDetailedStatsWord = async (stats, unitName = "Toàn trường
                   }),
                   new TableCell({
                     children: [
-                      createPara([createText("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", true, false, 26)], AlignmentType.CENTER),
+                      createPara([createText("CỘNG HÒA XÝHỘI CHỦ NGHĨA VIỆT NAM", true, false, 26)], AlignmentType.CENTER),
                       createPara([createText("Độc lập - Tự do - Hạnh phúc", true, false, 28)], AlignmentType.CENTER),
                       createPara([createText("───────────────", true, false, 26)], AlignmentType.CENTER, { before: 0, after: 0, line: 240 }),
                     ],

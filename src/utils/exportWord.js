@@ -133,7 +133,7 @@ export const exportCandidateToWord = async (candidate, signatureDataUrl = null) 
           }
         },
         children: [
-          createPara([createText("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", true)], AlignmentType.CENTER),
+          createPara([createText("CỘNG HÒA XÝHỘI CHỦ NGHĨA VIỆT NAM", true)], AlignmentType.CENTER),
           createPara([createText("Độc lập - Tự do - Hạnh phúc", true, false, 26, "000000"), createText("\n----------------", true)], AlignmentType.CENTER),
           createPara([], AlignmentType.CENTER, { before: 1000 }),
           createPara([createText("HỒ SƠ", true, false, 48)], AlignmentType.CENTER, { before: 1000 }),

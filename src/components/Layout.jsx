@@ -16,7 +16,7 @@ export const Layout = ({ children, currentPage, setCurrentPage, onLogout }) => {
           </div>
           <div>
             <h1 className="font-bold text-white text-base sm:text-lg leading-tight whitespace-nowrap">Xét thăng hạng viên chức</h1>
-            <p className="text-xs text-slate-400" title="Trường THPT Cao Bá Quát - Phường Tân An - Tỉnh Đắk Lắk">THPT Cao Bá Quát</p>
+            <p className="text-xs text-slate-400" title="Trường Tân An - Tỉnh Đắk Lắk">THPT Cao Bá Quát</p>
           </div>
         </div>
         
