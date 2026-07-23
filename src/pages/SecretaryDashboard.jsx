@@ -159,7 +159,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
           </div>
           <div>
             <h1 className="font-bold text-white leading-tight text-base sm:text-lg whitespace-nowrap">Hệ thống Xét thăng hạng</h1>
-            <p className="text-xs text-slate-400" title="Trường Tân An - Tỉnh Äắk Lắk">THPT Cao Bá Quát</p>
+            <p className="text-xs text-slate-400" title="Trường Tân An - Tỉnh Đắk Lắk">THPT Cao Bá Quát</p>
             <div className="mt-2 text-[10px] bg-emerald-600/50 px-2 py-0.5 rounded text-emerald-100 w-fit">
               Thư ký: @{secretaryInfo.username}
             </div>

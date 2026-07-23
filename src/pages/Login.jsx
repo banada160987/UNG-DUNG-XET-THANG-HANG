@@ -73,7 +73,7 @@ export const Login = ({ onLogin }) => {
       } else {
         const lockMins = getRemainingLockMinutes(teacher.locked_until);
         if (lockMins) {
-          showAlert('Lỗi', `Tài khoản đã bị khoá tạm thá»i do nhập sai quá nhiá»u lần. Vui lòng thử lại sau ${lockMins} phút.`);
+          showAlert('Lỗi', `Tài khoản đã bị khoá tạm thờins} phút.`);
           await logAccess(cccd, 'teacher', 'LOCKED');
           return;
         }
@@ -88,7 +88,7 @@ export const Login = ({ onLogin }) => {
           const isLocked = await handleFailedAttempt('teachers', 'cccd', cccd, teacher.failed_attempts || 0);
           await logAccess(cccd, 'teacher', 'FAILED');
           if (isLocked) {
-             showAlert('Lỗi', 'Bạn đã nhập sai mật khẩu quá 5 lần. Tài khoản bị khoá tạm thá»i 15 phút.');
+             showAlert('Lỗi', 'Bạn đã nhập sai mật khẩu quá 5 lần. Tài khoản bị khoá tạm thời 15 phút.');
           } else {
              showAlert('Lỗi', 'Sai mật khẩu!');
           }
@@ -191,7 +191,7 @@ export const Login = ({ onLogin }) => {
             <GraduationCap size={32} />
           </div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Hệ thống Xét thăng hạng viên chức</h1>
-          <p className="text-blue-100 mt-2 text-xs sm:text-sm font-medium">Trường Tân An - Tỉnh Äắk Lắk</p>
+          <p className="text-blue-100 mt-2 text-xs sm:text-sm font-medium">Trường Tân An - Tỉnh Đắk Lắk</p>
         </div>
         
         {activeBatch && activeBatch.deadline && (
@@ -382,11 +382,11 @@ export const Login = ({ onLogin }) => {
             )}
 
             <button type="submit" className="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg mt-4 hover:bg-blue-700 transition-colors">
-              Äăng nhập
+              Đăng nhập
             </button>
           </form>
           <div className="mt-6 text-center text-sm text-slate-500 font-medium">
-            Bản quyá»n thuộc vá» trưá»ng THPT Cao Bá Quát
+            Bản quyền thuộc về trường THPT Cao Bá Quát
           </div>
         </div>
       </div>

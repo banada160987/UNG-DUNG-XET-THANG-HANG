@@ -166,7 +166,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
     <div className="min-h-screen bg-slate-100 pb-10">
         <header className="bg-white border-b border-slate-200 px-4 md:px-8 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-50 shadow-sm">
           <div>
-            <p className="text-xs text-slate-500 mb-0.5 font-medium">Hệ thống Xét thăng hạng viên chức | Trường Tân An - Tỉnh Äắk Lắk</p>
+            <p className="text-xs text-slate-500 mb-0.5 font-medium">Hệ thống Xét thăng hạng viên chức | Trường Tân An - Tỉnh Đắk Lắk</p>
             <h2 className="text-xl font-bold text-slate-800">
               Duyệt hồ sơ Tổ: <span className="text-blue-600">{department}</span>
             </h2>
