@@ -36,16 +36,16 @@ export const HeadDashboard = ({ department, onLogout }) => {
   const [showAIReport, setShowAIReport] = useState(false);
   const [showZaloModal, setShowZaloModal] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
-  
+
   const { settings } = useSettings();
-  
+
   // Trạng thái modal từ chối
   const [rejectingCand, setRejectingCand] = useState(null);
   const [feedback, setFeedback] = useState('');
-  
+
   // Trạng thái modal lịch sử
   const [timelineCandId, setTimelineCandId] = useState(null);
-  
+
   // Trạng thái modal xem chi tiết
   const [viewCand, setViewCand] = useState(null);
 
@@ -58,7 +58,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
   const loadData = async () => {
     setLoading(true);
     const { data: batches } = await supabase.from('batches').select('*').eq('isActive', true).order('created_at', { ascending: false }).limit(1);
-    
+
     if (batches && batches.length > 0) {
       setActiveBatchId(batches[0].id);
       setActiveBatch(batches[0]);
@@ -68,7 +68,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
         .eq('batch_id', batches[0].id)
         .eq('unit', department)
         .order('created_at', { ascending: false });
-      
+
       setCandidates(cands || []);
     }
     setLoading(false);
@@ -95,16 +95,16 @@ export const HeadDashboard = ({ department, onLogout }) => {
       showAlert('Thông báo', "Vui lòng nhập lý do!");
       return;
     }
-    
+
     await updateStatus(rejectingCand, 'head_rejected', feedback);
-    
+
     if (withZalo && rejectingCand.phone) {
       const msg = `Chào thầy/cô, hồ sơ thăng hạng của thầy/cô cần bổ sung: ${feedback}. Thầy/cô vui lòng lên hệ thống cập nhật nhé!`;
       window.open(`https://zalo.me/${rejectingCand.phone}?text=${encodeURIComponent(msg)}`, '_blank');
     } else if (withZalo) {
       showAlert('Thông báo', "Giáo viên này chưa cập nhật Số điện thoại Zalo.");
     }
-    
+
     setRejectingCand(null);
     setFeedback('');
   };
@@ -114,7 +114,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
     ...c,
     score: calculateTotalScore(c, settings)
   }));
-  
+
   // Bảng thống kê
   const totalCount = displayCandidates.length;
   const waitingCount = displayCandidates.filter(c => c.status === 'submitted').length;
@@ -153,7 +153,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
       return;
     }
     if (!confirm(`Bạn có chắc muốn duyệt hàng loạt ${candsToApprove.length} hồ sơ?`)) return;
-    
+
     for (const c of candsToApprove) {
       const { error } = await supabase.from('candidates').update({ status: 'head_approved' }).eq('id', c.id);
       if (!error) await logAction(c.id, 'head', `Tổ trưởng ${department}`, 'XÁC NHẬN HỢP LỆ (Duyệt gộp)');
@@ -162,72 +162,72 @@ export const HeadDashboard = ({ department, onLogout }) => {
     loadData();
   };
 
-    return (
+  return (
     <div className="min-h-screen bg-slate-100 pb-10">
-        <header className="bg-white border-b border-slate-200 px-4 md:px-8 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-50 shadow-sm">
-          <div>
-            <p className="text-xs text-slate-500 mb-0.5 font-medium">Hệ thống Xét thăng hạng viên chức | Trường Tân An - Tỉnh Đắk Lắk</p>
-            <h2 className="text-xl font-bold text-slate-800">
-              Duyệt hồ sơ Tổ: <span className="text-blue-600">{department}</span>
-            </h2>
-          </div>
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setShowGuide(true)}
-              className="flex items-center gap-2 text-sm bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-100 shadow-sm font-medium border border-blue-200"
-              title="Hướng dẫn sử dụng"
-            >
-              <HelpCircle size={16} />
-              Hướng dẫn
-            </button>
-            <button 
-              onClick={() => setShowZaloModal(true)}
-              className="flex items-center gap-2 text-sm bg-amber-50 text-amber-700 px-3 py-1.5 rounded-lg hover:bg-amber-100 shadow-sm font-medium border border-amber-200 transition-colors"
-            >
-              <Bell size={16} />
-Đôn đốc
-            </button>
-            <button 
-              onClick={() => setShowHistory(!showHistory)} 
-              className={`flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border font-medium transition-colors ${showHistory ? 'bg-blue-100 text-blue-700 border-blue-200' : 'text-slate-600 bg-slate-50 hover:bg-slate-100 border-slate-200'}`}
-            >
-              <Clock size={16} /> Nhật ký
-            </button>
-            <button 
-              onClick={() => exportStatisticsWord(displayCandidates, department)} 
-              className="flex items-center gap-2 text-sm text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-lg border border-green-200 font-medium transition-colors"
-            >
-              <FileText size={16} /> Xuất thống kê (Word)
-            </button>
-            <button 
-              onClick={() => exportStatisticsExcel(displayCandidates)} 
-              className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg border border-emerald-200 font-medium transition-colors"
-            >
-              <FileSpreadsheet size={16} /> Xuất báo cáo Sở (Excel)
-            </button>
-            <button 
-              onClick={() => setShowStatistics(true)} 
-              className="flex items-center gap-2 text-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg border border-indigo-200 font-medium transition-colors"
-            >
-              <BarChart2 size={16} /> Chi tiết thành tích
-            </button>
-            <button 
-              onClick={() => setShowAIReport(true)} 
-              className="flex items-center gap-2 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-lg border border-purple-200 font-medium transition-colors"
-            >
-              <Sparkles size={16} /> Phân tích AI
-            </button>
-            <button 
-              onClick={() => setShowChangePassword(true)}
-              className="flex items-center gap-2 text-sm bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 shadow-sm font-medium border border-slate-200 transition-colors"
-            >
-              <KeyRound size={16} /> Đổi mật khẩu
-            </button>
-            <button onClick={onLogout} className="text-sm text-rose-600 hover:bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-200 font-medium">
-              Thoát
-            </button>
-          </div>
-        </header>
+      <header className="bg-white border-b border-slate-200 px-4 md:px-8 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-50 shadow-sm">
+        <div>
+          <p className="text-xs text-slate-500 mb-0.5 font-medium">Hệ thống Xét thăng hạng viên chức | Trường Tân An - Tỉnh Đắk Lắk</p>
+          <h2 className="text-xl font-bold text-slate-800">
+            Duyệt hồ sơ Tổ: <span className="text-blue-600">{department}</span>
+          </h2>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowGuide(true)}
+            className="flex items-center gap-2 text-sm bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-100 shadow-sm font-medium border border-blue-200"
+            title="Hướng dẫn sử dụng"
+          >
+            <HelpCircle size={16} />
+            Hướng dẫn
+          </button>
+          <button
+            onClick={() => setShowZaloModal(true)}
+            className="flex items-center gap-2 text-sm bg-amber-50 text-amber-700 px-3 py-1.5 rounded-lg hover:bg-amber-100 shadow-sm font-medium border border-amber-200 transition-colors"
+          >
+            <Bell size={16} />
+            Đôn đốc
+          </button>
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className={`flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border font-medium transition-colors ${showHistory ? 'bg-blue-100 text-blue-700 border-blue-200' : 'text-slate-600 bg-slate-50 hover:bg-slate-100 border-slate-200'}`}
+          >
+            <Clock size={16} /> Nhật ký
+          </button>
+          <button
+            onClick={() => exportStatisticsWord(displayCandidates, department)}
+            className="flex items-center gap-2 text-sm text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-lg border border-green-200 font-medium transition-colors"
+          >
+            <FileText size={16} /> Xuất thống kê (Word)
+          </button>
+          <button
+            onClick={() => exportStatisticsExcel(displayCandidates)}
+            className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg border border-emerald-200 font-medium transition-colors"
+          >
+            <FileSpreadsheet size={16} /> Xuất báo cáo Sở (Excel)
+          </button>
+          <button
+            onClick={() => setShowStatistics(true)}
+            className="flex items-center gap-2 text-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg border border-indigo-200 font-medium transition-colors"
+          >
+            <BarChart2 size={16} /> Chi tiết thành tích
+          </button>
+          <button
+            onClick={() => setShowAIReport(true)}
+            className="flex items-center gap-2 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-lg border border-purple-200 font-medium transition-colors"
+          >
+            <Sparkles size={16} /> Phân tích AI
+          </button>
+          <button
+            onClick={() => setShowChangePassword(true)}
+            className="flex items-center gap-2 text-sm bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 shadow-sm font-medium border border-slate-200 transition-colors"
+          >
+            <KeyRound size={16} /> Đổi mật khẩu
+          </button>
+          <button onClick={onLogout} className="text-sm text-rose-600 hover:bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-200 font-medium">
+            Thoát
+          </button>
+        </div>
+      </header>
 
       <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
         {showHistory ? (
@@ -245,35 +245,35 @@ export const HeadDashboard = ({ department, onLogout }) => {
             <DepartmentInsights candidates={candidates} department={department} quota={activeBatch?.quota || 0} />
             {/* Thống kê */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <StatCard 
-                title="Tổng hồ sơ" 
-                value={totalCount} 
-                icon={<Users size={20} className="text-blue-600" />} 
-                bgColor="bg-blue-100" 
+              <StatCard
+                title="Tổng hồ sơ"
+                value={totalCount}
+                icon={<Users size={20} className="text-blue-600" />}
+                bgColor="bg-blue-100"
                 active={selectedFilter === 'all'}
                 onClick={() => setSelectedFilter('all')}
               />
-              <StatCard 
-                title="Chá» duyệt" 
-                value={waitingCount} 
-                icon={<FileText size={20} className="text-amber-600" />} 
-                bgColor="bg-amber-100" 
+              <StatCard
+                title="ớ duyệt"
+                value={waitingCount}
+                icon={<FileText size={20} className="text-amber-600" />}
+                bgColor="bg-amber-100"
                 active={selectedFilter === 'waiting'}
                 onClick={() => setSelectedFilter('waiting')}
               />
-              <StatCard 
-                title="Yêu cầu bổ sung" 
-                value={rejectedCount} 
-                icon={<AlertTriangle size={20} className="text-rose-600" />} 
-                bgColor="bg-rose-100" 
+              <StatCard
+                title="Yêu cầu bổ sung"
+                value={rejectedCount}
+                icon={<AlertTriangle size={20} className="text-rose-600" />}
+                bgColor="bg-rose-100"
                 active={selectedFilter === 'rejected'}
                 onClick={() => setSelectedFilter('rejected')}
               />
-              <StatCard 
-title="Đã duyệt & Chuyển" 
-                value={forwardCount} 
-                icon={<CheckSquare size={20} className="text-emerald-600" />} 
-                bgColor="bg-emerald-100" 
+              <StatCard
+                title="Đã duyệt & Chuyển"
+                value={forwardCount}
+                icon={<CheckSquare size={20} className="text-emerald-600" />}
+                bgColor="bg-emerald-100"
                 active={selectedFilter === 'forwarded'}
                 onClick={() => setSelectedFilter('forwarded')}
               />
@@ -296,9 +296,9 @@ title="Đã duyệt & Chuyển"
               <div className="p-4 border-b border-slate-200 bg-slate-50 flex flex-col md:flex-row gap-4 items-center justify-between">
                 <div className="relative w-full md:w-64">
                   <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input 
-                    type="text" 
-                    placeholder="Tìm tên hoặc CCCD..." 
+                  <input
+                    type="text"
+                    placeholder="Tìm tên hoặc CCCD..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-9 pr-4 py-2 w-full border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
@@ -306,11 +306,11 @@ title="Đã duyệt & Chuyển"
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   {settings?.use_scoring !== false && (
-                    <button 
-            onClick={() => setSortByScore(!sortByScore)}
-                  title={sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
+                    <button
+                      onClick={() => setSortByScore(!sortByScore)}
+                      title={sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
                     >
-                  {sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
+                      {sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
                     </button>
                   )}
                   {selectedForCompare.length >= 1 && (
@@ -347,11 +347,11 @@ title="Đã duyệt & Chuyển"
                       const eligibility = checkEligibility(c);
                       const canAct = ['submitted_to_head', 'resubmitted', 'head_rejected'].includes(c.status);
                       const badges = getBadges(c);
-                      
+
                       return (
                         <tr key={c.id} className="hover:bg-slate-50/50">
                           <td className="p-4 text-center">
-                            <input 
+                            <input
                               type="checkbox"
                               className="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer"
                               checked={selectedForCompare.includes(c.id)}
@@ -363,7 +363,7 @@ title="Đã duyệt & Chuyển"
                             <p className="text-xs text-slate-500">CCCD: {c.cccd}</p>
                             <div className="flex flex-wrap gap-1 mt-1.5">
                               {settings?.use_scoring !== false && (
-                                  <span className="font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-xs">Điểm: {c.score}</span>
+                                <span className="font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-xs">Điểm: {c.score}</span>
                               )}
                               {badges.map(b => {
                                 const Icon = b.icon;
@@ -382,9 +382,9 @@ title="Đã duyệt & Chuyển"
                             <div className="flex flex-col gap-2 items-start">
                               <StatusBadge status={c.status} />
                               {c.phone && (
-                                <a 
-                                  href={`https://zalo.me/${c.phone}`} 
-                                  target="_blank" 
+                                <a
+                                  href={`https://zalo.me/${c.phone}`}
+                                  target="_blank"
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full border border-blue-200 hover:bg-blue-100 transition-colors"
                                 >
@@ -399,7 +399,7 @@ title="Đã duyệt & Chuyển"
                               <button onClick={() => setViewCand(c)} title="Xem chi tiết" className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-200">
                                 <Eye size={16} />
                               </button>
-                              
+
                               {canAct ? (
                                 <>
                                   <button onClick={() => updateStatus(c, 'head_approved')} title="Xác nhận đủ điều kiện" className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors border border-transparent hover:border-emerald-200">
@@ -410,7 +410,7 @@ title="Đã duyệt & Chuyển"
                                   </button>
                                 </>
                               ) : (
-                                  <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-200">Đã xử lý</span>
+                                <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-200">Đã xử lý</span>
                               )}
                               <button onClick={() => setTimelineCandId(c.id)} title="Lịch sử hồ sơ" className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
                                 <History size={16} />
@@ -437,8 +437,8 @@ title="Đã duyệt & Chuyển"
             </div>
             <div className="p-4 space-y-4">
               <p className="text-sm text-slate-600">Giáo viên: <b>{rejectingCand.fullName}</b></p>
-              <textarea 
-                className="w-full border border-slate-300 p-3 rounded-lg outline-none focus:ring-2 focus:ring-rose-500" 
+              <textarea
+                className="w-full border border-slate-300 p-3 rounded-lg outline-none focus:ring-2 focus:ring-rose-500"
                 rows="4"
                 placeholder="Nhập lý do cần bổ sung (VD: Chụp thiếu ảnh quyết định lương)..."
                 value={feedback}
@@ -462,9 +462,9 @@ title="Đã duyệt & Chuyển"
       )}
 
       {viewCand && (
-        <DigitalTwinModal 
-          candidate={viewCand} 
-          onClose={() => setViewCand(null)} 
+        <DigitalTwinModal
+          candidate={viewCand}
+          onClose={() => setViewCand(null)}
           onReject={(candidate, msg) => {
             updateStatus(candidate, 'head_rejected', msg);
             setViewCand(null);
@@ -473,34 +473,34 @@ title="Đã duyệt & Chuyển"
       )}
 
       {showCompare && (
-        <CompareModal 
-          candidates={getCompareCandidates()} 
-          onClose={() => setShowCompare(false)} 
+        <CompareModal
+          candidates={getCompareCandidates()}
+          onClose={() => setShowCompare(false)}
         />
       )}
-      
+
       {showStatistics && <StatisticsModal candidates={displayCandidates} unitName={department || "Tổ"} onClose={() => setShowStatistics(false)} />}
-      
+
       {showAIReport && <AIReportModal candidates={displayCandidates} unitName={department || "Tổ"} onClose={() => setShowAIReport(false)} />}
 
       {showGuide && (
         <UserGuideModal role="head" onClose={() => setShowGuide(false)} />
       )}
-      
+
       {showChangePassword && (
-        <ChangePasswordModal 
-          isOpen={showChangePassword} 
-          onClose={() => setShowChangePassword(false)} 
-          role="head" 
-          identifier={department} 
+        <ChangePasswordModal
+          isOpen={showChangePassword}
+          onClose={() => setShowChangePassword(false)}
+          role="head"
+          identifier={department}
         />
       )}
-      
-      <ZaloReminderModal 
-        isOpen={showZaloModal} 
-        onClose={() => setShowZaloModal(false)} 
-        candidates={candidates} 
-        scope="head" 
+
+      <ZaloReminderModal
+        isOpen={showZaloModal}
+        onClose={() => setShowZaloModal(false)}
+        candidates={candidates}
+        scope="head"
         departmentName={department}
         activeBatch={activeBatch}
       />
@@ -510,11 +510,10 @@ title="Đã duyệt & Chuyển"
 
 
 const StatCard = ({ title, value, icon, bgColor, active, onClick, pulse }) => (
-  <div 
+  <div
     onClick={onClick}
-    className={`p-4 rounded-xl border cursor-pointer transition-all ${
-      active ? 'border-blue-400 shadow-md ring-2 ring-blue-50' : 'border-slate-200 shadow-sm hover:border-slate-300 bg-white'
-    } flex items-center gap-4 relative overflow-hidden`}
+    className={`p-4 rounded-xl border cursor-pointer transition-all ${active ? 'border-blue-400 shadow-md ring-2 ring-blue-50' : 'border-slate-200 shadow-sm hover:border-slate-300 bg-white'
+      } flex items-center gap-4 relative overflow-hidden`}
   >
     {active && <div className="absolute inset-0 bg-blue-50/30"></div>}
     <div className={`p-3 rounded-full ${bgColor} relative z-10 ${pulse ? 'animate-pulse' : ''}`}>
