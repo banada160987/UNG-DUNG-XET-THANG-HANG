@@ -149,7 +149,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
   const handleBulkApprove = async () => {
     const candsToApprove = candidates.filter(c => selectedForCompare.includes(c.id) && c.status === 'submitted');
     if (candsToApprove.length === 0) {
-      showAlert('Thông báo', "Không có hồ sơ nào hợp lệ để duyệt trong các hồ sơ đã chọng 'Chờ xử lý').");
+      showAlert('Thông báo', "Không có hồ sơ nào hợp lệ để duyệt trong các hồ sơ đã chọn (chỉ duyệt hồ sơ đang 'Chờ xử lý').");
       return;
     }
     if (!confirm(`Bạn có chắc muốn duyệt hàng loạt ${candsToApprove.length} hồ sơ?`)) return;
@@ -185,7 +185,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
               className="flex items-center gap-2 text-sm bg-amber-50 text-amber-700 px-3 py-1.5 rounded-lg hover:bg-amber-100 shadow-sm font-medium border border-amber-200 transition-colors"
             >
               <Bell size={16} />
-              Äôn đốc
+Đôn đốc
             </button>
             <button 
               onClick={() => setShowHistory(!showHistory)} 
@@ -270,7 +270,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
                 onClick={() => setSelectedFilter('rejected')}
               />
               <StatCard 
-                title="Äã duyệt & Chuyển" 
+title="Đã duyệt & Chuyển" 
                 value={forwardCount} 
                 icon={<CheckSquare size={20} className="text-emerald-600" />} 
                 bgColor="bg-emerald-100" 
@@ -307,10 +307,10 @@ export const HeadDashboard = ({ department, onLogout }) => {
                 <div className="flex flex-wrap items-center gap-2">
                   {settings?.use_scoring !== false && (
                     <button 
-                      onClick={() => setSortByScore(!sortByScore)}
-                      className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${sortByScore ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}
+            onClick={() => setSortByScore(!sortByScore)}
+                  title={sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
                     >
-                      {sortByScore ? 'Äang xếp hạng theo Äiểm' : 'Sắp xếp theo Äiểm'}
+                  {sortByScore ? 'Đang xếp hạng theo Điểm' : 'Sắp xếp theo Điểm'}
                     </button>
                   )}
                   {selectedForCompare.length >= 1 && (
@@ -337,7 +337,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
                     <tr className="bg-slate-50 border-b border-slate-200 text-sm text-slate-600 font-medium">
                       <th className="p-4 w-12 text-center">So sánh</th>
                       <th className="p-4">Há» tên / CCCD</th>
-                      <th className="p-4">Tự động quét ÄK</th>
+                      <th className="p-4">Tự động quét ĐK</th>
                       <th className="p-4">Trạng thái</th>
                       <th className="p-4 text-right">Thao tác</th>
                     </tr>
@@ -363,7 +363,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
                             <p className="text-xs text-slate-500">CCCD: {c.cccd}</p>
                             <div className="flex flex-wrap gap-1 mt-1.5">
                               {settings?.use_scoring !== false && (
-                                <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">Äiểm: {c.score}</span>
+                                  <span className="font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-xs">Điểm: {c.score}</span>
                               )}
                               {badges.map(b => {
                                 const Icon = b.icon;
@@ -410,7 +410,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
                                   </button>
                                 </>
                               ) : (
-                                <span className="text-xs text-slate-400 italic px-2">Äã xử lý</span>
+                                  <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-200">Đã xử lý</span>
                               )}
                               <button onClick={() => setTimelineCandId(c.id)} title="Lịch sử hồ sơ" className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
                                 <History size={16} />
