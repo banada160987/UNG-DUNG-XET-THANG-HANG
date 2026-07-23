@@ -1,6 +1,7 @@
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { format } from 'date-fns';
+import { ACHIEVEMENT_LEVELS } from '../data/config';
 
 export const exportStatisticsExcel = async (candidates) => {
   const workbook = new ExcelJS.Workbook();
@@ -19,7 +20,7 @@ export const exportStatisticsExcel = async (candidates) => {
   };
   sheet.getCell('A1').alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
 
-  sheet.mergeCells('N1:W1');
+  sheet.mergeCells('N1:X1');
   sheet.getCell('N1').value = {
     richText: [
       { font: { name: 'Times New Roman', size: 11, bold: true }, text: 'CỘNG HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM\n' },
@@ -28,12 +29,12 @@ export const exportStatisticsExcel = async (candidates) => {
   };
   sheet.getCell('N1').alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
 
-  sheet.mergeCells('A2:W2');
+  sheet.mergeCells('A2:X2');
   sheet.getCell('A2').value = 'DANH SÁCH VIÊN CHỨC ĐĂNG KÝ THĂNG HẠNG CHỨC DANH NGHỀ NGHIỆP VIÊN CHỨC NĂM 2026';
   sheet.getCell('A2').font = { name: 'Times New Roman', bold: true, size: 12 };
   sheet.getCell('A2').alignment = { vertical: 'middle', horizontal: 'center' };
 
-  sheet.mergeCells('A3:W3');
+  sheet.mergeCells('A3:X3');
   sheet.getCell('A3').value = '(Kèm theo Công văn số ......../SGDĐT-TCCB ngày .../.../2026 của Sở Giáo dục và Đào tạo)';
   sheet.getCell('A3').font = { name: 'Times New Roman', italic: true, size: 11 };
   sheet.getCell('A3').alignment = { vertical: 'middle', horizontal: 'center' };
@@ -64,8 +65,9 @@ export const exportStatisticsExcel = async (candidates) => {
     { header: 'Giáo viên dạy giỏi, giáo viên chủ nhiệm lớp giỏi... cấp huyện', key: 'gvdg_huyen', width: 12 },
     { header: 'Giáo viên dạy giỏi, giáo viên chủ nhiệm lớp giỏi cấp trường', key: 'gvdg_truong', width: 12 },
     { header: 'Đạt giải trong Hội thi giáo viên dạy giỏi cấp tỉnh', key: 'gvdg_giai_tinh', width: 12 },
-    { header: 'Thành tích khác', key: 'other', width: 15 },
-    { header: 'Ghi chú', key: 'note', width: 10 },
+    { header: 'SL Thành tích khác', key: 'other_count', width: 12 },
+    { header: 'Chi tiết Thành tích khác', key: 'other', width: 35 },
+    { header: 'Ghi chú', key: 'note', width: 15 },
   ];
 
   sheet.columns = columns.map(c => ({ key: c.key, width: c.width }));
@@ -86,7 +88,7 @@ export const exportStatisticsExcel = async (candidates) => {
   headerRow4.getCell(3).value = 'Ngày tháng năm sinh';
 
   // Merge vertical for others
-  const mergeKeys = ['A', 'B', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W'];
+  const mergeKeys = ['A', 'B', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X'];
   mergeKeys.forEach(key => {
     sheet.mergeCells(`${key}4:${key}5`);
   });
@@ -132,51 +134,98 @@ export const exportStatisticsExcel = async (candidates) => {
 
   // Add school header
   const schoolRow = sheet.addRow(['Trường THPT Cao Bá Quát']);
-  sheet.mergeCells(`A${schoolRow.number}:W${schoolRow.number}`);
+  sheet.mergeCells(`A${schoolRow.number}:X${schoolRow.number}`);
   schoolRow.getCell(1).font = { name: 'Times New Roman', bold: true, color: { argb: 'FFFF0000' } };
   schoolRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
   schoolRow.getCell(1).border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
   
   Object.keys(groupedData).forEach(groupName => {
     const groupRow = sheet.addRow([groupName]);
-    sheet.mergeCells(`A${groupRow.number}:W${groupRow.number}`);
+    sheet.mergeCells(`A${groupRow.number}:X${groupRow.number}`);
     groupRow.getCell(1).font = { name: 'Times New Roman', bold: true, color: { argb: 'FFFF0000' } };
     groupRow.getCell(1).border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
 
     const renderCandidates = (list, title) => {
       if (list.length === 0) return;
       const titleRow = sheet.addRow([title]);
-      sheet.mergeCells(`A${titleRow.number}:W${titleRow.number}`);
+      sheet.mergeCells(`A${titleRow.number}:X${titleRow.number}`);
       titleRow.getCell(1).font = { name: 'Times New Roman', bold: true };
       titleRow.getCell(1).border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
       
       list.forEach((c, idx) => {
         const allAch = [...(c.achievements||[]), ...(c.otherAchievements||[])];
+        const usedIndices = new Set();
+        
         const count = (ids) => {
           if (!Array.isArray(ids)) ids = [ids];
           let cnt = 0;
-          allAch.forEach(a => {
-            if (ids.includes(a.id)) cnt++;
+          allAch.forEach((a, aIdx) => {
+            if (!usedIndices.has(aIdx) && ids.includes(a.id)) {
+              cnt++;
+              usedIndices.add(aIdx);
+            }
           });
           return cnt > 0 ? cnt : '';
         };
 
         const cnt_tinh_uy = count(['bk_tinh_uy_5nam', 'bk_tinh_uy_dotxuat']);
-        const cnt_gk_so = count(['gk_so_nganh_xa', 'gk_sgd', 'gk_bannganh', 'gk_xa']);
+        const cnt_gk_so = count(['gk_so_nganh_xa', 'gk_sgd', 'gk_bannganh', 'gk_xa', 'bk_ldld_tinhdoan', 'bk_ldld', 'bk_tinhdoan']);
         
         let gvdg_tinh = '';
         let gvdg_huyen = '';
         let gvdg_truong = '';
         let gvdg_giai_tinh = '';
 
-        allAch.forEach(a => {
-           const name = (a.name || '').toLowerCase();
-           if (name.includes('giáo viên dạy giỏi') || name.includes('chủ nhiệm') || name.includes('tổng phụ trách')) {
-              if (name.includes('tỉnh')) gvdg_tinh = 'x';
-              if (name.includes('huyện') || name.includes('thành phố')) gvdg_huyen = 'x';
-              if (name.includes('trường')) gvdg_truong = 'x';
+        allAch.forEach((a, aIdx) => {
+           if (usedIndices.has(aIdx)) return;
+           const name = (a.name || a.id || '').toLowerCase();
+           
+           const isGVDG = /(giáo viên dạy giỏi|gvdg|gv giỏi|giáo viên giỏi)/.test(name);
+           const isGVCN = /(chủ nhiệm|gvcn|gv cn)/.test(name);
+           const isTPT = /(tổng phụ trách|tpt|tổng pt)/.test(name);
+           
+           if (isGVDG || isGVCN || isTPT) {
+              const isTinh = /(tỉnh|cấp tỉnh)/.test(name);
+              const isHuyen = /(huyện|thành phố|thị xã|quận)/.test(name) && !isTinh;
+              const isTruong = /(trường|cấp trường|cơ sở)/.test(name) && !isTinh && !isHuyen;
+              
+              if (isTinh) {
+                 if (name.includes('giải') || name.includes('đạt giải')) {
+                    gvdg_giai_tinh = 'x';
+                 } else {
+                    gvdg_tinh = 'x';
+                 }
+                 usedIndices.add(aIdx);
+              } else if (isHuyen) {
+                 gvdg_huyen = 'x';
+                 usedIndices.add(aIdx);
+              } else if (isTruong) {
+                 gvdg_truong = 'x';
+                 usedIndices.add(aIdx);
+              }
            }
         });
+
+        const otherList = [];
+        let hasBkLdld = false;
+        
+        allAch.forEach((a, aIdx) => {
+           if (['bk_ldld_tinhdoan', 'bk_ldld', 'bk_tinhdoan'].includes(a.id)) {
+               hasBkLdld = true;
+           }
+           if (!usedIndices.has(aIdx)) {
+              let text = a.name || a.id || '';
+              const predefined = ACHIEVEMENT_LEVELS.find(lvl => lvl.id === text);
+              if (predefined) text = predefined.name;
+              
+              if (a.year) text += ` (${a.year})`;
+              otherList.push(text);
+           }
+        });
+
+        let notes = [];
+        if (hasBkLdld) notes.push('Có BK LĐLĐ/Tỉnh đoàn');
+        if (c.note) notes.push(c.note);
 
         let dob = '';
         if (c.dob) {
@@ -207,8 +256,9 @@ export const exportStatisticsExcel = async (candidates) => {
           gvdg_huyen,
           gvdg_truong,
           gvdg_giai_tinh,
-          other: '',
-          note: ''
+          other_count: otherList.length > 0 ? otherList.length : '',
+          other: otherList.join('; '),
+          note: notes.join('; ')
         };
         const r = sheet.addRow(rowData);
         r.eachCell(cell => {
