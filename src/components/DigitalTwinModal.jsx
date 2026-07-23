@@ -9,6 +9,7 @@ import { exportDetailedChecklistWord } from '../utils/exportDetailedChecklistWor
 import { showPrompt } from '../utils/alert';
 import { getBadges } from './DepartmentInsights';
 import { checkEligibility } from '../utils/validation';
+import { ACHIEVEMENT_LEVELS } from '../data/config';
 
 export const DigitalTwinModal = ({ candidate, onClose, onReject }) => {
   const [activeTab, setActiveTab] = useState('overview'); // overview, timeline, documents
@@ -77,7 +78,11 @@ export const DigitalTwinModal = ({ candidate, onClose, onReject }) => {
     });
 
     candidate.achievements?.forEach(a => {
-      if (a.year) events.push({ year: a.year, title: `Thành tích: ${a.name || a.id}`, type: 'award', icon: Award, color: 'bg-amber-100 text-amber-600' });
+      let title = a.name || a.id;
+      const predefined = ACHIEVEMENT_LEVELS.find(lvl => lvl.id === title);
+      if (predefined) title = predefined.name;
+      
+      if (a.year) events.push({ year: a.year, title: `Thành tích: ${title}`, type: 'award', icon: Award, color: 'bg-amber-100 text-amber-600' });
     });
 
     candidate.otherAchievements?.forEach(a => {
@@ -328,7 +333,13 @@ export const DigitalTwinModal = ({ candidate, onClose, onReject }) => {
                     {candidate.achievements.map((a, i) => (
                       <li key={i} className="flex flex-col bg-amber-50/50 p-3 rounded-lg border border-amber-100">
                         <div className="flex justify-between items-start">
-                          <span className="font-bold text-amber-800 text-sm">{a.name || a.id}</span>
+                          <span className="font-bold text-amber-800 text-sm">
+                            {(() => {
+                              const title = a.name || a.id;
+                              const predefined = ACHIEVEMENT_LEVELS.find(lvl => lvl.id === title);
+                              return predefined ? predefined.name : title;
+                            })()}
+                          </span>
                           {a.link && (
                             <a href={a.link} target="_blank" rel="noreferrer" className="text-xs flex items-center gap-1 bg-amber-100 text-amber-700 px-2 py-1 rounded hover:bg-amber-200 transition-colors">
                               <Eye size={12} /> Xem
