@@ -1,4 +1,4 @@
-import ExcelJS from 'exceljs';
+﻿import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { format } from 'date-fns';
 import { ACHIEVEMENT_LEVELS } from '../data/config';
@@ -6,6 +6,7 @@ import { ACHIEVEMENT_LEVELS } from '../data/config';
 export const exportStatisticsExcel = async (candidates) => {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet('Danh sách');
+  const sheet2 = workbook.addWorksheet('Chi tiết Thành tích khác');
 
   // Set default font
   sheet.properties.defaultRowHeight = 25;
@@ -20,7 +21,7 @@ export const exportStatisticsExcel = async (candidates) => {
   };
   sheet.getCell('A1').alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
 
-  sheet.mergeCells('N1:X1');
+  sheet.mergeCells('N1:W1');
   sheet.getCell('N1').value = {
     richText: [
       { font: { name: 'Times New Roman', size: 11, bold: true }, text: 'CỘNG HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM\n' },
@@ -29,17 +30,17 @@ export const exportStatisticsExcel = async (candidates) => {
   };
   sheet.getCell('N1').alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
 
-  sheet.mergeCells('A2:X2');
+  sheet.mergeCells('A2:W2');
   sheet.getCell('A2').value = 'DANH SÁCH VIÊN CHỨC ĐĂNG KÝ THĂNG HẠNG CHỨC DANH NGHỀ NGHIỆP VIÊN CHỨC NĂM 2026';
   sheet.getCell('A2').font = { name: 'Times New Roman', bold: true, size: 12 };
   sheet.getCell('A2').alignment = { vertical: 'middle', horizontal: 'center' };
 
-  sheet.mergeCells('A3:X3');
+  sheet.mergeCells('A3:W3');
   sheet.getCell('A3').value = '(Kèm theo Công văn số ......../SGDĐT-TCCB ngày .../.../2026 của Sở Giáo dục và Đào tạo)';
   sheet.getCell('A3').font = { name: 'Times New Roman', italic: true, size: 11 };
   sheet.getCell('A3').alignment = { vertical: 'middle', horizontal: 'center' };
 
-  // Define Columns and Headers
+  // Define Columns and Headers for Sheet 1
   const headerRow4 = sheet.getRow(4);
   const headerRow5 = sheet.getRow(5);
 
@@ -66,7 +67,6 @@ export const exportStatisticsExcel = async (candidates) => {
     { header: 'Giáo viên dạy giỏi, giáo viên chủ nhiệm lớp giỏi cấp trường', key: 'gvdg_truong', width: 12 },
     { header: 'Đạt giải trong Hội thi giáo viên dạy giỏi cấp tỉnh', key: 'gvdg_giai_tinh', width: 12 },
     { header: 'SL Thành tích khác', key: 'other_count', width: 12 },
-    { header: 'Chi tiết Thành tích khác', key: 'other', width: 35 },
     { header: 'Ghi chú', key: 'note', width: 15 },
   ];
 
@@ -88,7 +88,7 @@ export const exportStatisticsExcel = async (candidates) => {
   headerRow4.getCell(3).value = 'Ngày tháng năm sinh';
 
   // Merge vertical for others
-  const mergeKeys = ['A', 'B', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X'];
+  const mergeKeys = ['A', 'B', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W'];
   mergeKeys.forEach(key => {
     sheet.mergeCells(`${key}4:${key}5`);
   });
@@ -106,6 +106,21 @@ export const exportStatisticsExcel = async (candidates) => {
   });
   
   headerRow4.height = 120;
+
+  // --- SHEET 2 CONFIG ---
+  sheet2.columns = [
+    { header: 'Stt', key: 'stt', width: 8 },
+    { header: 'Họ và tên', key: 'name', width: 25 },
+    { header: 'Đơn vị / Chức danh', key: 'unit', width: 35 },
+    { header: 'Chi tiết thành tích khác chưa được tính', key: 'others', width: 80 }
+  ];
+  const s2Header = sheet2.getRow(1);
+  s2Header.eachCell(cell => {
+    cell.font = { name: 'Times New Roman', bold: true, size: 12 };
+    cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+    cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+  });
+  let sheet2Index = 1;
 
   // Process data
   const groupedData = {};
@@ -134,21 +149,21 @@ export const exportStatisticsExcel = async (candidates) => {
 
   // Add school header
   const schoolRow = sheet.addRow(['Trường THPT Cao Bá Quát']);
-  sheet.mergeCells(`A${schoolRow.number}:X${schoolRow.number}`);
+  sheet.mergeCells(`A${schoolRow.number}:W${schoolRow.number}`);
   schoolRow.getCell(1).font = { name: 'Times New Roman', bold: true, color: { argb: 'FFFF0000' } };
   schoolRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
   schoolRow.getCell(1).border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
   
   Object.keys(groupedData).forEach(groupName => {
     const groupRow = sheet.addRow([groupName]);
-    sheet.mergeCells(`A${groupRow.number}:X${groupRow.number}`);
+    sheet.mergeCells(`A${groupRow.number}:W${groupRow.number}`);
     groupRow.getCell(1).font = { name: 'Times New Roman', bold: true, color: { argb: 'FFFF0000' } };
     groupRow.getCell(1).border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
 
     const renderCandidates = (list, title) => {
       if (list.length === 0) return;
       const titleRow = sheet.addRow([title]);
-      sheet.mergeCells(`A${titleRow.number}:X${titleRow.number}`);
+      sheet.mergeCells(`A${titleRow.number}:W${titleRow.number}`);
       titleRow.getCell(1).font = { name: 'Times New Roman', bold: true };
       titleRow.getCell(1).border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
       
@@ -168,8 +183,19 @@ export const exportStatisticsExcel = async (candidates) => {
           return cnt > 0 ? cnt : '';
         };
 
-        const cnt_tinh_uy = count(['bk_tinh_uy_5nam', 'bk_tinh_uy_dotxuat']);
-        const cnt_gk_so = count(['gk_so_nganh_xa', 'gk_sgd', 'gk_bannganh', 'gk_xa', 'bk_ldld_tinhdoan', 'bk_ldld', 'bk_tinhdoan']);
+        // EVALUATE ALL STANDARD COLUMNS FIRST TO POPULATE usedIndices
+        const huan_chuong = count('huan_chuong');
+        const danh_hieu_nn = count('danh_hieu_nn');
+        const giai_thuong_hcm = count('giai_thuong_hcm');
+        const cstd_toan_quoc = count('cstd_toan_quoc');
+        const bk_thu_tuong = count('bk_thu_tuong');
+        const cstd_cap_tinh = count('cstd_cap_tinh');
+        const bk_tinh_uy = count(['bk_tinh_uy_5nam', 'bk_tinh_uy_dotxuat']);
+        const bk_bo_nganh = count('bk_bo_nganh');
+        const bk_ubnd_tinh = count('bk_ubnd_tinh');
+        const cstd_co_so = count('cstd_co_so');
+        const gk_dang_uy_xa = count('gk_dang_uy_xa');
+        const gk_so_nganh_xa = count(['gk_so_nganh_xa', 'gk_sgd', 'gk_bannganh', 'gk_xa', 'bk_ldld_tinhdoan', 'bk_ldld', 'bk_tinhdoan']);
         
         let gvdg_tinh = '';
         let gvdg_huyen = '';
@@ -206,6 +232,7 @@ export const exportStatisticsExcel = async (candidates) => {
            }
         });
 
+        // NOW COLLECT OTHERS
         const otherList = [];
         let hasBkLdld = false;
         
@@ -240,24 +267,23 @@ export const exportStatisticsExcel = async (candidates) => {
           dob_nam: c.gender === 'Nam' ? dob : '',
           dob_nu: c.gender === 'Nữ' ? dob : '',
           jobTitle: c.currentTitle,
-          huan_chuong: count('huan_chuong'),
-          danh_hieu_nn: count('danh_hieu_nn'),
-          giai_thuong_hcm: count('giai_thuong_hcm'),
-          cstd_toan_quoc: count('cstd_toan_quoc'),
-          bk_thu_tuong: count('bk_thu_tuong'),
-          cstd_cap_tinh: count('cstd_cap_tinh'),
-          bk_tinh_uy: cnt_tinh_uy,
-          bk_bo_nganh: count('bk_bo_nganh'),
-          bk_ubnd_tinh: count('bk_ubnd_tinh'),
-          cstd_co_so: count('cstd_co_so'),
-          gk_dang_uy_xa: count('gk_dang_uy_xa'),
-          gk_so_nganh_xa: cnt_gk_so,
+          huan_chuong,
+          danh_hieu_nn,
+          giai_thuong_hcm,
+          cstd_toan_quoc,
+          bk_thu_tuong,
+          cstd_cap_tinh,
+          bk_tinh_uy,
+          bk_bo_nganh,
+          bk_ubnd_tinh,
+          cstd_co_so,
+          gk_dang_uy_xa,
+          gk_so_nganh_xa,
           gvdg_tinh,
           gvdg_huyen,
           gvdg_truong,
           gvdg_giai_tinh,
           other_count: otherList.length > 0 ? otherList.length : '',
-          other: otherList.join('; '),
           note: notes.join('; ')
         };
         const r = sheet.addRow(rowData);
@@ -267,6 +293,22 @@ export const exportStatisticsExcel = async (candidates) => {
            cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
         });
         r.getCell(2).alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+
+        // Output to Sheet 2 if there are other achievements
+        if (otherList.length > 0) {
+           const r2 = sheet2.addRow({
+              stt: sheet2Index++,
+              name: (c.fullName || c.name || '').toUpperCase(),
+              unit: `${c.currentTitle || ''} - ${c.unit || ''}`,
+              others: '- ' + otherList.join('\n- ')
+           });
+           r2.eachCell(cell => {
+              cell.font = { name: 'Times New Roman', size: 12 };
+              cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+              cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+           });
+           r2.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+        }
       });
     };
 
