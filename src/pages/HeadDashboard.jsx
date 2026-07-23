@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { checkEligibility } from '../utils/validation';
 import { calculateTotalScore } from '../utils/ranking';
@@ -254,7 +254,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
                 onClick={() => setSelectedFilter('all')}
               />
               <StatCard
-                title="ớ duyệt"
+                title="Chờ duyệt"
                 value={waitingCount}
                 icon={<FileText size={20} className="text-amber-600" />}
                 bgColor="bg-amber-100"
@@ -336,7 +336,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-sm text-slate-600 font-medium">
                       <th className="p-4 w-12 text-center">So sánh</th>
-                      <th className="p-4">Há» tên / CCCD</th>
+                      <th className="p-4">Họ tên / CCCD</th>
                       <th className="p-4">Tự động quét ĐK</th>
                       <th className="p-4">Trạng thái</th>
                       <th className="p-4 text-right">Thao tác</th>
