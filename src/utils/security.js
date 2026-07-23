@@ -92,3 +92,45 @@ export const getRemainingLockMinutes = (lockedUntil) => {
   }
   return null;
 };
+
+/**
+ * T?o token don gi?n cho phiên làm vi?c (mã hóa base64 v?i timestamp d? có th?i h?n)
+ */
+export const generateSessionToken = (userPayload) => {
+  const payload = {
+    ...userPayload,
+    exp: Date.now() + 8 * 60 * 60 * 1000 // 8 hours
+  };
+  return btoa(JSON.stringify(payload));
+};
+
+/**
+ * Ki?m tra tính h?p l? c?a token
+ */
+export const verifySessionToken = (tokenStr) => {
+  if (!tokenStr) return null;
+  try {
+    const payload = JSON.parse(atob(tokenStr));
+    if (payload.exp < Date.now()) return null;
+    return payload;
+  } catch (e) {
+    return null;
+  }
+};
+
+/**
+ * Ghi log Audit (Nh?t ký h? th?ng)
+ */
+export const logAudit = async (actor, actionType, targetId, oldData, newData) => {
+  try {
+    await supabase.from('audit_logs').insert([{
+      actor: actor,
+      action_type: actionType,
+      target_id: targetId,
+      old_data: oldData,
+      new_data: newData
+    }]);
+  } catch (error) {
+    console.error("L?i khi ghi audit log:", error);
+  }
+};

@@ -10,11 +10,16 @@ import { TeacherDashboard } from './pages/TeacherDashboard';
 import { HeadDashboard } from './pages/HeadDashboard';
 import { SecretaryDashboard } from './pages/SecretaryDashboard';
 import { ActionHistory } from './components/ActionHistory';
+import { AuditLogsViewer } from './components/AuditLogsViewer';
 import { SecretaryManager } from './components/SecretaryManager';
 import { supabase } from './utils/supabaseClient';
+import { verifySessionToken } from './utils/security';
 
 function App() {
-  const [session, setSession] = useState(null); // { role, cccd?, department? }
+  const [session, setSession] = useState(() => {
+    const token = sessionStorage.getItem('cbq_session_token');
+    return verifySessionToken(token);
+  }); // { role, cccd?, department? }
   
   // Admin states
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -44,6 +49,7 @@ function App() {
   };
 
   const handleLogout = () => {
+    sessionStorage.removeItem('cbq_session_token');
     setSession(null);
   };
 
@@ -85,7 +91,10 @@ function App() {
       ) : currentPage === 'secretaries' ? (
         <SecretaryManager />
       ) : currentPage === 'history' ? (
-        <ActionHistory />
+        <div className="space-y-6">
+          <AuditLogsViewer />
+          <ActionHistory />
+        </div>
       ) : (
         <>
           <BatchManager activeBatchId={activeBatchId} onSelectBatch={setActiveBatchId} />

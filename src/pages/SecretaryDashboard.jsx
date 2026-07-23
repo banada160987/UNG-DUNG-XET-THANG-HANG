@@ -9,8 +9,10 @@ import { DigitalTwinModal } from '../components/DigitalTwinModal';
 import { CompareModal } from '../components/CompareModal';
 import { StatisticsModal } from '../components/StatisticsModal';
 import { AIReportModal } from '../components/AIReportModal';
+import { ActionHistory } from '../components/ActionHistory';
 import { UserGuideModal } from '../components/UserGuideModal';
 import { ChangePasswordModal } from '../components/ChangePasswordModal';
+import { logAudit } from '../utils/security';
 import { KeyRound } from 'lucide-react';
 import { ZaloReminderModal } from '../components/ZaloReminderModal';
 import { useSettings } from '../contexts/SettingsContext';
@@ -88,6 +90,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
     const { error } = await supabase.from('candidates').update(payload).eq('id', c.id);
     if (!error) {
       await logAction(c.id, 'secretary', `Thư ký ${secretaryInfo.username}`, action, feedbackMsg);
+      await logAudit(`Thư ký ${secretaryInfo.username}`, status.toUpperCase(), c.cccd, { status: c.status }, { status: status });
       loadData();
     } else {
       showAlert('Thông báo', 'Lỗi cập nhật trạng thái!');

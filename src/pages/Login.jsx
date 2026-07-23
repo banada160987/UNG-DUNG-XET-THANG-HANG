@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { GraduationCap, User, Users, ShieldAlert, Eye, EyeOff } from 'lucide-react';
 import { showAlert } from '../utils/alert';
-import { hashPassword, logAccess, handleFailedAttempt, handleSuccessfulLogin, getRemainingLockMinutes } from '../utils/security';
+import { hashPassword, logAccess, handleFailedAttempt, handleSuccessfulLogin, getRemainingLockMinutes, generateSessionToken } from '../utils/security';
 
 export const Login = ({ onLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -17,6 +17,12 @@ export const Login = ({ onLogin }) => {
   // States for Head
   const [selectedDept, setSelectedDept] = useState('');
   const [headPass, setHeadPass] = useState('');
+  
+  const handleLoginSuccess = (payload) => {
+    const token = generateSessionToken(payload);
+    sessionStorage.setItem('cbq_session_token', token);
+    onLogin(payload);
+  };
   
   // States for Secretary
   const [secUser, setSecUser] = useState('');
@@ -69,7 +75,7 @@ export const Login = ({ onLogin }) => {
           return;
         }
         await logAccess(cccd, 'teacher', 'SUCCESS');
-        onLogin({ role: 'teacher', cccd });
+        handleLoginSuccess({ role: 'teacher', cccd });
       } else {
         const lockMins = getRemainingLockMinutes(teacher.locked_until);
         if (lockMins) {
@@ -97,7 +103,7 @@ export const Login = ({ onLogin }) => {
         
         await handleSuccessfulLogin('teachers', 'cccd', cccd);
         await logAccess(cccd, 'teacher', 'SUCCESS');
-        onLogin({ role: 'teacher', cccd });
+        handleLoginSuccess({ role: 'teacher', cccd });
       }
     } 
     else if (role === 'head') {
@@ -128,7 +134,7 @@ export const Login = ({ onLogin }) => {
 
       await handleSuccessfulLogin('heads', 'department', selectedDept);
       await logAccess(selectedDept, 'head', 'SUCCESS');
-      onLogin({ role: 'head', department: selectedDept });
+      handleLoginSuccess({ role: 'head', department: selectedDept });
     } 
     else if (role === 'secretary') {
       const { data } = await supabase.from('secretaries').select('*').eq('username', secUser).maybeSingle();
@@ -159,7 +165,7 @@ export const Login = ({ onLogin }) => {
 
       await handleSuccessfulLogin('secretaries', 'username', secUser);
       await logAccess(secUser, 'secretary', 'SUCCESS');
-      onLogin({ role: 'secretary', info: data });
+      handleLoginSuccess({ role: 'secretary', info: data });
     }
     else if (role === 'admin') {
       const { data: adminConfig } = await supabase.from('settings').select('points').eq('id', 'admin_config').maybeSingle();
@@ -179,7 +185,7 @@ export const Login = ({ onLogin }) => {
         return;
       }
       await logAccess('admin', 'admin', 'SUCCESS');
-      onLogin({ role: 'admin' });
+      handleLoginSuccess({ role: 'admin' });
     }
   };
 

@@ -11,6 +11,7 @@ import { StatisticsModal } from '../components/StatisticsModal';
 import { AIReportModal } from '../components/AIReportModal';
 import { ZaloReminderModal } from '../components/ZaloReminderModal';
 import { useSettings } from '../contexts/SettingsContext';
+import { logAudit } from '../utils/security';
 import { CheckCircle, XCircle, Search, UserCheck, AlertTriangle, Send, History, Eye, Scale, Users, FileText, CheckSquare, FileSpreadsheet, Clock, HelpCircle, BarChart2, Sparkles, Bell } from 'lucide-react';
 import { showAlert, showConfirm } from '../utils/alert';
 import { exportStatisticsWord } from '../utils/exportStatistics';
@@ -84,6 +85,7 @@ export const HeadDashboard = ({ department, onLogout }) => {
     const { error } = await supabase.from('candidates').update(payload).eq('id', c.id);
     if (!error) {
       await logAction(c.id, 'head', `Tổ trưởng ${department}`, action, feedbackMsg);
+      await logAudit(`Tổ trưởng ${department}`, status.toUpperCase(), c.cccd, { status: c.status }, { status: status });
       loadData();
     } else {
       showAlert('Thông báo', 'Lỗi cập nhật trạng thái');
@@ -156,7 +158,10 @@ export const HeadDashboard = ({ department, onLogout }) => {
 
     for (const c of candsToApprove) {
       const { error } = await supabase.from('candidates').update({ status: 'head_approved' }).eq('id', c.id);
-      if (!error) await logAction(c.id, 'head', `Tổ trưởng ${department}`, 'XÁC NHẬN HỢP LỆ (Duyệt gộp)');
+      if (!error) {
+        await logAction(c.id, 'head', `Tổ trưởng ${department}`, 'XÁC NHẬN HỢP LỆ (Duyệt gộp)');
+        await logAudit(`Tổ trưởng ${department}`, 'HEAD_APPROVED_BULK', c.cccd, { status: c.status }, { status: 'head_approved' });
+      }
     }
     setSelectedForCompare([]);
     loadData();
