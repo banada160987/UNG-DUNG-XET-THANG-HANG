@@ -59,7 +59,7 @@ export const Login = ({ onLogin }) => {
 
       if (!teacher) {
         if (!teacherPass) {
-          showAlert('Thông báo', 'Äây là lần đăng nhập đầu tiên, vui lòng nhập Mật khẩu để tạo tài khoản!');
+          showAlert('Thông báo', 'Đây là lần đăng nhập đầu tiên, vui lòng nhập Mật khẩu để tạo tài khoản!');
           return;
         }
         const hashedPass = await hashPassword(teacherPass);
@@ -73,7 +73,7 @@ export const Login = ({ onLogin }) => {
       } else {
         const lockMins = getRemainingLockMinutes(teacher.locked_until);
         if (lockMins) {
-          showAlert('Lỗi', `Tài khoản đã bị khoá tạm thờins} phút.`);
+          showAlert('Lỗi', `Tài khoản đã bị khoá tạm thời. Vui lòng thử lại sau ${lockMins} phút.`);
           await logAccess(cccd, 'teacher', 'LOCKED');
           return;
         }
@@ -109,7 +109,7 @@ export const Login = ({ onLogin }) => {
 
       const lockMins = getRemainingLockMinutes(head.locked_until);
       if (lockMins) {
-        showAlert('Lỗi', `Tài khoản đã bị khoá tạm thá»i. Vui lòng thử lại sau ${lockMins} phút.`);
+        showAlert('Lỗi', `Tài khoản đã bị khoá tạm thời. Vui lòng thử lại sau ${lockMins} phút.`);
         await logAccess(selectedDept, 'head', 'LOCKED');
         return;
       }
@@ -119,7 +119,7 @@ export const Login = ({ onLogin }) => {
         const isLocked = await handleFailedAttempt('heads', 'department', selectedDept, head.failed_attempts || 0);
         await logAccess(selectedDept, 'head', 'FAILED');
         if (isLocked) {
-           showAlert('Lỗi', 'Nhập sai mật khẩu quá 5 lần. Tài khoản bị khoá tạm thá»i 15 phút.');
+           showAlert('Lỗi', 'Nhập sai mật khẩu quá 5 lần. Tài khoản bị khoá tạm thời 15 phút.');
         } else {
            showAlert('Lỗi', 'Sai mật khẩu Tổ trưởng!');
         }
@@ -140,7 +140,7 @@ export const Login = ({ onLogin }) => {
 
       const lockMins = getRemainingLockMinutes(data.locked_until);
       if (lockMins) {
-        showAlert('Lỗi', `Tài khoản đã bị khoá tạm thá»i. Vui lòng thử lại sau ${lockMins} phút.`);
+        showAlert('Lỗi', `Tài khoản đã bị khoá tạm thời. Vui lòng thử lại sau ${lockMins} phút.`);
         await logAccess(secUser, 'secretary', 'LOCKED');
         return;
       }
@@ -150,7 +150,7 @@ export const Login = ({ onLogin }) => {
         const isLocked = await handleFailedAttempt('secretaries', 'username', secUser, data.failed_attempts || 0);
         await logAccess(secUser, 'secretary', 'FAILED');
         if (isLocked) {
-           showAlert('Lỗi', 'Nhập sai mật khẩu quá 5 lần. Tài khoản bị khoá tạm thá»i 15 phút.');
+           showAlert('Lỗi', 'Nhập sai mật khẩu quá 5 lần. Tài khoản bị khoá tạm thời 15 phút.');
         } else {
            showAlert('Lỗi', 'Sai mật khẩu Thư ký!');
         }

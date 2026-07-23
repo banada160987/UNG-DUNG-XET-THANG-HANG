@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { checkEligibility } from '../utils/validation';
 import { calculateTotalScore } from '../utils/ranking';
@@ -79,8 +79,8 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
 
   const updateStatus = async (c, status, feedbackMsg = '') => {
     let action = 'Bắt đầu rà soát';
-    if (status === 'admin_approved') action = 'ÄỦ ÄIỀU KIỆN';
-    if (status === 'returned') action = 'TRẢ Láº I / YÊU CẦU BỔ SUNG'; // Äổi status thành returned thay vì admin_rejected
+    if (status === 'admin_approved') action = 'ĐỦ ĐIỀU KIỆN';
+    if (status === 'returned') action = 'TRẢ LẠI / YÊU CẦU BỔ SUNG'; // Đổi status thành returned thay vì admin_rejected
 
     const payload = { status };
     if (feedbackMsg) payload.feedback_message = feedbackMsg;
@@ -183,7 +183,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
             onClick={onLogout}
             className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 hover:bg-rose-600 hover:text-white rounded-lg text-sm transition-colors text-slate-400"
           >
-            <LogOut size={18} /> Äăng xuất
+            <LogOut size={18} /> Đăng xuất
           </button>
         </div>
       </aside>
@@ -270,7 +270,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                   pulse={waitingAdminCount > 0}
                 />
                 <StatCard
-                  title="Äang Rà soát"
+                  title="Đang Rà soát"
                   value={reviewingCount}
                   icon={<Search className="text-amber-500" size={24} />}
                   bgColor="bg-amber-50"
@@ -278,7 +278,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                   onClick={() => setSelectedFilter('reviewing')}
                 />
                 <StatCard
-                  title="Äã Rà soát xong"
+                  title="Đã Rà soát xong"
                   value={adminFinishedCount}
                   icon={<CheckSquare className="text-emerald-500" size={24} />}
                   bgColor="bg-emerald-50"
@@ -340,10 +340,10 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                                 onClick={() => {
                                   const missingDocs = c.eligibility && !c.eligibility.isValid ? c.eligibility.missing.map(m => `- ${m}`).join('\n') : '';
                                   const msg = missingDocs
-                                    ? `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô trên hệ thống đang thiếu các thông tin/giấy tá» sau:\n${missingDocs}\n\nThầy/cô vui lòng bổ sung sớm nhé!`
+                                    ? `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô trên hệ thống đang thiếu các thông tin/giấy tờ sau:\n${missingDocs}\n\nThầy/cô vui lòng bổ sung sớm nhé!`
                                     : `Chào thầy/cô ${c.fullName},\nHồ sơ xét thăng hạng của thầy/cô đã được tiếp nhận.`;
                                   navigator.clipboard.writeText(msg).then(() => {
-                                    showAlert('Thông báo', "Äã copy sẵn tin nhắn báo thiếu hồ sơ!\nBạn chỉ cần ấn Ctrl+V (Dán) vào khung chat Zalo nhé.");
+                                    showAlert('Thông báo', "Đã copy sẵn tin nhắn báo thiếu hồ sơ!\nBạn chỉ cần ấn Ctrl+V (Dán) vào khung chat Zalo nhé.");
                                     window.location.href = `zalo://conversation?phone=${c.phone}`;
                                   });
                                 }}
@@ -366,7 +366,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                           )}
                           {c.eligibility.isValid ? (
                             <span className="inline-flex text-xs bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded-md font-medium">
-                              Hệ thống: Äủ điều kiện ban đầu
+                              Hệ thống: Đủ điều kiện ban đầu
                             </span>
                           ) : (
                             <span className="inline-flex text-xs bg-rose-50 text-rose-600 border border-rose-100 px-2 py-0.5 rounded-md font-medium" title={c.eligibility.missing?.join('\n')}>
@@ -398,7 +398,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                           {c.status === 'admin_reviewing' && (
                             <div className="flex items-center gap-2">
                               <button onClick={() => updateStatus(c, 'admin_approved')} className="flex-1 flex items-center justify-center gap-1 text-sm bg-emerald-600 text-white px-2 py-2 rounded-lg hover:bg-emerald-700 shadow-sm">
-                                <ThumbsUp size={16} /> Äủ ÄK
+                                <ThumbsUp size={16} /> Đủ ĐK
                               </button>
                               <button onClick={() => setRejectingCand(c)} className="flex-1 flex items-center justify-center gap-1 text-sm bg-white border border-rose-300 text-rose-600 px-2 py-2 rounded-lg hover:bg-rose-50 shadow-sm">
                                 <ThumbsDown size={16} /> Loại
