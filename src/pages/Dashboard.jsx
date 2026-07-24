@@ -426,6 +426,24 @@ export const Dashboard = ({ candidates, onRefresh }) => {
       </div>
 
       {/* Candidate Flex/Grid Cards */}
+      <div className="flex justify-between items-center mb-3 px-2">
+        <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-700 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm hover:bg-slate-50 transition-colors w-max">
+          <input 
+            type="checkbox" 
+            checked={rankedDisplayList.length > 0 && selectedForCompare.length === rankedDisplayList.length}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setSelectedForCompare(rankedDisplayList.map(c => c.id));
+              } else {
+                setSelectedForCompare([]);
+              }
+            }}
+            className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+          />
+          Chọn tất cả ({rankedDisplayList.length})
+        </label>
+      </div>
+      
       <motion.div layout className="flex flex-col gap-4">
         <AnimatePresence>
         {rankedDisplayList.length === 0 ? (
