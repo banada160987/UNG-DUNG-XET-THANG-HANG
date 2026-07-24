@@ -83,9 +83,15 @@ export const StatisticsModal = ({ candidates, onClose, unitName }) => {
 
       if (c.achievements) {
         c.achievements.forEach(ach => {
-          if (officialCount[ach.id] !== undefined) {
-            officialCount[ach.id].count++;
-            officialCount[ach.id].users.push(c.fullName);
+          let mappedId = ach.id;
+          // Gộp Bằng khen LĐLĐ, Tỉnh đoàn vào Bằng khen của Tỉnh (UBND Tỉnh)
+          if (mappedId === 'bk_ldld_tinhdoan' || mappedId === 'bk_ldld' || mappedId === 'bk_tinhdoan') {
+            mappedId = 'bk_ubnd_tinh';
+          }
+
+          if (officialCount[mappedId] !== undefined) {
+            officialCount[mappedId].count++;
+            officialCount[mappedId].users.push(c.fullName);
           } else {
             processAchText(ach);
           }

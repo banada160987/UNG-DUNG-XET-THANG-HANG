@@ -262,10 +262,10 @@ export const exportStatisticsExcel = async (candidates) => {
       const cstd_toan_quoc = count('cstd_toan_quoc');
       const bk_tinh_uy = count(['bk_tinh_uy_5nam', 'bk_tinh_uy_dotxuat']);
       const bk_bo_nganh = count('bk_bo_nganh');
-      const bk_ubnd_tinh = count('bk_ubnd_tinh');
+      const bk_ubnd_tinh = count(['bk_ubnd_tinh', 'bk_ldld_tinhdoan', 'bk_ldld', 'bk_tinhdoan']);
       const cstd_cap_tinh = count('cstd_cap_tinh');
       const gk_dang_uy_xa = count('gk_dang_uy_xa');
-      const gk_so_nganh_xa = count(['gk_so_nganh_xa', 'gk_sgd', 'gk_bannganh', 'gk_xa', 'bk_ldld_tinhdoan', 'bk_ldld', 'bk_tinhdoan']);
+      const gk_so_nganh_xa = count(['gk_so_nganh_xa', 'gk_sgd', 'gk_bannganh', 'gk_xa']);
       
       const cstd_co_so = count('cstd_co_so'); // Extra? Mẫu ko có CSTĐ Cơ Sở ở nhóm ngoài. Nó có thể nằm trong "Thành tích khác" nếu ko có cột.
       
