@@ -95,11 +95,13 @@ export const SettingsModal = ({ isOpen, onClose }) => {
                       ))}
                     </div>
                   </div>
+                </>
+              )}
 
-                  <div>
-                    <h3 className="font-semibold text-slate-800 mb-3 border-b pb-2">Các cấu hình khác</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex flex-col">
+              <div>
+                <h3 className="font-semibold text-slate-800 mb-3 border-b pb-2 mt-6">Các cấu hình khác</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex flex-col">
                         <label className="text-sm text-slate-600 mb-1">Điểm thâm niên (mỗi năm)</label>
                         <input 
                           type="number" 
@@ -170,8 +172,6 @@ export const SettingsModal = ({ isOpen, onClose }) => {
                       </div>
                     </div>
                   </div>
-                </>
-              )}
             </div>
           )}
         </div>
