@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { X, BarChart2, Award, FileText, CheckCircle, Clock, Download } from 'lucide-react';
 import { exportDetailedStatsWord } from '../utils/exportDetailedStats';
-import { ACHIEVEMENT_LEVELS } from '../data/config';
+import { ACHIEVEMENT_LEVELS, OTHER_ACHIEVEMENT_TYPES } from '../data/config';
 
 export const StatisticsModal = ({ candidates, onClose, unitName }) => {
   const [isExporting, setIsExporting] = useState(false);
@@ -20,16 +20,12 @@ export const StatisticsModal = ({ candidates, onClose, unitName }) => {
       officialCount[lvl.id] = { count: 0, users: [] };
     });
 
-    const otherStats = {
-      skkn: { name: 'Sáng kiến kinh nghiệm', count: 0, users: [] },
-      gvcng: { name: 'Giáo viên chủ nhiệm giỏi', count: 0, users: [] },
-      gvdg: { name: 'Giáo viên dạy giỏi', count: 0, users: [] },
-      ht_khen: { name: 'Hiệu trưởng khen', count: 0, users: [] },
-      cd_nganh: { name: 'Công đoàn ngành khen', count: 0, users: [] },
-      td_bmt: { name: 'Thành đoàn BMT khen', count: 0, users: [] },
-      cd_truong: { name: 'Công đoàn trường khen', count: 0, users: [] },
-      dt_khen: { name: 'Đoàn trường khen', count: 0, users: [] },
-    };
+    const otherStats = {};
+    OTHER_ACHIEVEMENT_TYPES.forEach(lvl => {
+      if (lvl.id !== 'khac') {
+        otherStats[lvl.id] = { name: lvl.name, count: 0, users: [] };
+      }
+    });
 
     // Danh sách thành tích khác
     const otherAchs = [];
@@ -42,35 +38,48 @@ export const StatisticsModal = ({ candidates, onClose, unitName }) => {
         const text = typeof ach === 'string' ? ach : (ach.id || ach.name || '');
         const lowerText = text.toLowerCase();
         
+        let mappedId = ach.id;
+        if (otherStats[mappedId]) {
+          otherStats[mappedId].count++;
+          otherStats[mappedId].users.push(c.fullName);
+          return;
+        }
+        
         if (lowerText.includes('sáng kiến') || lowerText.includes('skkn')) {
-          otherStats.skkn.count++;
-          otherStats.skkn.users.push(c.fullName);
+          otherStats['other_skkn_tinh'].count++;
+          otherStats['other_skkn_tinh'].users.push(c.fullName);
         } else if (lowerText.includes('chủ nhiệm') || lowerText.includes('gvcng')) {
-          otherStats.gvcng.count++;
-          otherStats.gvcng.users.push(c.fullName);
+          otherStats['other_gvcng_truong'].count++;
+          otherStats['other_gvcng_truong'].users.push(c.fullName);
         } else if (lowerText.includes('dạy giỏi') || lowerText.includes('gvdg')) {
-          otherStats.gvdg.count++;
-          otherStats.gvdg.users.push(c.fullName);
+          otherStats['other_gvdg_truong'].count++;
+          otherStats['other_gvdg_truong'].users.push(c.fullName);
         } else if (lowerText.includes('hiệu trưởng') || lowerText.includes('ht khen')) {
-          otherStats.ht_khen.count++;
-          otherStats.ht_khen.users.push(c.fullName);
+          otherStats['other_gk_hieu_truong'].count++;
+          otherStats['other_gk_hieu_truong'].users.push(c.fullName);
         } else if (lowerText.includes('công đoàn ngành') || lowerText.includes('cđ ngành')) {
-          otherStats.cd_nganh.count++;
-          otherStats.cd_nganh.users.push(c.fullName);
+          if (officialCount['gk_congdoannganh']) {
+            officialCount['gk_congdoannganh'].count++;
+            officialCount['gk_congdoannganh'].users.push(c.fullName);
+          }
+        } else if (lowerText.includes('thành đoàn') || lowerText.includes('bmt')) {
+          if (officialCount['gk_thanhdoan']) {
+            officialCount['gk_thanhdoan'].count++;
+            officialCount['gk_thanhdoan'].users.push(c.fullName);
+          }
         } else if (lowerText.includes('công đoàn trường') || lowerText.includes('cđ trường') || lowerText.includes('công đoàn')) {
            if (lowerText.includes('ngành')) {
-             otherStats.cd_nganh.count++;
-             otherStats.cd_nganh.users.push(c.fullName);
+             if (officialCount['gk_congdoannganh']) {
+               officialCount['gk_congdoannganh'].count++;
+               officialCount['gk_congdoannganh'].users.push(c.fullName);
+             }
            } else {
-             otherStats.cd_truong.count++;
-             otherStats.cd_truong.users.push(c.fullName);
+             otherStats['other_gk_cd_truong'].count++;
+             otherStats['other_gk_cd_truong'].users.push(c.fullName);
            }
-        } else if (lowerText.includes('thành đoàn') || lowerText.includes('bmt')) {
-          otherStats.td_bmt.count++;
-          otherStats.td_bmt.users.push(c.fullName);
         } else if (lowerText.includes('đoàn trường') || lowerText.includes('đtn trường') || lowerText.includes('đoàn thanh niên')) {
-          otherStats.dt_khen.count++;
-          otherStats.dt_khen.users.push(c.fullName);
+          otherStats['other_gk_doan_truong'].count++;
+          otherStats['other_gk_doan_truong'].users.push(c.fullName);
         } else {
           otherAchs.push({
             name: c.fullName,

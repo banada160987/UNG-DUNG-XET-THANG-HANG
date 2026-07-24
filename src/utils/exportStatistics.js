@@ -1,6 +1,6 @@
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, BorderStyle, AlignmentType, VerticalAlign, PageOrientation } from 'docx';
 import { saveAs } from 'file-saver';
-import { ACHIEVEMENT_LEVELS } from '../data/config';
+import { ACHIEVEMENT_LEVELS, OTHER_ACHIEVEMENT_TYPES } from '../data/config';
 
 // Helper to create TextRun
 const createText = (text, bold = false, italic = false, size = 22, color = "000000") => {
@@ -156,21 +156,24 @@ export const exportStatisticsWord = async (candidates, unitName = "Toàn trườ
         const textStr = typeof ach === 'string' ? ach : (ach.id || ach.name || '');
         if (!textStr) return;
         
-        // 2) Chủ động đưa thành tích vào đúng cột
-        if (ach.id === 'bk_ubnd_tinh' || textIncludes(ach, ['ubnd tỉnh', 'lđlđ', 'liên đoàn lao động', 'tỉnh đoàn', 'thành đoàn', 'đoàn thanh niên'])) counts.bk_ubndt++;
-        else if (ach.id === 'cstd_cap_tinh' || textIncludes(ach, ['cstđ cấp tỉnh', 'cstđ tỉnh', 'chiến sĩ thi đua cấp tỉnh'])) counts.cstd_tinh++;
-        else if (ach.id === 'cstd_co_so' || textIncludes(ach, ['cstđ cơ sở', 'chiến sĩ thi đua cơ sở'])) counts.cstd_cs++;
-        else if (ach.id === 'gk_sgd' || ach.id === 'gk_so_nganh_xa' || textIncludes(ach, ['sở giáo dục', 'giám đốc sở'])) counts.gk_so++;
-        else if (ach.id === 'gk_bannganh' || ach.id === 'gk_xa' || ach.id === 'gk_dang_uy_xa' || textIncludes(ach, ['giấy khen của thủ trưởng', 'chủ tịch ubnd', 'ngành', 'ban', 'gk ban'])) counts.gk_ban++;
-        else if (textIncludes(ach, ['gvdg', 'dạy giỏi', 'giáo viên dạy giỏi'])) counts.gvdg++;
-        else if (textIncludes(ach, ['gvcng', 'chủ nhiệm', 'gvcn'])) counts.gvcng++;
-        else if (textIncludes(ach, ['skkn', 'sáng kiến'])) counts.skkn.push(textStr);
-        else if (textIncludes(ach, ['ht ', 'hiệu trưởng', 'trường khen', 'cấp trường khen'])) counts.ht_khen++;
-        else if (textIncludes(ach, ['cđ', 'công đoàn'])) counts.cd_khen++;
-        else if (textIncludes(ach, ['đtn', 'đoàn trường'])) counts.dtn_khen++;
+        // Cập nhật mapping ID chuẩn
+        if (['bk_ubnd_tinh', 'bk_ldld_tinhdoan', 'bk_ldld', 'bk_tinhdoan'].includes(ach.id) || textIncludes(ach, ['ubnd tỉnh'])) counts.bk_ubndt++;
+        else if (ach.id === 'cstd_cap_tinh' || textIncludes(ach, ['cstđ cấp tỉnh'])) counts.cstd_tinh++;
+        else if (ach.id === 'cstd_co_so' || textIncludes(ach, ['cstđ cơ sở'])) counts.cstd_cs++;
+        else if (['gk_sgd', 'gk_so_nganh_xa'].includes(ach.id) || textIncludes(ach, ['sở giáo dục'])) counts.gk_so++;
+        else if (['gk_bannganh', 'gk_xa', 'gk_dang_uy_xa', 'gk_congdoannganh', 'gk_thanhdoan'].includes(ach.id)) counts.gk_ban++;
+        else if (['other_gvdg_tinh', 'other_gvdg_truong'].includes(ach.id) || textIncludes(ach, ['gvdg', 'dạy giỏi'])) counts.gvdg++;
+        else if (['other_gvcng_tinh', 'other_gvcng_truong'].includes(ach.id) || textIncludes(ach, ['gvcng', 'chủ nhiệm'])) counts.gvcng++;
+        else if (ach.id === 'other_skkn_tinh' || textIncludes(ach, ['skkn', 'sáng kiến'])) counts.skkn.push('Sáng kiến kinh nghiệm cấp Tỉnh');
+        else if (ach.id === 'other_gk_hieu_truong' || textIncludes(ach, ['hiệu trưởng', 'trường khen'])) counts.ht_khen++;
+        else if (ach.id === 'other_gk_cd_truong' || textIncludes(ach, ['cđ trường', 'công đoàn trường'])) counts.cd_khen++;
+        else if (ach.id === 'other_gk_doan_truong' || textIncludes(ach, ['đtn', 'đoàn trường'])) counts.dtn_khen++;
         else {
           const achObj = typeof ach === 'object' ? ACHIEVEMENT_LEVELS.find(lvl => lvl.id === ach.id) : null;
-          counts.khac.push(achObj ? achObj.name : textStr);
+          const otherObj = typeof ach === 'object' ? OTHER_ACHIEVEMENT_TYPES.find(lvl => lvl.id === ach.id) : null;
+          if (achObj) counts.khac.push(achObj.name);
+          else if (otherObj && otherObj.id !== 'khac') counts.khac.push(otherObj.name);
+          else counts.khac.push(textStr);
         }
       };
 

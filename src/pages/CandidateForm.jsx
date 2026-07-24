@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '../utils/supabaseClient';
-import { ACHIEVEMENT_LEVELS, TARGET_TITLES } from '../data/config';
+import { ACHIEVEMENT_LEVELS, TARGET_TITLES, OTHER_ACHIEVEMENT_TYPES } from '../data/config';
 import { Save, X, Plus, Trash2, Send, Upload, Paperclip, AlertCircle, ScanText, Loader2, MessageSquarePlus, Download, Award, Medal, Trophy, Globe, GraduationCap, Star, CheckCircle2, ArrowDown, ArrowUp } from 'lucide-react';
 import { DriveUploadButton } from '../components/DriveUploadButton';
 import { performOCR } from '../utils/ocr';
@@ -306,6 +306,32 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
     
     if(isConfirmed){
       onSubmitToHead(getSubmitData());
+    }
+  };
+
+  const handleSubmitToSecretary = async (e) => {
+    e.preventDefault();
+    const data = getSubmitData();
+    if (!data) return; 
+    
+    if (!formData.ratingSheets || !formData.certificates || formData.certificates.length === 0) {
+      showAlert('Thiếu thông tin', 'Vui lòng kiểm tra lại Phiếu đánh giá và Chứng chỉ.', 'warning');
+      return;
+    }
+    
+    const isConfirmed = await showConfirm(
+      'Nộp thẳng cho Thư ký', 
+      'Bạn có chắc chắn nộp hồ sơ thẳng lên cho Thư ký (Bỏ qua Tổ trưởng)? Hành động này thường chỉ dùng khi bạn bổ sung hồ sơ theo yêu cầu.', 
+      'question'
+    );
+    
+    if(isConfirmed){
+      if (typeof onSubmitToSecretary === 'function') {
+         onSubmitToSecretary(data);
+      } else {
+         data.status = 'head_approved'; 
+         onSubmitToHead(data);
+      }
     }
   };
 
@@ -772,16 +798,46 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
               <div key={index} className="flex flex-col md:flex-row gap-3 items-start md:items-end bg-slate-50 p-4 rounded-lg border border-slate-200">
                 <div className="flex-1 w-full">
                   <label className="text-xs font-medium text-slate-500 mb-1 block">Tên thành tích <span className="text-rose-500">*</span></label>
-                  <input 
-                    disabled={isReadOnly}
-                    required
-                    type="text"
-                    placeholder="VD: Giáo viên dạy giỏi..."
-                    value={ach.id} 
-                    title={ach.id}
-                    onChange={(e) => updateOtherAchievement(index, 'id', e.target.value)}
-                    className="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white disabled:bg-slate-100"
-                  />
+                  {(() => {
+                    const isStandard = OTHER_ACHIEVEMENT_TYPES.some(t => t.id === ach.id || t.name === ach.id);
+                    const isCustom = !isStandard && ach.id !== '';
+                    
+                    return (
+                      <div className="space-y-2">
+                        <select 
+                          disabled={isReadOnly}
+                          required
+                          value={isCustom ? 'khac' : ach.id}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === 'khac') {
+                              updateOtherAchievement(index, 'id', ''); 
+                            } else {
+                              updateOtherAchievement(index, 'id', val);
+                            }
+                          }}
+                          className="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-slate-100"
+                        >
+                          <option value="" disabled>-- Chọn phân loại thành tích --</option>
+                          {OTHER_ACHIEVEMENT_TYPES.map(type => (
+                            <option key={type.id} value={type.id}>{type.name}</option>
+                          ))}
+                        </select>
+                        
+                        {(isCustom || ach.id === '') && (
+                          <input 
+                            disabled={isReadOnly}
+                            required
+                            type="text"
+                            placeholder="Nhập tên thành tích khác của bạn..."
+                            value={ach.id === 'khac' ? '' : ach.id} 
+                            onChange={(e) => updateOtherAchievement(index, 'id', e.target.value)}
+                            className="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white disabled:bg-slate-100"
+                          />
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div className="w-full md:w-24">
                   <label className="text-xs font-medium text-slate-500 mb-1 block">Năm</label>
@@ -853,6 +909,12 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
             <Save size={18} /> Lưu nháp
           </button>
           
+          {typeof onSubmitToSecretary === 'function' && (
+            <button type="button" onClick={handleSubmitToSecretary} className="flex items-center gap-2 px-6 py-2 rounded-lg font-medium text-white bg-orange-600 hover:bg-orange-700 shadow-sm transition-colors">
+              <Send size={18} /> Nộp thẳng Thư ký
+            </button>
+          )}
+
           <button type="submit" className="flex items-center gap-2 px-6 py-2 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors">
             <Send size={18} /> Nộp cho Tổ trưởng
           </button>

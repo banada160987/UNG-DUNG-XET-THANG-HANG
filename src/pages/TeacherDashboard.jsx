@@ -8,9 +8,11 @@ import { exportDetailedChecklistWord } from '../utils/exportDetailedChecklistWor
 import { SignatureModal } from '../components/SignatureModal';
 import { UserGuideModal } from '../components/UserGuideModal';
 import { showAlert } from '../utils/alert';
+import { useSettings } from '../contexts/SettingsContext';
 import confetti from 'canvas-confetti';
 
 export const TeacherDashboard = ({ cccd, onLogout }) => {
+  const { settings } = useSettings();
   const [candidate, setCandidate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeBatchId, setActiveBatchId] = useState(null);
@@ -79,6 +81,10 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
   const handleSubmitToHead = async (formData) => {
     const newStatus = 'submitted_to_head'; // Luôn nộp cho tổ trưởng
     await saveCandidate(formData, newStatus);
+  };
+
+  const handleSubmitToSecretary = (formData) => {
+    saveCandidate(formData, 'head_approved');
   };
 
   if (loading) return <div className="p-8 text-center">Đang tải dữ liệu...</div>;
@@ -212,6 +218,7 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
               fixedCccd={cccd} 
               onSave={handleSaveDraft}
               onSubmitToHead={handleSubmitToHead}
+              onSubmitToSecretary={settings?.allow_direct_to_secretary ? handleSubmitToSecretary : undefined}
               isReadOnly={isReadOnly}
             />
           </>

@@ -141,6 +141,38 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
     displayList = [...displayList].sort((a, b) => b.score - a.score);
   }
 
+  const handleBulkReject = async () => {
+    const reason = await showPrompt('Từ chối hàng loạt', 'Nhập lý do từ chối chung cho các hồ sơ đã chọn...');
+    if (!reason || reason.trim() === '') {
+      if (reason !== null) showAlert('Lỗi', 'Vui lòng nhập lý do từ chối.', 'error');
+      return;
+    }
+    
+    setLoading(true);
+    let successCount = 0;
+    
+    for (const candId of selectedForCompare) {
+      const cand = candidates.find(c => c.id === candId);
+      if (!cand) continue;
+      
+      const { error } = await supabase
+        .from('candidates')
+        .update({ status: 'returned', feedback: reason })
+        .eq('id', candId);
+        
+      if (!error) {
+        successCount++;
+        await logAction(candId, secretaryInfo.email, 'Từ chối (Hàng loạt)', `Lý do: ${reason}`);
+        await logAudit(secretaryInfo.email, 'REJECT_CANDIDATE', candId, cand.status, 'returned');
+      }
+    }
+    
+    setLoading(false);
+    showAlert('Thành công', `Đã từ chối ${successCount} hồ sơ.`, 'success');
+    setSelectedForCompare([]);
+    loadData();
+  };
+
   const handleToggleCompare = (candidateId) => {
     setSelectedForCompare(prev => {
       if (prev.includes(candidateId)) return prev.filter(id => id !== candidateId);
@@ -311,6 +343,15 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
                         className="px-3 py-1.5 text-sm font-medium rounded-lg border bg-blue-600 text-white border-blue-600 hover:bg-blue-700 flex items-center gap-1 shadow-sm"
                       >
                         <Scale size={16} /> Bàn cân đối chiếu ({selectedForCompare.length})
+                      </button>
+                    )}
+                    
+                    {selectedForCompare.length >= 1 && (
+                      <button
+                        onClick={handleBulkReject}
+                        className="px-3 py-1.5 text-sm font-medium rounded-lg border bg-rose-600 text-white border-rose-600 hover:bg-rose-700 flex items-center gap-1 shadow-sm"
+                      >
+                        <XCircle size={16} /> Trả lại hàng loạt ({selectedForCompare.length})
                       </button>
                     )}
                   </div>

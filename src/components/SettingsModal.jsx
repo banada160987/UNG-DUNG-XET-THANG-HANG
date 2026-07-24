@@ -11,12 +11,12 @@ export const SettingsModal = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  const handleChange = (id, value) => {
-    setLocalSettings(prev => ({
-      ...prev,
-      [id]: id === 'use_scoring' ? value : parseFloat(value) || 0
-    }));
-  };
+    const handleChange = (id, value) => {
+      setLocalSettings(prev => ({
+        ...prev,
+        [id]: (id === 'use_scoring' || id === 'allow_direct_to_secretary') ? value : parseFloat(value) || 0
+      }));
+    };
 
   const handleSave = async () => {
     setSaving(true);
@@ -107,6 +107,21 @@ export const SettingsModal = ({ isOpen, onClose }) => {
                           onChange={(e) => handleChange('seniority_per_year', e.target.value)}
                           className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
+                      </div>
+                      
+                      <div className="flex flex-col bg-slate-50 p-3 rounded-xl border border-slate-200 justify-center">
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                          <input 
+                            type="checkbox"
+                            checked={localSettings['allow_direct_to_secretary'] === true}
+                            onChange={(e) => handleChange('allow_direct_to_secretary', e.target.checked)}
+                            className="w-5 h-5 border-2 border-slate-300 rounded text-blue-600 focus:ring-blue-500 peer"
+                          />
+                          <div>
+                            <div className="font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">Cho phép GV nộp thẳng Thư ký</div>
+                            <div className="text-xs text-slate-500 mt-0.5">Hiển thị nút cho phép GV nộp hồ sơ bỏ qua Tổ trưởng.</div>
+                          </div>
+                        </label>
                       </div>
                     </div>
                   </div>

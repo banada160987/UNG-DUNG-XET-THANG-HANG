@@ -1,7 +1,7 @@
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { format } from 'date-fns';
-import { ACHIEVEMENT_LEVELS } from '../data/config';
+import { ACHIEVEMENT_LEVELS, OTHER_ACHIEVEMENT_TYPES } from '../data/config';
 
 export const exportStatisticsExcel = async (candidates) => {
   const workbook = new ExcelJS.Workbook();
@@ -298,7 +298,16 @@ export const exportStatisticsExcel = async (candidates) => {
           usedIndices.add(aIdx);
         }
         else {
-          th_khac_list.push('- ' + ach.id + (ach.year ? ` (${ach.year})` : ''));
+          let achName = ach.id;
+          const otherObj = typeof ach === 'object' ? OTHER_ACHIEVEMENT_TYPES.find(lvl => lvl.id === ach.id) : null;
+          if (otherObj && otherObj.id !== 'khac') {
+            achName = otherObj.name;
+          } else {
+            const lvlObj = typeof ach === 'object' ? ACHIEVEMENT_LEVELS.find(lvl => lvl.id === ach.id) : null;
+            if (lvlObj) achName = lvlObj.name;
+            else achName = ach.name || ach.id;
+          }
+          th_khac_list.push('- ' + achName + (ach.year ? ` (${ach.year})` : ''));
         }
       });
       

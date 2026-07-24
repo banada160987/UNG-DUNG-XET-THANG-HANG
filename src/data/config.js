@@ -30,10 +30,25 @@ export const ACHIEVEMENT_LEVELS = [
   { id: 'gk_so_nganh_xa', name: 'Giấy khen của Thủ trưởng Sở, ban, ngành, UB MTTQ tỉnh, Chủ tịch UBND cấp xã', score: 13 },
   { id: 'gk_sgd', name: 'Giấy khen Sở Giáo dục và Đào tạo', score: 13 },
   { id: 'gk_bannganh', name: 'Giấy khen Ban, ngành, đoàn thể, UB MTTQ tỉnh', score: 13 },
+  { id: 'gk_congdoannganh', name: 'Giấy khen Công đoàn ngành Giáo dục', score: 13 },
+  { id: 'gk_thanhdoan', name: 'Giấy khen Thành đoàn', score: 13 },
   { id: 'gk_xa', name: 'Giấy khen Chủ tịch UBND cấp xã', score: 13 },
 
-  // Nhóm Bằng khen Đoàn thể cấp tỉnh (Theo luật TĐKT, tương đương Giấy khen cấp Sở/Ngành - Mức 13)
-  { id: 'bk_ldld_tinhdoan', name: 'Bằng khen LĐLĐ, tỉnh Đoàn (Tương đương Mức 13: Giấy khen cấp Sở)', score: 13 },
-  { id: 'bk_ldld', name: 'Bằng khen Liên đoàn Lao động (Tương đương Mức 13: Giấy khen cấp Sở)', score: 13 },
-  { id: 'bk_tinhdoan', name: 'Bằng khen Tỉnh đoàn (Tương đương Mức 13: Giấy khen cấp Sở)', score: 13 }
+  // Nhóm Bằng khen Đoàn thể cấp tỉnh (Theo yêu cầu: ngang mức Bằng khen UBND Tỉnh - score 10)
+  { id: 'bk_ldld_tinhdoan', name: 'Bằng khen LĐLĐ, tỉnh Đoàn (Tương đương Mức 10: Bằng khen cấp Tỉnh)', score: 10 },
+  { id: 'bk_ldld', name: 'Bằng khen Liên đoàn Lao động (Tương đương Mức 10: Bằng khen cấp Tỉnh)', score: 10 },
+  { id: 'bk_tinhdoan', name: 'Bằng khen Tỉnh đoàn (Tương đương Mức 10: Bằng khen cấp Tỉnh)', score: 10 }
+];
+
+// Danh sách các thành tích bổ sung chuẩn hóa (dùng cho Dropdown)
+export const OTHER_ACHIEVEMENT_TYPES = [
+  { id: 'other_gvdg_tinh', name: 'Chứng nhận Giáo viên dạy giỏi cấp Tỉnh' },
+  { id: 'other_gvdg_truong', name: 'Chứng nhận Giáo viên dạy giỏi cấp Trường' },
+  { id: 'other_gvcng_tinh', name: 'Chứng nhận Giáo viên chủ nhiệm lớp giỏi cấp Tỉnh' },
+  { id: 'other_gvcng_truong', name: 'Chứng nhận Giáo viên chủ nhiệm lớp giỏi cấp Trường' },
+  { id: 'other_skkn_tinh', name: 'Sáng kiến kinh nghiệm cấp Tỉnh' },
+  { id: 'other_gk_hieu_truong', name: 'Giấy khen của Hiệu trưởng' },
+  { id: 'other_gk_cd_truong', name: 'Giấy khen của Công đoàn Trường' },
+  { id: 'other_gk_doan_truong', name: 'Giấy khen của Đoàn Thanh niên Trường' },
+  { id: 'khac', name: 'Thành tích khác (Tự nhập tay)' }
 ];

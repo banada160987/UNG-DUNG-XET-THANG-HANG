@@ -128,6 +128,35 @@ export const Dashboard = ({ candidates, onRefresh }) => {
     return [...activeWithRank, ...excludedWithRank];
   }, [displayList, sortByScore, excludedIds]);
 
+  const handleBulkReject = async () => {
+    const reason = await showPrompt('Từ chối hàng loạt', 'Nhập lý do từ chối chung cho các hồ sơ đã chọn...');
+    if (!reason || reason.trim() === '') {
+      if (reason !== null) showAlert('Lỗi', 'Vui lòng nhập lý do từ chối.', 'error');
+      return;
+    }
+    
+    let successCount = 0;
+    
+    for (const candId of selectedForCompare) {
+      const cand = candidates.find(c => c.id === candId);
+      if (!cand) continue;
+      
+      const { error } = await supabase
+        .from('candidates')
+        .update({ status: 'returned', feedback: reason })
+        .eq('id', candId);
+        
+      if (!error) {
+        successCount++;
+        await logAction(candId, 'Admin', 'Từ chối (Hàng loạt)', `Lý do: ${reason}`);
+      }
+    }
+    
+    showAlert('Thành công', `Đã từ chối ${successCount} hồ sơ.`, 'success');
+    setSelectedForCompare([]);
+    if (onRefresh) onRefresh();
+  };
+
   const handleToggleCompare = (candidateId) => {
     setSelectedForCompare(prev => {
       if (prev.includes(candidateId)) return prev.filter(id => id !== candidateId);
@@ -342,8 +371,16 @@ export const Dashboard = ({ candidates, onRefresh }) => {
             <Bell size={16} /> Đôn đốc
           </button>
           {selectedForCompare.length >= 2 && (
-            <button onClick={() => setShowCompare(true)} className="flex items-center justify-center gap-2 text-sm bg-orange-50 border border-orange-200 hover:bg-orange-100 text-orange-700 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none">
-              <Scale size={16} /> Đối sánh ({selectedForCompare.length})
+            <button onClick={() => setShowCompare(true)} className="px-3 py-1.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-1 shadow-sm">
+              <Scale size={16} /> Bàn cân đối chiếu ({selectedForCompare.length})
+            </button>
+          )}
+          {selectedForCompare.length >= 1 && (
+            <button
+              onClick={handleBulkReject}
+              className="px-3 py-1.5 text-sm font-medium rounded-lg bg-rose-600 text-white hover:bg-rose-700 flex items-center gap-1 shadow-sm"
+            >
+              <XCircle size={16} /> Trả lại hàng loạt ({selectedForCompare.length})
             </button>
           )}
           <button onClick={() => setShowStatistics(true)} className="flex items-center justify-center gap-2 text-sm bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-3 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex-1 md:flex-none">
