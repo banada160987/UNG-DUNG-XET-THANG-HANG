@@ -116,7 +116,18 @@ export const Login = ({ onLogin }) => {
     else if (role === 'head') {
       const { data: head, error } = await supabase.from('heads').select('*').eq('department', selectedDept).maybeSingle();
       if (!head) {
-         showAlert('Thông báo', 'Chưa có tài khoản cho Tổ trưởng tổ này. Vui lòng liên hệ Admin!');
+         if (!headPass) {
+           showAlert('Thông báo', 'Đây là lần đăng nhập đầu tiên, vui lòng nhập Mật khẩu để tạo tài khoản Tổ trưởng!');
+           return;
+         }
+         const hashedPass = await hashPassword(headPass);
+         const { error: insertError } = await supabase.from('heads').insert([{ department: selectedDept, password: hashedPass }]);
+         if (insertError) {
+           showAlert('Thông báo', 'Lỗi tạo tài khoản!');
+           return;
+         }
+         await logAccess(selectedDept, 'head', 'SUCCESS');
+         handleLoginSuccess({ role: 'head', department: selectedDept });
          return;
       }
 
@@ -153,9 +164,19 @@ export const Login = ({ onLogin }) => {
     else if (role === 'secretary') {
       const { data } = await supabase.from('secretaries').select('*').eq('username', secUser).maybeSingle();
       if (!data) {
-        await logAccess(secUser, 'secretary', 'FAILED');
-        showAlert('Thông báo', 'Sai tên đăng nhập hoặc mật khẩu Thư ký!');
-        return;
+         if (!secPass) {
+           showAlert('Thông báo', 'Đây là lần đăng nhập đầu tiên, vui lòng nhập Mật khẩu để tạo tài khoản Thư ký!');
+           return;
+         }
+         const hashedPass = await hashPassword(secPass);
+         const { error: insertError } = await supabase.from('secretaries').insert([{ username: secUser, password: hashedPass }]);
+         if (insertError) {
+           showAlert('Thông báo', 'Lỗi tạo tài khoản!');
+           return;
+         }
+         await logAccess(secUser, 'secretary', 'SUCCESS');
+         handleLoginSuccess({ role: 'secretary', username: secUser });
+         return;
       }
 
       const lockMins = getRemainingLockMinutes(data.locked_until);
@@ -338,6 +359,9 @@ export const Login = ({ onLogin }) => {
                     </button>
                   </div>
                 </div>
+                <p className="text-xs text-slate-500 mt-2">
+                  Lưu ý: Nếu chưa có tài khoản, hệ thống sẽ tự động tạo bằng Tổ và Mật khẩu bạn nhập ở trên.
+                </p>
               </>
             )}
 
@@ -379,6 +403,9 @@ export const Login = ({ onLogin }) => {
                     </button>
                   </div>
                 </div>
+                <p className="text-xs text-slate-500 mt-2">
+                  Lưu ý: Nếu chưa có tài khoản, hệ thống sẽ tự động tạo bằng Tên đăng nhập và Mật khẩu bạn nhập ở trên.
+                </p>
               </>
             )}
 

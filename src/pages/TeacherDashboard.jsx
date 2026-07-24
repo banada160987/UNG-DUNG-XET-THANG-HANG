@@ -3,6 +3,7 @@ import { supabase } from '../utils/supabaseClient';
 import { CandidateForm } from './CandidateForm';
 import { StatusBadge } from '../components/StatusBadge';
 import { AlertCircle, FileCheck, Search, Download, PenTool, HelpCircle, Award, BarChart2 } from 'lucide-react';
+import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import { exportCandidateToWord } from '../utils/exportWord';
 import { exportDetailedChecklistWord } from '../utils/exportDetailedChecklistWord';
 import { calculateTotalScore, rankCandidates } from '../utils/ranking';
@@ -33,14 +34,40 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
     if (candidate && settings) {
       // Calculate Stats
       let totalAchs = 0;
+      let breakdownMap = {};
+      const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
+      
       if (candidate.achievements && Array.isArray(candidate.achievements)) {
         totalAchs += candidate.achievements.length;
+        candidate.achievements.forEach(ach => {
+          if (!ach.id) return;
+          if (!breakdownMap[ach.id]) breakdownMap[ach.id] = 0;
+          breakdownMap[ach.id]++;
+        });
       }
+      
+      let otherCount = 0;
       if (candidate.otherAchievements && Array.isArray(candidate.otherAchievements)) {
-        totalAchs += candidate.otherAchievements.length;
+        otherCount = candidate.otherAchievements.length;
+        totalAchs += otherCount;
       }
+      
+      const breakdown = Object.keys(breakdownMap).map((name, i) => ({
+        name: name,
+        value: breakdownMap[name],
+        fill: colors[i % colors.length]
+      }));
+      
+      if (otherCount > 0) {
+        breakdown.push({
+          name: 'Thành tích khác',
+          value: otherCount,
+          fill: '#64748b'
+        });
+      }
+
       const score = calculateTotalScore(candidate, settings);
-      setStats({ totalAchievements: totalAchs, score });
+      setStats({ totalAchievements: totalAchs, score, breakdown });
 
       // Calculate Rank if needed
       const calculateRank = async () => {
@@ -215,19 +242,45 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
             {(settings?.show_teacher_stats !== false || settings?.show_teacher_ranking === true) && candidate && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 {settings?.show_teacher_stats !== false && (
-                  <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-                      <BarChart2 size={24} />
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500 font-medium">Thống kê hồ sơ</p>
-                      <div className="flex items-end gap-2">
-                        <p className="text-2xl font-bold text-slate-800">{stats.totalAchievements} <span className="text-sm font-normal text-slate-500">thành tích</span></p>
-                        {settings?.use_scoring !== false && (
-                          <p className="text-sm font-medium text-emerald-600 mb-1">({stats.score} điểm)</p>
-                        )}
+                  <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 col-span-1 md:col-span-2 lg:col-span-1">
+                    <div className="flex items-center gap-4 mb-2">
+                      <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                        <BarChart2 size={24} />
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-500 font-medium">Thống kê hồ sơ</p>
+                        <div className="flex items-baseline gap-2">
+                          <p className="text-2xl font-bold text-slate-800">{stats.totalAchievements} <span className="text-sm font-normal text-slate-500">thành tích</span></p>
+                          {settings?.use_scoring !== false && (
+                            <p className="text-sm font-medium text-emerald-600">({stats.score} điểm)</p>
+                          )}
+                        </div>
                       </div>
                     </div>
+                    
+                    {stats.breakdown && stats.breakdown.length > 0 && (
+                      <div className="h-40 w-full mt-4">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={stats.breakdown}
+                              cx="40%"
+                              cy="50%"
+                              innerRadius={30}
+                              outerRadius={55}
+                              paddingAngle={2}
+                              dataKey="value"
+                            >
+                              {stats.breakdown.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.fill} />
+                              ))}
+                            </Pie>
+                            <RechartsTooltip formatter={(value) => [`${value} thành tích`, 'Số lượng']} />
+                            <Legend layout="vertical" verticalAlign="middle" align="right" wrapperStyle={{ fontSize: '11px', lineHeight: '18px' }} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
                   </div>
                 )}
 
