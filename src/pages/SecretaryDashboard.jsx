@@ -151,16 +151,23 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
     
     showLoading('Đang xử lý trả lại hàng loạt...');
     
-    // Bulk update status
-    const { error: updateError } = await supabase
-      .from('candidates')
-      .update({ status: 'returned', feedback: reason })
-      .in('id', selectedForCompare);
-      
-    if (updateError) {
-      closeLoading();
-      showAlert('Lỗi', 'Có lỗi xảy ra khi trả lại hồ sơ.', 'error');
-      return;
+    // Helper to chunk array to avoid URI Too Long error in Supabase .in()
+    const chunkArray = (arr, size) => Array.from({ length: Math.ceil(arr.length / size) }, (v, i) => arr.slice(i * size, i * size + size));
+    const chunks = chunkArray(selectedForCompare, 20);
+    
+    // Bulk update status in chunks
+    for (const chunk of chunks) {
+      const { error: updateError } = await supabase
+        .from('candidates')
+        .update({ status: 'returned', feedback: reason })
+        .in('id', chunk);
+        
+      if (updateError) {
+        console.error("Bulk update error:", updateError);
+        closeLoading();
+        showAlert('Lỗi', 'Có lỗi xảy ra khi trả lại hồ sơ: ' + updateError.message, 'error');
+        return;
+      }
     }
     
     // Bulk insert candidate_logs

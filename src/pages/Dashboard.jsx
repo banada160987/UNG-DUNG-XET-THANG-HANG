@@ -138,16 +138,22 @@ export const Dashboard = ({ candidates, onRefresh }) => {
     
     showLoading('Đang xử lý từ chối hàng loạt...');
     
-    // Bulk update status
-    const { error: updateError } = await supabase
-      .from('candidates')
-      .update({ status: 'returned', feedback: reason })
-      .in('id', selectedForCompare);
-      
-    if (updateError) {
-      closeLoading();
-      showAlert('Lỗi', 'Có lỗi xảy ra khi từ chối hồ sơ.', 'error');
-      return;
+    // Helper to chunk array to avoid URI Too Long error in Supabase .in()
+    const chunkArray = (arr, size) => Array.from({ length: Math.ceil(arr.length / size) }, (v, i) => arr.slice(i * size, i * size + size));
+    const chunks = chunkArray(selectedForCompare, 20);
+    
+    // Bulk update status in chunks
+    for (const chunk of chunks) {
+      const { error: updateError } = await supabase
+        .from('candidates')
+        .update({ status: 'returned', feedback: reason })
+        .in('id', chunk);
+        
+      if (updateError) {
+        closeLoading();
+        showAlert('Lỗi', 'Có lỗi xảy ra khi từ chối hồ sơ: ' + updateError.message, 'error');
+        return;
+      }
     }
     
     // Bulk insert logs
