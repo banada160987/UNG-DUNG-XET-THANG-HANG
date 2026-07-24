@@ -116,7 +116,11 @@ export const generateSessionToken = (userPayload) => {
     ...userPayload,
     exp: Date.now() + 8 * 60 * 60 * 1000 // 8 hours
   };
-  return btoa(JSON.stringify(payload));
+  const jsonStr = JSON.stringify(payload);
+  return btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g,
+      function toSolidBytes(match, p1) {
+          return String.fromCharCode('0x' + p1);
+  }));
 };
 
 /**
@@ -125,7 +129,10 @@ export const generateSessionToken = (userPayload) => {
 export const verifySessionToken = (tokenStr) => {
   if (!tokenStr) return null;
   try {
-    const payload = JSON.parse(atob(tokenStr));
+    const jsonStr = decodeURIComponent(atob(tokenStr).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    const payload = JSON.parse(jsonStr);
     if (payload.exp < Date.now()) return null;
     return payload;
   } catch (e) {
