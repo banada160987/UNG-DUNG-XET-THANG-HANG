@@ -74,3 +74,25 @@ export const showPrompt = async (title, inputPlaceholder = '', defaultValue = ''
   });
   return result.isConfirmed ? result.value : null;
 };
+
+/**
+ * Hiển thị thông báo đang xử lý
+ */
+export const showLoading = (title = 'Đang xử lý...') => {
+  MySwal.fire({
+    ...baseConfig,
+    title,
+    allowOutsideClick: false,
+    showConfirmButton: false,
+    didOpen: () => {
+      MySwal.showLoading();
+    }
+  });
+};
+
+/**
+ * Đóng thông báo đang xử lý
+ */
+export const closeLoading = () => {
+  MySwal.close();
+};

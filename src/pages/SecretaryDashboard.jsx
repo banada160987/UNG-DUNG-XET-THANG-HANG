@@ -17,7 +17,8 @@ import { KeyRound } from 'lucide-react';
 import { ZaloReminderModal } from '../components/ZaloReminderModal';
 import { useSettings } from '../contexts/SettingsContext';
 import { Users, FileText, CheckSquare, Search, ThumbsUp, ThumbsDown, LogOut, XCircle, Send, History, Eye, Scale, HelpCircle, BarChart2, FileSpreadsheet, Sparkles, Award, Bell } from 'lucide-react';
-import { showAlert } from '../utils/alert';
+import { showAlert, showConfirm, showPrompt, showLoading, closeLoading } from '../utils/alert';
+import { getDeviceIp } from '../utils/security';
 import { exportStatisticsWord } from '../utils/exportStatistics';
 import { exportStatisticsExcel } from '../utils/exportExcel';
 import { exportGoldenRollWord } from '../utils/exportGoldenRoll';
@@ -142,33 +143,51 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
   }
 
   const handleBulkReject = async () => {
-    const reason = await showPrompt('Từ chối hàng loạt', 'Nhập lý do từ chối chung cho các hồ sơ đã chọn...');
+    const reason = await showPrompt('Trả lại hàng loạt', 'Nhập lý do trả lại cho các hồ sơ đã chọn...');
     if (!reason || reason.trim() === '') {
-      if (reason !== null) showAlert('Lỗi', 'Vui lòng nhập lý do từ chối.', 'error');
+      if (reason !== null) showAlert('Lỗi', 'Vui lòng nhập lý do trả lại.', 'error');
       return;
     }
     
-    setLoading(true);
-    let successCount = 0;
+    showLoading('Đang xử lý trả lại hàng loạt...');
     
-    for (const candId of selectedForCompare) {
-      const cand = candidates.find(c => c.id === candId);
-      if (!cand) continue;
+    // Bulk update status
+    const { error: updateError } = await supabase
+      .from('candidates')
+      .update({ status: 'returned', feedback: reason })
+      .in('id', selectedForCompare);
       
-      const { error } = await supabase
-        .from('candidates')
-        .update({ status: 'returned', feedback: reason })
-        .eq('id', candId);
-        
-      if (!error) {
-        successCount++;
-        await logAction(candId, secretaryInfo.email, 'Từ chối (Hàng loạt)', `Lý do: ${reason}`);
-        await logAudit(secretaryInfo.email, 'REJECT_CANDIDATE', candId, cand.status, 'returned');
-      }
+    if (updateError) {
+      closeLoading();
+      showAlert('Lỗi', 'Có lỗi xảy ra khi trả lại hồ sơ.', 'error');
+      return;
     }
     
-    setLoading(false);
-    showAlert('Thành công', `Đã từ chối ${successCount} hồ sơ.`, 'success');
+    // Bulk insert candidate_logs
+    const candidateLogEntries = selectedForCompare.map(candId => ({
+      candidate_id: candId,
+      actor_role: 'Thư ký',
+      actor_name: secretaryInfo.username || 'Thư ký',
+      action: 'Trả lại (Hàng loạt)',
+      notes: `Lý do: ${reason}`
+    }));
+    await supabase.from('candidate_logs').insert(candidateLogEntries);
+    
+    // Bulk insert audit_logs
+    const auditLogEntries = selectedForCompare.map(candId => {
+      const cand = candidates.find(c => c.id === candId);
+      return {
+        actor: secretaryInfo.username || 'Thư ký',
+        action_type: 'REJECT_CANDIDATE',
+        target_id: candId,
+        old_data: cand?.status,
+        new_data: 'returned'
+      };
+    });
+    await supabase.from('audit_logs').insert(auditLogEntries);
+    
+    closeLoading();
+    showAlert('Thành công', `Đã trả lại ${selectedForCompare.length} hồ sơ.`, 'success');
     setSelectedForCompare([]);
     loadData();
   };

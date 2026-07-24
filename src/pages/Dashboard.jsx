@@ -16,7 +16,8 @@ import { ZaloReminderModal } from '../components/ZaloReminderModal';
 import { useSettings } from '../contexts/SettingsContext';
 import { Users, FileText, CheckSquare, XCircle, Search, ThumbsUp, ThumbsDown, History, Eye, EyeOff, Trash2, Scale, Settings, FileSpreadsheet, BarChart2, Sparkles, AlertTriangle, CheckCircle, Award, Table as TableIcon, Target, Bell } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
-import { showAlert, showConfirm, showPrompt } from '../utils/alert';
+import { showAlert, showConfirm, showPrompt, showLoading, closeLoading } from '../utils/alert';
+import { getDeviceIp } from '../utils/security';
 import { exportStatisticsWord } from '../utils/exportStatistics';
 import { exportGoldenRollWord } from '../utils/exportGoldenRoll';
 import { exportStatisticsExcel } from '../utils/exportExcel';
@@ -135,24 +136,33 @@ export const Dashboard = ({ candidates, onRefresh }) => {
       return;
     }
     
-    let successCount = 0;
+    showLoading('Đang xử lý từ chối hàng loạt...');
     
-    for (const candId of selectedForCompare) {
-      const cand = candidates.find(c => c.id === candId);
-      if (!cand) continue;
+    // Bulk update status
+    const { error: updateError } = await supabase
+      .from('candidates')
+      .update({ status: 'returned', feedback: reason })
+      .in('id', selectedForCompare);
       
-      const { error } = await supabase
-        .from('candidates')
-        .update({ status: 'returned', feedback: reason })
-        .eq('id', candId);
-        
-      if (!error) {
-        successCount++;
-        await logAction(candId, 'Admin', 'Từ chối (Hàng loạt)', `Lý do: ${reason}`);
-      }
+    if (updateError) {
+      closeLoading();
+      showAlert('Lỗi', 'Có lỗi xảy ra khi từ chối hồ sơ.', 'error');
+      return;
     }
     
-    showAlert('Thành công', `Đã từ chối ${successCount} hồ sơ.`, 'success');
+    // Bulk insert logs
+    const logEntries = selectedForCompare.map(candId => ({
+      candidate_id: candId,
+      actor_role: 'Admin',
+      actor_name: 'Quản trị viên',
+      action: 'Từ chối (Hàng loạt)',
+      notes: `Lý do: ${reason}`
+    }));
+    
+    await supabase.from('candidate_logs').insert(logEntries);
+    
+    closeLoading();
+    showAlert('Thành công', `Đã từ chối ${selectedForCompare.length} hồ sơ.`, 'success');
     setSelectedForCompare([]);
     if (onRefresh) onRefresh();
   };
