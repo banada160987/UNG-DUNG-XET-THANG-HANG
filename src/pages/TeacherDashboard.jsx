@@ -259,26 +259,38 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
                     </div>
                     
                     {stats.breakdown && stats.breakdown.length > 0 && (
-                      <div className="h-40 w-full mt-4">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={stats.breakdown}
-                              cx="40%"
-                              cy="50%"
-                              innerRadius={30}
-                              outerRadius={55}
-                              paddingAngle={2}
-                              dataKey="value"
-                            >
-                              {stats.breakdown.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.fill} />
-                              ))}
-                            </Pie>
-                            <RechartsTooltip formatter={(value) => [`${value} thành tích`, 'Số lượng']} />
-                            <Legend layout="vertical" verticalAlign="middle" align="right" wrapperStyle={{ fontSize: '11px', lineHeight: '18px' }} />
-                          </PieChart>
-                        </ResponsiveContainer>
+                      <div className="flex mt-4 h-44 border-t border-slate-100 pt-4">
+                        <div className="w-5/12 h-full">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={stats.breakdown}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={25}
+                                outerRadius={50}
+                                paddingAngle={2}
+                                dataKey="value"
+                              >
+                                {stats.breakdown.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                                ))}
+                              </Pie>
+                              <RechartsTooltip formatter={(value) => [`${value} thành tích`, 'Số lượng']} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <div className="w-7/12 h-full overflow-y-auto pl-2 pr-1 space-y-2">
+                          {stats.breakdown.map((entry, index) => (
+                            <div key={index} className="flex items-center justify-between text-xs">
+                              <div className="flex items-center gap-2 truncate pr-2">
+                                <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: entry.fill }}></div>
+                                <span className="text-slate-600 truncate" title={entry.name}>{entry.name}</span>
+                              </div>
+                              <span className="font-semibold text-slate-700 shrink-0 bg-slate-100 px-1.5 py-0.5 rounded">{entry.value}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
