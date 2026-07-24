@@ -159,7 +159,7 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
     for (const chunk of chunks) {
       const { error: updateError } = await supabase
         .from('candidates')
-        .update({ status: 'returned', feedback: reason })
+        .update({ status: 'returned', feedback_message: reason })
         .in('id', chunk);
         
       if (updateError) {
