@@ -10,7 +10,7 @@ import { downloadAllEvidenceAsZip } from '../utils/downloadEvidence';
 
 export const CommentContext = createContext({});
 
-export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, fixedCccd, isReadOnly, mode, onCommentChange }) => {
+export const CandidateForm = ({ onSave, onSubmitToHead, onSubmitToSecretary, onCancel, initialData, fixedCccd, isReadOnly, mode, onCommentChange, allowSubmitToHead = true }) => {
   const [departments, setDepartments] = useState([]);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
@@ -26,7 +26,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
       workplace: '',
       unit: '',
       currentTitle: '',
-      targetTitle: 'Hạng II',
+      targetTitle: 'Háº¡ng II',
       decisionRecruitment: { date: '', number: '', issuer: '', link: '' },
       decisionProbation: { date: '', number: '', issuer: '', link: '' },
       decisionAppointment: { date: '', number: '', issuer: '', link: '' },
@@ -104,7 +104,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
   const addDegree = () => {
     setFormData({
       ...formData,
-      degrees: [...formData.degrees, { level: 'Đại học', major: '', school: '', year: '', number: '', link: '' }]
+      degrees: [...formData.degrees, { level: 'Äáº¡i há»c', major: '', school: '', year: '', number: '', link: '' }]
     });
   };
 
@@ -140,7 +140,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
       ...formData,
       achievements: [
         ...formData.achievements,
-        { id: '', year: new Date().getFullYear(), type: 'Cá nhân', decisionNo: '', link: '' }
+        { id: '', year: new Date().getFullYear(), type: 'CÃ¡ nhÃ¢n', decisionNo: '', link: '' }
       ]
     });
   };
@@ -158,7 +158,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
   const addOtherAchievement = () => {
     setFormData({
       ...formData,
-      otherAchievements: [...formData.otherAchievements, { id: '', year: new Date().getFullYear(), type: 'cá nhân', decisionNo: '', link: '' }]
+      otherAchievements: [...formData.otherAchievements, { id: '', year: new Date().getFullYear(), type: 'cÃ¡ nhÃ¢n', decisionNo: '', link: '' }]
     });
   };
 
@@ -200,7 +200,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      showAlert('Thông báo', "File quá lớn! Vui lòng chọn file dưới 5MB.");
+      showAlert('ThÃ´ng bÃ¡o', "File quÃ¡ lá»›n! Vui lÃ²ng chá»n file dÆ°á»›i 5MB.");
       return;
     }
 
@@ -212,7 +212,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
     const { error } = await supabase.storage.from('evidence_files').upload(filePath, file);
     
     if (error) {
-      showAlert('Thông báo', "Lỗi tải file: " + error.message);
+      showAlert('ThÃ´ng bÃ¡o', "Lá»—i táº£i file: " + error.message);
     } else {
       const { data } = supabase.storage.from('evidence_files').getPublicUrl(filePath);
       if (data) {
@@ -226,10 +226,10 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
   };
 
   const removeFile = async (index) => {
-    if (!confirm("Bạn muốn xóa file này?")) return;
+    if (!confirm("Báº¡n muá»‘n xÃ³a file nÃ y?")) return;
     const fileToRemove = formData.files[index];
     
-    // Tùy chọn: Xóa file trên Storage thực tế
+    // TÃ¹y chá»n: XÃ³a file trÃªn Storage thá»±c táº¿
     if (fileToRemove.path) {
       await supabase.storage.from('evidence_files').remove([fileToRemove.path]);
     }
@@ -256,37 +256,37 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
     e.preventDefault();
     
     if (!formData.ratingSheets) {
-      showAlert('Thiếu thông tin', 'Bắt buộc phải tick chọn "Phiếu đánh giá, xếp loại các năm trong thời gian công tác được tính xét thăng hạng" ở mục V.', 'warning');
+      showAlert('Thiáº¿u thÃ´ng tin', 'Báº¯t buá»™c pháº£i tick chá»n "Phiáº¿u Ä‘Ã¡nh giÃ¡, xáº¿p loáº¡i cÃ¡c nÄƒm trong thá»i gian cÃ´ng tÃ¡c Ä‘Æ°á»£c tÃ­nh xÃ©t thÄƒng háº¡ng" á»Ÿ má»¥c V.', 'warning');
       return;
     }
 
     if (!formData.certificates || formData.certificates.length === 0) {
-      showAlert('Thiếu thông tin', 'Bắt buộc phải có Chứng chỉ theo yêu cầu của chức danh nghề nghiệp để đủ điều kiện xét thăng hạng.', 'warning');
+      showAlert('Thiáº¿u thÃ´ng tin', 'Báº¯t buá»™c pháº£i cÃ³ Chá»©ng chá»‰ theo yÃªu cáº§u cá»§a chá»©c danh nghá» nghiá»‡p Ä‘á»ƒ Ä‘á»§ Ä‘iá»u kiá»‡n xÃ©t thÄƒng háº¡ng.', 'warning');
       return;
     }
 
-    // Ràng buộc thành tích chính
+    // RÃ ng buá»™c thÃ nh tÃ­ch chÃ­nh
     const invalidAch = formData.achievements.some(ach => !ach.id || !ach.decisionNo.trim());
     if (invalidAch) {
-      showAlert('Thiếu thông tin', 'Vui lòng chọn Loại thành tích và nhập đầy đủ Số quyết định cho các thành tích ở phần VI.', 'warning');
+      showAlert('Thiáº¿u thÃ´ng tin', 'Vui lÃ²ng chá»n Loáº¡i thÃ nh tÃ­ch vÃ  nháº­p Ä‘áº§y Ä‘á»§ Sá»‘ quyáº¿t Ä‘á»‹nh cho cÃ¡c thÃ nh tÃ­ch á»Ÿ pháº§n VI.', 'warning');
       return;
     }
 
-    // Ràng buộc thành tích khác
+    // RÃ ng buá»™c thÃ nh tÃ­ch khÃ¡c
     const invalidOtherAch = formData.otherAchievements?.some(ach => !ach.id.trim() || !ach.decisionNo.trim());
     if (invalidOtherAch) {
-      showAlert('Thiếu thông tin', 'Vui lòng nhập đầy đủ Tên thành tích và Số quyết định cho các thành tích ở phần VIII.', 'warning');
+      showAlert('Thiáº¿u thÃ´ng tin', 'Vui lÃ²ng nháº­p Ä‘áº§y Ä‘á»§ TÃªn thÃ nh tÃ­ch vÃ  Sá»‘ quyáº¿t Ä‘á»‹nh cho cÃ¡c thÃ nh tÃ­ch á»Ÿ pháº§n VIII.', 'warning');
       return;
     }
 
-    // Ràng buộc không cho phép nhập thành tích chính vào mục thành tích khác
+    // RÃ ng buá»™c khÃ´ng cho phÃ©p nháº­p thÃ nh tÃ­ch chÃ­nh vÃ o má»¥c thÃ nh tÃ­ch khÃ¡c
     const checkIsOfficial = (text) => {
       const lower = text.toLowerCase().trim();
       if (lower.length < 4) return false;
       const exactOrPartialKeywords = [
-        'chiến sĩ thi đua', 'chiến sỹ thi đua', 'cstđ', 'cstd', 
-        'huân chương', 'nhà giáo ưu tú', 'nhà giáo nhân dân', 'ngưt', 'ngnd',
-        'bằng khen của bộ', 'bằng khen của ubnd', 'bằng khen của tỉnh', 'bằng khen thủ tướng', 'bằng khen của ban thường vụ'
+        'chiáº¿n sÄ© thi Ä‘ua', 'chiáº¿n sá»¹ thi Ä‘ua', 'cstÄ‘', 'cstd', 
+        'huÃ¢n chÆ°Æ¡ng', 'nhÃ  giÃ¡o Æ°u tÃº', 'nhÃ  giÃ¡o nhÃ¢n dÃ¢n', 'ngÆ°t', 'ngnd',
+        'báº±ng khen cá»§a bá»™', 'báº±ng khen cá»§a ubnd', 'báº±ng khen cá»§a tá»‰nh', 'báº±ng khen thá»§ tÆ°á»›ng', 'báº±ng khen cá»§a ban thÆ°á»ng vá»¥'
       ];
       if (exactOrPartialKeywords.some(kw => lower.includes(kw))) return true;
       const officialNames = ACHIEVEMENT_LEVELS.map(lvl => lvl.name.toLowerCase().trim());
@@ -294,13 +294,13 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
     };
     const overlappingAch = formData.otherAchievements?.find(ach => checkIsOfficial(ach.id));
     if (overlappingAch) {
-      showAlert('Sai vị trí thành tích', `Thành tích "${overlappingAch.id}" thuộc danh mục Thành tích chính quy định tại Kế hoạch 125. Vui lòng bấm nút mũi tên chuyển thành tích này lên mục VI để hợp lệ và được tính điểm.`, 'warning');
+      showAlert('Sai vá»‹ trÃ­ thÃ nh tÃ­ch', `ThÃ nh tÃ­ch "${overlappingAch.id}" thuá»™c danh má»¥c ThÃ nh tÃ­ch chÃ­nh quy Ä‘á»‹nh táº¡i Káº¿ hoáº¡ch 125. Vui lÃ²ng báº¥m nÃºt mÅ©i tÃªn chuyá»ƒn thÃ nh tÃ­ch nÃ y lÃªn má»¥c VI Ä‘á»ƒ há»£p lá»‡ vÃ  Ä‘Æ°á»£c tÃ­nh Ä‘iá»ƒm.`, 'warning');
       return;
     }
 
     const isConfirmed = await showConfirm(
-      'Xác nhận nộp', 
-      'Bạn có chắc chắn muốn nộp hồ sơ này cho Tổ trưởng? Bạn sẽ không thể sửa nếu chưa bị trả lại.', 
+      'XÃ¡c nháº­n ná»™p', 
+      'Báº¡n cÃ³ cháº¯c cháº¯n muá»‘n ná»™p há»“ sÆ¡ nÃ y cho Tá»• trÆ°á»Ÿng? Báº¡n sáº½ khÃ´ng thá»ƒ sá»­a náº¿u chÆ°a bá»‹ tráº£ láº¡i.', 
       'question'
     );
     
@@ -315,13 +315,13 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
     if (!data) return; 
     
     if (!formData.ratingSheets || !formData.certificates || formData.certificates.length === 0) {
-      showAlert('Thiếu thông tin', 'Vui lòng kiểm tra lại Phiếu đánh giá và Chứng chỉ.', 'warning');
+      showAlert('Thiáº¿u thÃ´ng tin', 'Vui lÃ²ng kiá»ƒm tra láº¡i Phiáº¿u Ä‘Ã¡nh giÃ¡ vÃ  Chá»©ng chá»‰.', 'warning');
       return;
     }
     
     const isConfirmed = await showConfirm(
-      'Nộp thẳng cho Thư ký', 
-      'Bạn có chắc chắn nộp hồ sơ thẳng lên cho Thư ký (Bỏ qua Tổ trưởng)? Hành động này thường chỉ dùng khi bạn bổ sung hồ sơ theo yêu cầu.', 
+      'Ná»™p tháº³ng cho ThÆ° kÃ½', 
+      'Báº¡n cÃ³ cháº¯c cháº¯n ná»™p há»“ sÆ¡ tháº³ng lÃªn cho ThÆ° kÃ½ (Bá» qua Tá»• trÆ°á»Ÿng)? HÃ nh Ä‘á»™ng nÃ y thÆ°á»ng chá»‰ dÃ¹ng khi báº¡n bá»• sung há»“ sÆ¡ theo yÃªu cáº§u.', 
       'question'
     );
     
@@ -349,16 +349,16 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
       });
       
       if (Object.keys(data).length === 0) {
-        showAlert('Thông báo', "Không nhận diện được thông tin. Vui lòng thử ảnh rõ nét hơn.");
+        showAlert('ThÃ´ng bÃ¡o', "KhÃ´ng nháº­n diá»‡n Ä‘Æ°á»£c thÃ´ng tin. Vui lÃ²ng thá»­ áº£nh rÃµ nÃ©t hÆ¡n.");
       } else {
         setFormData(prev => ({
           ...prev,
           ...data
         }));
-        showAlert('Thông báo', `Đã nhận diện thành công:\nCCCD: ${data.cccd || 'Không tìm thấy'}\nHọ Tên: ${data.fullName || 'Không tìm thấy'}\nNgày Sinh: ${data.dob || 'Không tìm thấy'}`);
+        showAlert('ThÃ´ng bÃ¡o', `ÄÃ£ nháº­n diá»‡n thÃ nh cÃ´ng:\nCCCD: ${data.cccd || 'KhÃ´ng tÃ¬m tháº¥y'}\nHá» TÃªn: ${data.fullName || 'KhÃ´ng tÃ¬m tháº¥y'}\nNgÃ y Sinh: ${data.dob || 'KhÃ´ng tÃ¬m tháº¥y'}`);
       }
     } catch (error) {
-      showAlert('Thông báo', "Có lỗi xảy ra khi quét OCR. Vui lòng nhập tay.");
+      showAlert('ThÃ´ng bÃ¡o', "CÃ³ lá»—i xáº£y ra khi quÃ©t OCR. Vui lÃ²ng nháº­p tay.");
     } finally {
       setOcrLoading(false);
       e.target.value = null; // reset input
@@ -395,16 +395,16 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
 
   const badges = (() => {
     const b = [];
-    if (formData.degrees?.some(d => d.level === 'Thạc sĩ' || d.level === 'Tiến sĩ')) {
-      b.push({ id: 'degree', name: 'Học vấn bậc cao', icon: <GraduationCap size={16} className="text-purple-600" />, bg: 'bg-purple-100 text-purple-800 border-purple-200' });
+    if (formData.degrees?.some(d => d.level === 'Tháº¡c sÄ©' || d.level === 'Tiáº¿n sÄ©')) {
+      b.push({ id: 'degree', name: 'Há»c váº¥n báº­c cao', icon: <GraduationCap size={16} className="text-purple-600" />, bg: 'bg-purple-100 text-purple-800 border-purple-200' });
     }
     if ((formData.certIT && formData.certLanguage) || (formData.certificates?.length >= 1)) {
-      b.push({ id: 'cert', name: 'Kỹ năng Đa dạng', icon: <Globe size={16} className="text-blue-600" />, bg: 'bg-blue-100 text-blue-800 border-blue-200' });
+      b.push({ id: 'cert', name: 'Ká»¹ nÄƒng Äa dáº¡ng', icon: <Globe size={16} className="text-blue-600" />, bg: 'bg-blue-100 text-blue-800 border-blue-200' });
     }
     if (formData.achievements?.some(a => ['cstd_tinh', 'bang_khen_bo', 'bang_khen_tinh'].includes(a.id))) {
-      b.push({ id: 'ach', name: 'Giáo viên Xuất sắc', icon: <Trophy size={16} className="text-amber-600" />, bg: 'bg-amber-100 text-amber-800 border-amber-200' });
+      b.push({ id: 'ach', name: 'GiÃ¡o viÃªn Xuáº¥t sáº¯c', icon: <Trophy size={16} className="text-amber-600" />, bg: 'bg-amber-100 text-amber-800 border-amber-200' });
     } else if (formData.achievements?.length >= 2) {
-      b.push({ id: 'ach2', name: 'Nhiều Thành tích', icon: <Star size={16} className="text-rose-600" />, bg: 'bg-rose-100 text-rose-800 border-rose-200' });
+      b.push({ id: 'ach2', name: 'Nhiá»u ThÃ nh tÃ­ch', icon: <Star size={16} className="text-rose-600" />, bg: 'bg-rose-100 text-rose-800 border-rose-200' });
     }
     return b;
   })();
@@ -418,7 +418,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
         <div className="bg-rose-50 border-l-4 border-rose-500 p-4 rounded-r-lg flex items-start gap-3 shadow-sm">
           <AlertCircle className="text-rose-500 mt-0.5" size={20} />
           <div>
-            <h3 className="font-semibold text-rose-800">Hồ sơ cần chỉnh sửa</h3>
+            <h3 className="font-semibold text-rose-800">Há»“ sÆ¡ cáº§n chá»‰nh sá»­a</h3>
             <p className="text-rose-700 text-sm mt-1 whitespace-pre-wrap">{feedbackData.general}</p>
           </div>
         </div>
@@ -433,7 +433,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
           <div className="flex-1 w-full">
             <h3 className="text-lg font-bold text-slate-800 mb-2 flex items-center gap-2">
               <CheckCircle2 size={20} className={progress === 100 ? "text-emerald-500" : "text-slate-400"} />
-              Độ hoàn thiện hồ sơ: {progress}%
+              Äá»™ hoÃ n thiá»‡n há»“ sÆ¡: {progress}%
             </h3>
             <div className="w-full bg-slate-100 rounded-full h-3 mb-2 overflow-hidden border border-slate-200">
               <div 
@@ -443,16 +443,16 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
             </div>
             <p className="text-sm text-slate-500">
               {progress === 100 
-                ? "Tuyệt vời! Hồ sơ của bạn đã sẵn sàng để nộp." 
-                : "Hãy điền thêm các thông tin văn bằng, chứng chỉ và thành tích để đạt 100%."}
+                ? "Tuyá»‡t vá»i! Há»“ sÆ¡ cá»§a báº¡n Ä‘Ã£ sáºµn sÃ ng Ä‘á»ƒ ná»™p." 
+                : "HÃ£y Ä‘iá»n thÃªm cÃ¡c thÃ´ng tin vÄƒn báº±ng, chá»©ng chá»‰ vÃ  thÃ nh tÃ­ch Ä‘á»ƒ Ä‘áº¡t 100%."}
             </p>
           </div>
           
           <div className="w-full md:w-auto min-w-[200px]">
-            <h4 className="text-sm font-semibold text-slate-600 mb-3 uppercase tracking-wider">Huy hiệu đạt được</h4>
+            <h4 className="text-sm font-semibold text-slate-600 mb-3 uppercase tracking-wider">Huy hiá»‡u Ä‘áº¡t Ä‘Æ°á»£c</h4>
             <div className="flex flex-wrap gap-2">
               {badges.length === 0 ? (
-                <span className="text-sm text-slate-400 italic">Chưa có huy hiệu nào</span>
+                <span className="text-sm text-slate-400 italic">ChÆ°a cÃ³ huy hiá»‡u nÃ o</span>
               ) : (
                 badges.map(b => (
                   <div key={b.id} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-medium shadow-sm ${b.bg}`}>
@@ -468,7 +468,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
 
       <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-2 mb-4 gap-2">
-          <h3 className="text-lg font-semibold text-slate-800">I. Thông tin cá nhân</h3>
+          <h3 className="text-lg font-semibold text-slate-800">I. ThÃ´ng tin cÃ¡ nhÃ¢n</h3>
           <div className="flex items-center gap-2 flex-wrap">
             {initialData && (
               <button 
@@ -476,7 +476,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                 onClick={() => downloadAllEvidenceAsZip(formData)}
                 className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 transition-colors"
               >
-                <Download size={16} /> Tải minh chứng (ZIP)
+                <Download size={16} /> Táº£i minh chá»©ng (ZIP)
               </button>
             )}
             {!isReadOnly && (
@@ -487,42 +487,42 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                   className={`inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors cursor-pointer ${ocrLoading ? 'bg-slate-100 text-slate-400 border-slate-200 pointer-events-none' : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'}`}
                 >
                   {ocrLoading ? <Loader2 size={16} className="animate-spin" /> : <ScanText size={16} />}
-                  {ocrLoading ? `Đang nhận diện... ${ocrProgress}%` : 'Quét ảnh điền tự động'}
+                  {ocrLoading ? `Äang nháº­n diá»‡n... ${ocrProgress}%` : 'QuÃ©t áº£nh Ä‘iá»n tá»± Ä‘á»™ng'}
                 </label>
               </div>
             )}
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input label="Số CCCD" name="cccd" value={formData.cccd} onChange={handleChange} required disabled={!!fixedCccd || isReadOnly} />
-          <Input label="Họ tên" name="fullName" value={formData.fullName} onChange={handleChange} required disabled={isReadOnly} />
-          <Input label="Ngày sinh" name="dob" type="date" value={formData.dob} onChange={handleChange} required disabled={isReadOnly} />
+          <Input label="Sá»‘ CCCD" name="cccd" value={formData.cccd} onChange={handleChange} required disabled={!!fixedCccd || isReadOnly} />
+          <Input label="Há» tÃªn" name="fullName" value={formData.fullName} onChange={handleChange} required disabled={isReadOnly} />
+          <Input label="NgÃ y sinh" name="dob" type="date" value={formData.dob} onChange={handleChange} required disabled={isReadOnly} />
           
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-slate-700">Giới tính</label>
+            <label className="text-sm font-medium text-slate-700">Giá»›i tÃ­nh</label>
             <select name="gender" value={formData.gender} onChange={handleChange} disabled={isReadOnly} className="border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500">
               <option value="Nam">Nam</option>
-              <option value="Nữ">Nữ</option>
+              <option value="Ná»¯">Ná»¯</option>
             </select>
           </div>
           
-          <Input label="Dân tộc" name="ethnicity" value={formData.ethnicity} onChange={handleChange} disabled={isReadOnly} />
-          <Input label="SĐT (Có Zalo)" name="phone" value={formData.phone} onChange={handleChange} placeholder="09xxxxxxx" required disabled={isReadOnly} />
+          <Input label="DÃ¢n tá»™c" name="ethnicity" value={formData.ethnicity} onChange={handleChange} disabled={isReadOnly} />
+          <Input label="SÄT (CÃ³ Zalo)" name="phone" value={formData.phone} onChange={handleChange} placeholder="09xxxxxxx" required disabled={isReadOnly} />
           
-          <Input label="Đơn vị công tác (Trường)" name="workplace" value={formData.workplace} onChange={handleChange} placeholder="Trường THPT..." required disabled={isReadOnly} />
+          <Input label="ÄÆ¡n vá»‹ cÃ´ng tÃ¡c (TrÆ°á»ng)" name="workplace" value={formData.workplace} onChange={handleChange} placeholder="TrÆ°á»ng THPT..." required disabled={isReadOnly} />
 
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-slate-700">Tổ chuyên môn <span className="text-rose-500">*</span></label>
+            <label className="text-sm font-medium text-slate-700">Tá»• chuyÃªn mÃ´n <span className="text-rose-500">*</span></label>
             <select name="unit" value={formData.unit} onChange={handleChange} disabled={isReadOnly} className="border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white disabled:bg-slate-100 disabled:text-slate-500">
-              {departments.length === 0 && <option value="">Chưa có dữ liệu Tổ</option>}
+              {departments.length === 0 && <option value="">ChÆ°a cÃ³ dá»¯ liá»‡u Tá»•</option>}
               {departments.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
             </select>
           </div>
 
-          <Input label="Chức danh hiện giữ" name="currentTitle" value={formData.currentTitle} onChange={handleChange} required disabled={isReadOnly} />
+          <Input label="Chá»©c danh hiá»‡n giá»¯" name="currentTitle" value={formData.currentTitle} onChange={handleChange} required disabled={isReadOnly} />
           
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-slate-700">Chức danh đăng ký xét</label>
+            <label className="text-sm font-medium text-slate-700">Chá»©c danh Ä‘Äƒng kÃ½ xÃ©t</label>
             <select name="targetTitle" value={formData.targetTitle} onChange={handleChange} disabled={isReadOnly} className="border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500">
               {TARGET_TITLES.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
@@ -530,62 +530,62 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
         </div>
       </section>
 
-      {/* 2. Quyết định công tác */}
+      {/* 2. Quyáº¿t Ä‘á»‹nh cÃ´ng tÃ¡c */}
       <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <h3 className="text-lg font-semibold border-b pb-2 mb-4 text-slate-800">II. Thông tin công tác</h3>
+        <h3 className="text-lg font-semibold border-b pb-2 mb-4 text-slate-800">II. ThÃ´ng tin cÃ´ng tÃ¡c</h3>
         <div className="space-y-6">
-          <DecisionInputGroup title="Quyết định Tuyển dụng" type="decisionRecruitment" data={formData.decisionRecruitment} onChange={handleDecisionChange} disabled={isReadOnly} filePrefix={filePrefix} />
-          <DecisionInputGroup title="Quyết định Hết tập sự" type="decisionProbation" data={formData.decisionProbation} onChange={handleDecisionChange} disabled={isReadOnly} filePrefix={filePrefix} />
-          <DecisionInputGroup title="Quyết định Bổ nhiệm hạng" type="decisionAppointment" data={formData.decisionAppointment} onChange={handleDecisionChange} disabled={isReadOnly} filePrefix={filePrefix} />
-          <DecisionInputGroup title="Quyết định Nâng lương gần nhất" type="decisionSalary" data={formData.decisionSalary} onChange={handleDecisionChange} disabled={isReadOnly} filePrefix={filePrefix} />
+          <DecisionInputGroup title="Quyáº¿t Ä‘á»‹nh Tuyá»ƒn dá»¥ng" type="decisionRecruitment" data={formData.decisionRecruitment} onChange={handleDecisionChange} disabled={isReadOnly} filePrefix={filePrefix} />
+          <DecisionInputGroup title="Quyáº¿t Ä‘á»‹nh Háº¿t táº­p sá»±" type="decisionProbation" data={formData.decisionProbation} onChange={handleDecisionChange} disabled={isReadOnly} filePrefix={filePrefix} />
+          <DecisionInputGroup title="Quyáº¿t Ä‘á»‹nh Bá»• nhiá»‡m háº¡ng" type="decisionAppointment" data={formData.decisionAppointment} onChange={handleDecisionChange} disabled={isReadOnly} filePrefix={filePrefix} />
+          <DecisionInputGroup title="Quyáº¿t Ä‘á»‹nh NÃ¢ng lÆ°Æ¡ng gáº§n nháº¥t" type="decisionSalary" data={formData.decisionSalary} onChange={handleDecisionChange} disabled={isReadOnly} filePrefix={filePrefix} />
         </div>
       </section>
 
-      {/* 3. Văn bằng */}
+      {/* 3. VÄƒn báº±ng */}
       <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <div className="flex justify-between items-center border-b pb-2 mb-4">
-          <h3 className="text-lg font-semibold text-slate-800">III. Văn bằng</h3>
+          <h3 className="text-lg font-semibold text-slate-800">III. VÄƒn báº±ng</h3>
           {!isReadOnly && (
             <button type="button" onClick={addDegree} className="flex items-center gap-1 text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 font-medium">
-              <Plus size={16} /> Thêm văn bằng
+              <Plus size={16} /> ThÃªm vÄƒn báº±ng
             </button>
           )}
         </div>
         
         {formData.degrees.length === 0 ? (
-          <p className="text-slate-400 italic text-center py-4">Chưa có văn bằng nào được thêm.</p>
+          <p className="text-slate-400 italic text-center py-4">ChÆ°a cÃ³ vÄƒn báº±ng nÃ o Ä‘Æ°á»£c thÃªm.</p>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {formData.degrees.map((deg, index) => (
               <div key={index} className="relative bg-gradient-to-br from-white to-blue-50/30 p-5 rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-all">
                 <div className="absolute top-0 right-0 bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1.5 rounded-bl-xl rounded-tr-xl flex items-center gap-1.5 shadow-sm border-b border-l border-blue-200">
-                  <GraduationCap size={14} /> Văn bằng {index + 1}
+                  <GraduationCap size={14} /> VÄƒn báº±ng {index + 1}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                   <div className="col-span-1">
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">Trình độ</label>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">TrÃ¬nh Ä‘á»™</label>
                   <select disabled={isReadOnly} value={deg.level} onChange={(e) => updateDegree(index, 'level', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white disabled:bg-slate-100">
-                    <option value="Trung cấp">Trung cấp</option>
-                    <option value="Đại học">Đại học</option>
-                    <option value="Thạc sĩ">Thạc sĩ</option>
-                    <option value="Tiến sĩ">Tiến sĩ</option>
+                    <option value="Trung cáº¥p">Trung cáº¥p</option>
+                    <option value="Äáº¡i há»c">Äáº¡i há»c</option>
+                    <option value="Tháº¡c sÄ©">Tháº¡c sÄ©</option>
+                    <option value="Tiáº¿n sÄ©">Tiáº¿n sÄ©</option>
                   </select>
                 </div>
                 <div className="col-span-1">
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">Chuyên ngành</label>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">ChuyÃªn ngÃ nh</label>
                   <input disabled={isReadOnly} type="text" value={deg.major} onChange={(e) => updateDegree(index, 'major', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
                 </div>
                 <div className="col-span-1 md:col-span-2">
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">Trường cấp</label>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">TrÆ°á»ng cáº¥p</label>
                   <input disabled={isReadOnly} type="text" value={deg.school} onChange={(e) => updateDegree(index, 'school', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
                 </div>
                 <div className="col-span-1">
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">Năm cấp</label>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">NÄƒm cáº¥p</label>
                   <input disabled={isReadOnly} type="text" value={deg.year} onChange={(e) => updateDegree(index, 'year', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
                 </div>
                 <div className="col-span-1 flex items-end gap-2">
                   <div className="flex-1">
-                    <label className="text-xs font-medium text-slate-500 mb-1 block">Số hiệu</label>
+                    <label className="text-xs font-medium text-slate-500 mb-1 block">Sá»‘ hiá»‡u</label>
                     <input disabled={isReadOnly} type="text" value={deg.number} onChange={(e) => updateDegree(index, 'number', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
                   </div>
                 </div>
@@ -602,7 +602,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                   </div>
                   {!isReadOnly && (
                     <button type="button" onClick={() => removeDegree(index)} className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg flex items-center gap-1 text-sm font-medium">
-                      <Trash2 size={16} /> Xóa
+                      <Trash2 size={16} /> XÃ³a
                     </button>
                   )}
                 </div>
@@ -612,41 +612,41 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
         )}
       </section>
 
-      {/* 4. Chứng chỉ chức danh nghề nghiệp */}
+      {/* 4. Chá»©ng chá»‰ chá»©c danh nghá» nghiá»‡p */}
       <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <div className="flex justify-between items-center border-b pb-2 mb-4">
-          <h3 className="text-lg font-semibold text-slate-800">IV. Chứng chỉ theo yêu cầu của chức danh nghề nghiệp xét thăng hạng</h3>
+          <h3 className="text-lg font-semibold text-slate-800">IV. Chá»©ng chá»‰ theo yÃªu cáº§u cá»§a chá»©c danh nghá» nghiá»‡p xÃ©t thÄƒng háº¡ng</h3>
           {!isReadOnly && (
             <button type="button" onClick={addCertificate} className="flex items-center gap-1 text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 font-medium">
-              <Plus size={16} /> Thêm chứng chỉ
+              <Plus size={16} /> ThÃªm chá»©ng chá»‰
             </button>
           )}
         </div>
         
         {(!formData.certificates || formData.certificates.length === 0) ? (
-          <p className="text-slate-400 italic text-center py-4">Chưa có chứng chỉ nào được thêm.</p>
+          <p className="text-slate-400 italic text-center py-4">ChÆ°a cÃ³ chá»©ng chá»‰ nÃ o Ä‘Æ°á»£c thÃªm.</p>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {formData.certificates.map((cert, index) => (
               <div key={index} className="relative bg-gradient-to-br from-white to-amber-50/30 p-5 rounded-xl border border-amber-100 shadow-sm hover:shadow-md transition-all">
                 <div className="absolute top-0 right-0 bg-amber-100 text-amber-700 text-xs font-bold px-3 py-1.5 rounded-bl-xl rounded-tr-xl flex items-center gap-1.5 shadow-sm border-b border-l border-amber-200">
-                  <Medal size={14} /> Chứng chỉ {index + 1}
+                  <Medal size={14} /> Chá»©ng chá»‰ {index + 1}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                   <div className="col-span-1 md:col-span-2">
-                    <label className="text-xs font-medium text-slate-500 mb-1 block">Tên chứng chỉ</label>
+                    <label className="text-xs font-medium text-slate-500 mb-1 block">TÃªn chá»©ng chá»‰</label>
                     <input disabled={isReadOnly} type="text" value={cert.name} onChange={(e) => updateCertificate(index, 'name', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
                   </div>
                   <div className="col-span-1 md:col-span-2">
-                    <label className="text-xs font-medium text-slate-500 mb-1 block">Nơi cấp</label>
+                    <label className="text-xs font-medium text-slate-500 mb-1 block">NÆ¡i cáº¥p</label>
                     <input disabled={isReadOnly} type="text" value={cert.issuer} onChange={(e) => updateCertificate(index, 'issuer', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
                   </div>
                   <div className="col-span-1">
-                    <label className="text-xs font-medium text-slate-500 mb-1 block">Năm cấp</label>
+                    <label className="text-xs font-medium text-slate-500 mb-1 block">NÄƒm cáº¥p</label>
                     <input disabled={isReadOnly} type="text" value={cert.year} onChange={(e) => updateCertificate(index, 'year', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
                   </div>
                   <div className="col-span-1">
-                    <label className="text-xs font-medium text-slate-500 mb-1 block">Số hiệu</label>
+                    <label className="text-xs font-medium text-slate-500 mb-1 block">Sá»‘ hiá»‡u</label>
                     <input disabled={isReadOnly} type="text" value={cert.number} onChange={(e) => updateCertificate(index, 'number', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
                   </div>
                 </div>
@@ -662,7 +662,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                   </div>
                   {!isReadOnly && (
                     <button type="button" onClick={() => removeCertificate(index)} className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg flex items-center gap-1 text-sm font-medium">
-                      <Trash2 size={16} /> Xóa
+                      <Trash2 size={16} /> XÃ³a
                     </button>
                   )}
                 </div>
@@ -672,39 +672,39 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
         )}
       </section>
 
-      {/* 5. Thành phần hồ sơ khác (Sơ yếu lý lịch, Nhận xét) */}
+      {/* 5. ThÃ nh pháº§n há»“ sÆ¡ khÃ¡c (SÆ¡ yáº¿u lÃ½ lá»‹ch, Nháº­n xÃ©t) */}
       <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <h3 className="text-lg font-semibold border-b pb-2 mb-4 text-slate-800">V. Thành phần hồ sơ khác</h3>
+        <h3 className="text-lg font-semibold border-b pb-2 mb-4 text-slate-800">V. ThÃ nh pháº§n há»“ sÆ¡ khÃ¡c</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg">
-          <Checkbox disabled={isReadOnly} label="Đã có Sơ yếu lý lịch (Mẫu HS02-VC/BNV)" name="resumeDoc" checked={formData.resumeDoc} onChange={handleChange} />
-          <Checkbox disabled={isReadOnly} label="Đã có Bản nhận xét, đánh giá của thủ trưởng" name="reviewDoc" checked={formData.reviewDoc} onChange={handleChange} />
-          <Checkbox required disabled={isReadOnly} label="Phiếu đánh giá, xếp loại các năm trong thời gian công tác được tính xét thăng hạng" name="ratingSheets" checked={formData.ratingSheets} onChange={handleChange} />
-          <Checkbox disabled={isReadOnly} label="Tin học (Có chứng chỉ hoặc xác nhận)" name="certIT" checked={formData.certIT} onChange={handleChange} />
-          <Checkbox disabled={isReadOnly} label="Ngoại ngữ (Có chứng chỉ hoặc xác nhận)" name="certLanguage" checked={formData.certLanguage} onChange={handleChange} />
-          <Checkbox disabled={isReadOnly} label="Tiếng dân tộc thiểu số (Có chứng chỉ hoặc xác nhận)" name="certEthnic" checked={formData.certEthnic} onChange={handleChange} />
-          <Checkbox disabled={isReadOnly} label="Đã có Biên bản đánh giá năng lực của Tổ chuyên môn (Thay thế cho Sáng kiến kinh nghiệm/Bằng khen)" name="evalMinute" checked={formData.evalMinute} onChange={handleChange} />
+          <Checkbox disabled={isReadOnly} label="ÄÃ£ cÃ³ SÆ¡ yáº¿u lÃ½ lá»‹ch (Máº«u HS02-VC/BNV)" name="resumeDoc" checked={formData.resumeDoc} onChange={handleChange} />
+          <Checkbox disabled={isReadOnly} label="ÄÃ£ cÃ³ Báº£n nháº­n xÃ©t, Ä‘Ã¡nh giÃ¡ cá»§a thá»§ trÆ°á»Ÿng" name="reviewDoc" checked={formData.reviewDoc} onChange={handleChange} />
+          <Checkbox required disabled={isReadOnly} label="Phiáº¿u Ä‘Ã¡nh giÃ¡, xáº¿p loáº¡i cÃ¡c nÄƒm trong thá»i gian cÃ´ng tÃ¡c Ä‘Æ°á»£c tÃ­nh xÃ©t thÄƒng háº¡ng" name="ratingSheets" checked={formData.ratingSheets} onChange={handleChange} />
+          <Checkbox disabled={isReadOnly} label="Tin há»c (CÃ³ chá»©ng chá»‰ hoáº·c xÃ¡c nháº­n)" name="certIT" checked={formData.certIT} onChange={handleChange} />
+          <Checkbox disabled={isReadOnly} label="Ngoáº¡i ngá»¯ (CÃ³ chá»©ng chá»‰ hoáº·c xÃ¡c nháº­n)" name="certLanguage" checked={formData.certLanguage} onChange={handleChange} />
+          <Checkbox disabled={isReadOnly} label="Tiáº¿ng dÃ¢n tá»™c thiá»ƒu sá»‘ (CÃ³ chá»©ng chá»‰ hoáº·c xÃ¡c nháº­n)" name="certEthnic" checked={formData.certEthnic} onChange={handleChange} />
+          <Checkbox disabled={isReadOnly} label="ÄÃ£ cÃ³ BiÃªn báº£n Ä‘Ã¡nh giÃ¡ nÄƒng lá»±c cá»§a Tá»• chuyÃªn mÃ´n (Thay tháº¿ cho SÃ¡ng kiáº¿n kinh nghiá»‡m/Báº±ng khen)" name="evalMinute" checked={formData.evalMinute} onChange={handleChange} />
         </div>
       </section>
 
-      {/* 6. Thành tích */}
+      {/* 6. ThÃ nh tÃ­ch */}
       <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <div className="flex justify-between items-center border-b pb-2 mb-4">
-          <h3 className="text-lg font-semibold text-slate-800">VI. Thành tích (Cập nhật đúng theo Kế hoạch)</h3>
+          <h3 className="text-lg font-semibold text-slate-800">VI. ThÃ nh tÃ­ch (Cáº­p nháº­t Ä‘Ãºng theo Káº¿ hoáº¡ch)</h3>
           {!isReadOnly && (
             <button type="button" onClick={addAchievement} className="flex items-center gap-1 text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 font-medium">
-              <Plus size={16} /> Thêm thành tích
+              <Plus size={16} /> ThÃªm thÃ nh tÃ­ch
             </button>
           )}
         </div>
 
         {formData.achievements.length === 0 ? (
-          <p className="text-slate-400 italic text-center py-4">Chưa khai báo thành tích nào.</p>
+          <p className="text-slate-400 italic text-center py-4">ChÆ°a khai bÃ¡o thÃ nh tÃ­ch nÃ o.</p>
         ) : (
           <div className="space-y-4">
             {formData.achievements.map((ach, index) => (
               <div key={index} className="flex flex-col md:flex-row gap-3 items-start md:items-end bg-slate-50 p-4 rounded-lg border border-slate-200">
                 <div className="flex-1 w-full">
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">Loại thành tích</label>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Loáº¡i thÃ nh tÃ­ch</label>
                   <select 
                     disabled={isReadOnly}
                     value={ach.id} 
@@ -712,26 +712,26 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                     onChange={(e) => updateAchievement(index, 'id', e.target.value)}
                     className="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white disabled:bg-slate-100"
                   >
-                    <option value="" disabled hidden>-- Chọn loại thành tích --</option>
+                    <option value="" disabled hidden>-- Chá»n loáº¡i thÃ nh tÃ­ch --</option>
                     {ACHIEVEMENT_LEVELS.map(lvl => (
                       <option key={lvl.id} value={lvl.id}>{lvl.name}</option>
                     ))}
                   </select>
                 </div>
                 <div className="w-full md:w-24">
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">Năm</label>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">NÄƒm</label>
                   <input disabled={isReadOnly} type="number" value={ach.year} onChange={(e) => updateAchievement(index, 'year', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
                 </div>
                 <div className="w-full md:w-32">
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">Cá nhân/Tập thể</label>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">CÃ¡ nhÃ¢n/Táº­p thá»ƒ</label>
                   <select disabled={isReadOnly} value={ach.type} onChange={(e) => updateAchievement(index, 'type', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white disabled:bg-slate-100">
-                    <option value="cá nhân">Cá nhân</option>
-                    <option value="tập thể">Tập thể</option>
+                    <option value="cÃ¡ nhÃ¢n">CÃ¡ nhÃ¢n</option>
+                    <option value="táº­p thá»ƒ">Táº­p thá»ƒ</option>
                   </select>
                 </div>
                 <div className="w-full md:w-48">
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">Số Quyết định <span className="text-rose-500">*</span></label>
-                  <input disabled={isReadOnly} required type="text" value={ach.decisionNo} title={ach.decisionNo} onChange={(e) => updateAchievement(index, 'decisionNo', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Nhập số QĐ..." />
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Sá»‘ Quyáº¿t Ä‘á»‹nh <span className="text-rose-500">*</span></label>
+                  <input disabled={isReadOnly} required type="text" value={ach.decisionNo} title={ach.decisionNo} onChange={(e) => updateAchievement(index, 'decisionNo', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Nháº­p sá»‘ QÄ..." />
                 </div>
                 
                 <div className="w-full mt-2 pt-2 border-t border-slate-200 border-dashed flex justify-between items-center md:hidden">
@@ -744,7 +744,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                   />
                   {!isReadOnly && (
                     <div className="flex items-center gap-1">
-                      <button type="button" onClick={() => moveToOtherAchievements(index)} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg" title="Chuyển xuống Thành tích khác">
+                      <button type="button" onClick={() => moveToOtherAchievements(index)} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg" title="Chuyá»ƒn xuá»‘ng ThÃ nh tÃ­ch khÃ¡c">
                         <ArrowDown size={18} />
                       </button>
                       <button type="button" onClick={() => removeAchievement(index)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg">
@@ -765,10 +765,10 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                   {!isReadOnly && (
                     <div className="flex items-center gap-3">
                       <button type="button" onClick={() => moveToOtherAchievements(index)} className="text-xs text-blue-500 hover:underline flex items-center gap-1">
-                        <ArrowDown size={12} /> Chuyển xuống Mục VIII
+                        <ArrowDown size={12} /> Chuyá»ƒn xuá»‘ng Má»¥c VIII
                       </button>
                       <button type="button" onClick={() => removeAchievement(index)} className="text-xs text-rose-500 hover:underline flex items-center gap-1">
-                        <Trash2 size={12} /> Xóa thành tích
+                        <Trash2 size={12} /> XÃ³a thÃ nh tÃ­ch
                       </button>
                     </div>
                   )}
@@ -779,25 +779,25 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
         )}
       </section>
 
-      {/* 5.5. Thành tích khác */}
+      {/* 5.5. ThÃ nh tÃ­ch khÃ¡c */}
       <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mt-6">
         <div className="flex justify-between items-center border-b pb-2 mb-4">
-          <h3 className="text-lg font-semibold text-slate-800">VIII. Các thành tích khác (Nếu có)</h3>
+          <h3 className="text-lg font-semibold text-slate-800">VIII. CÃ¡c thÃ nh tÃ­ch khÃ¡c (Náº¿u cÃ³)</h3>
           {!isReadOnly && (
             <button type="button" onClick={addOtherAchievement} className="flex items-center gap-1 text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 font-medium">
-              <Plus size={16} /> Thêm thành tích
+              <Plus size={16} /> ThÃªm thÃ nh tÃ­ch
             </button>
           )}
         </div>
 
         {formData.otherAchievements.length === 0 ? (
-          <p className="text-slate-400 italic text-center py-4">Chưa khai báo thành tích khác.</p>
+          <p className="text-slate-400 italic text-center py-4">ChÆ°a khai bÃ¡o thÃ nh tÃ­ch khÃ¡c.</p>
         ) : (
           <div className="space-y-4">
             {formData.otherAchievements.map((ach, index) => (
               <div key={index} className="flex flex-col md:flex-row gap-3 items-start md:items-end bg-slate-50 p-4 rounded-lg border border-slate-200">
                 <div className="flex-1 w-full">
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">Tên thành tích <span className="text-rose-500">*</span></label>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">TÃªn thÃ nh tÃ­ch <span className="text-rose-500">*</span></label>
                   {(() => {
                     const isStandard = OTHER_ACHIEVEMENT_TYPES.some(t => t.id === ach.id || t.name === ach.id);
                     const isCustom = !isStandard && ach.id !== '';
@@ -818,7 +818,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                           }}
                           className="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-slate-100"
                         >
-                          <option value="" disabled>-- Chọn phân loại thành tích --</option>
+                          <option value="" disabled>-- Chá»n phÃ¢n loáº¡i thÃ nh tÃ­ch --</option>
                           {OTHER_ACHIEVEMENT_TYPES.map(type => (
                             <option key={type.id} value={type.id}>{type.name}</option>
                           ))}
@@ -829,7 +829,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                             disabled={isReadOnly}
                             required
                             type="text"
-                            placeholder="Nhập tên thành tích khác của bạn..."
+                            placeholder="Nháº­p tÃªn thÃ nh tÃ­ch khÃ¡c cá»§a báº¡n..."
                             value={ach.id === 'khac' ? '' : ach.id} 
                             onChange={(e) => updateOtherAchievement(index, 'id', e.target.value)}
                             className="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white disabled:bg-slate-100"
@@ -840,19 +840,19 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                   })()}
                 </div>
                 <div className="w-full md:w-24">
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">Năm</label>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">NÄƒm</label>
                   <input disabled={isReadOnly} type="number" value={ach.year} onChange={(e) => updateOtherAchievement(index, 'year', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" />
                 </div>
                 <div className="w-full md:w-32">
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">Cá nhân/Tập thể</label>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">CÃ¡ nhÃ¢n/Táº­p thá»ƒ</label>
                   <select disabled={isReadOnly} value={ach.type} onChange={(e) => updateOtherAchievement(index, 'type', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white disabled:bg-slate-100">
-                    <option value="cá nhân">Cá nhân</option>
-                    <option value="tập thể">Tập thể</option>
+                    <option value="cÃ¡ nhÃ¢n">CÃ¡ nhÃ¢n</option>
+                    <option value="táº­p thá»ƒ">Táº­p thá»ƒ</option>
                   </select>
                 </div>
                 <div className="w-full md:w-48">
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">Số Quyết định <span className="text-rose-500">*</span></label>
-                  <input disabled={isReadOnly} required type="text" value={ach.decisionNo} title={ach.decisionNo} onChange={(e) => updateOtherAchievement(index, 'decisionNo', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" placeholder="Nhập số QĐ..." />
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Sá»‘ Quyáº¿t Ä‘á»‹nh <span className="text-rose-500">*</span></label>
+                  <input disabled={isReadOnly} required type="text" value={ach.decisionNo} title={ach.decisionNo} onChange={(e) => updateOtherAchievement(index, 'decisionNo', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" placeholder="Nháº­p sá»‘ QÄ..." />
                 </div>
                 
                 <div className="w-full mt-2 pt-2 border-t border-slate-200 border-dashed flex justify-between items-center md:hidden">
@@ -865,7 +865,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                   />
                   {!isReadOnly && (
                     <div className="flex items-center gap-1">
-                      <button type="button" onClick={() => moveToMainAchievements(index)} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg" title="Chuyển lên Thành tích chính">
+                      <button type="button" onClick={() => moveToMainAchievements(index)} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg" title="Chuyá»ƒn lÃªn ThÃ nh tÃ­ch chÃ­nh">
                         <ArrowUp size={18} />
                       </button>
                       <button type="button" onClick={() => removeOtherAchievement(index)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg">
@@ -886,10 +886,10 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
                   {!isReadOnly && (
                     <div className="flex items-center gap-3">
                       <button type="button" onClick={() => moveToMainAchievements(index)} className="text-xs text-blue-500 hover:underline flex items-center gap-1">
-                        <ArrowUp size={12} /> Chuyển lên Mục VI
+                        <ArrowUp size={12} /> Chuyá»ƒn lÃªn Má»¥c VI
                       </button>
                       <button type="button" onClick={() => removeOtherAchievement(index)} className="text-xs text-rose-500 hover:underline flex items-center gap-1">
-                        <Trash2 size={12} /> Xóa thành tích
+                        <Trash2 size={12} /> XÃ³a thÃ nh tÃ­ch
                       </button>
                     </div>
                   )}
@@ -900,24 +900,26 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onCancel, initialData, f
         )}
       </section>
 
-      {/* 6. Đã Xóa phần đính kèm file chung */}
+      {/* 6. ÄÃ£ XÃ³a pháº§n Ä‘Ã­nh kÃ¨m file chung */}
 
       {/* Actions */}
       {!isReadOnly && (
         <div className="flex justify-end gap-3 sticky bottom-0 bg-slate-50 p-4 border-t border-slate-200 shadow-sm -mx-8 -mb-8 px-8 z-10">
           <button type="button" onClick={handleSaveDraft} className="flex items-center gap-2 px-6 py-2 rounded-lg font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 shadow-sm transition-colors">
-            <Save size={18} /> Lưu nháp
+            <Save size={18} /> LÆ°u nhÃ¡p
           </button>
           
           {typeof onSubmitToSecretary === 'function' && (
             <button type="button" onClick={handleSubmitToSecretary} className="flex items-center gap-2 px-6 py-2 rounded-lg font-medium text-white bg-orange-600 hover:bg-orange-700 shadow-sm transition-colors">
-              <Send size={18} /> Nộp thẳng Thư ký
+              <Send size={18} /> Ná»™p tháº³ng ThÆ° kÃ½
             </button>
           )}
 
-          <button type="submit" className="flex items-center gap-2 px-6 py-2 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors">
-            <Send size={18} /> Nộp cho Tổ trưởng
-          </button>
+          {allowSubmitToHead && (
+            <button type="submit" className="flex items-center gap-2 px-6 py-2 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors">
+              <Send size={18} /> Ná»™p cho Tá»• trÆ°á»Ÿng
+            </button>
+          )}
         </div>
       )}
     </form>
@@ -938,9 +940,9 @@ export const DecisionInputGroup = ({ title, type, data, onChange, disabled, file
       />
     </div>
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-      <input disabled={disabled} type="text" placeholder="Số quyết định" value={data.number} onChange={e => onChange(type, 'number', e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500" />
-      <input disabled={disabled} type="date" title="Ngày ký" value={data.date} onChange={e => onChange(type, 'date', e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500" />
-      <input disabled={disabled} type="text" placeholder="Cơ quan ban hành" value={data.issuer} onChange={e => onChange(type, 'issuer', e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500" />
+      <input disabled={disabled} type="text" placeholder="Sá»‘ quyáº¿t Ä‘á»‹nh" value={data.number} onChange={e => onChange(type, 'number', e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500" />
+      <input disabled={disabled} type="date" title="NgÃ y kÃ½" value={data.date} onChange={e => onChange(type, 'date', e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500" />
+      <input disabled={disabled} type="text" placeholder="CÆ¡ quan ban hÃ nh" value={data.issuer} onChange={e => onChange(type, 'issuer', e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500" />
     </div>
   </div>
 );
@@ -960,11 +962,11 @@ export const Input = ({ label, ...props }) => {
             type="button" 
             onClick={async () => {
               const current = fields[props.name] || '';
-              const cmt = await showPrompt(`Nhập nhận xét cho [${label}]:`, "Nhập nhận xét...", current);
+              const cmt = await showPrompt(`Nháº­p nháº­n xÃ©t cho [${label}]:`, "Nháº­p nháº­n xÃ©t...", current);
               if (cmt !== null) onCommentChange(props.name, cmt);
             }}
             className="text-slate-400 hover:text-blue-500 transition-colors"
-            title="Thêm bình luận/báo lỗi"
+            title="ThÃªm bÃ¬nh luáº­n/bÃ¡o lá»—i"
           >
             <MessageSquarePlus size={16} />
           </button>
@@ -997,11 +999,11 @@ export const Checkbox = ({ label, name, checked, onChange, disabled, required })
             type="button" 
             onClick={async () => {
               const current = fields[name] || '';
-              const cmt = await showPrompt(`Nhập nhận xét cho [${label}]:`, "Nhập nhận xét...", current);
+              const cmt = await showPrompt(`Nháº­p nháº­n xÃ©t cho [${label}]:`, "Nháº­p nháº­n xÃ©t...", current);
               if (cmt !== null) onCommentChange(name, cmt);
             }}
             className="text-slate-400 hover:text-blue-500 transition-colors"
-            title="Thêm bình luận/báo lỗi"
+            title="ThÃªm bÃ¬nh luáº­n/bÃ¡o lá»—i"
           >
             <MessageSquarePlus size={16} />
           </button>

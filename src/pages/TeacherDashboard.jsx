@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { CandidateForm } from './CandidateForm';
 import { StatusBadge } from '../components/StatusBadge';
-import { AlertCircle, FileCheck, Search, Download, PenTool, HelpCircle } from 'lucide-react';
+import { AlertCircle, FileCheck, Search, Download, PenTool, HelpCircle, Award, BarChart2 } from 'lucide-react';
 import { exportCandidateToWord } from '../utils/exportWord';
 import { exportDetailedChecklistWord } from '../utils/exportDetailedChecklistWord';
+import { calculateTotalScore, rankCandidates } from '../utils/ranking';
 import { SignatureModal } from '../components/SignatureModal';
 import { UserGuideModal } from '../components/UserGuideModal';
 import { showAlert } from '../utils/alert';
@@ -20,10 +21,54 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
   const [showSignature, setShowSignature] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [signature, setSignature] = useState(localStorage.getItem(`signature_${cccd}`) || null);
+  const [teacherRank, setTeacherRank] = useState(null);
+  const [totalRanked, setTotalRanked] = useState(null);
+  const [stats, setStats] = useState({ totalAchievements: 0, score: 0 });
 
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (candidate && settings) {
+      // Calculate Stats
+      let totalAchs = 0;
+      if (candidate.achievements && Array.isArray(candidate.achievements)) {
+        totalAchs += candidate.achievements.length;
+      }
+      if (candidate.otherAchievements && Array.isArray(candidate.otherAchievements)) {
+        totalAchs += candidate.otherAchievements.length;
+      }
+      const score = calculateTotalScore(candidate, settings);
+      setStats({ totalAchievements: totalAchs, score });
+
+      // Calculate Rank if needed
+      const calculateRank = async () => {
+        if (settings.show_teacher_ranking && activeBatchId && ['admin_approved', 'ranked', 'finalized'].includes(candidate.status)) {
+          const { data: allCands } = await supabase.from('candidates')
+            .select('id, dob, gender, ethnicity, decisionRecruitment, decisionProbation, achievements')
+            .eq('batch_id', activeBatchId)
+            .in('status', ['admin_approved', 'ranked', 'finalized']);
+            
+          if (allCands) {
+            const withScore = allCands.map(c => ({ ...c, score: calculateTotalScore(c, settings) }));
+            if (settings.use_scoring !== false) {
+              withScore.sort((a, b) => b.score - a.score);
+            } else {
+              withScore.sort(rankCandidates);
+            }
+            const rankIndex = withScore.findIndex(c => c.id === candidate.id);
+            if (rankIndex !== -1) {
+              setTeacherRank(rankIndex + 1);
+              setTotalRanked(withScore.length);
+            }
+          }
+        }
+      };
+      
+      calculateRank();
+    }
+  }, [candidate, settings, activeBatchId]);
 
   const loadData = async () => {
     setLoading(true);
@@ -89,7 +134,7 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
 
   if (loading) return <div className="p-8 text-center">Đang tải dữ liệu...</div>;
 
-  const isPastDeadline = activeBatch && activeBatch.deadline && new Date() > new Date(`${activeBatch.deadline}T23:59:59`);
+  const isPastDeadline = activeBatch && activeBatch.deadline && new Date() > new Date(activeBatch.deadline.includes('T') ? activeBatch.deadline : `${activeBatch.deadline}T23:59:59`);
   const isReadOnly = (candidate && !['draft', 'head_rejected', 'returned', 'admin_rejected'].includes(candidate.status)) || isPastDeadline;
 
   return (
@@ -154,7 +199,7 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
             <AlertCircle size={32} className="shrink-0 mt-1" />
             <div>
               <div className="font-bold">Đã hết hạn nộp/sửa hồ sơ</div>
-              <div className="text-sm">Đợt xét này đã kết thúc thời gian tiếp nhận vào 23h59 phút ngày {new Date(activeBatch.deadline).toLocaleDateString('vi-VN')}. Bạn chỉ có thể xem lại thông tin.</div>
+              <div className="text-sm">Đợt xét này đã kết thúc thời gian tiếp nhận vào {activeBatch.deadline.includes('T') ? new Date(activeBatch.deadline).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '23h59'} ngày {new Date(activeBatch.deadline).toLocaleDateString('vi-VN')}. Bạn chỉ có thể xem lại thông tin.</div>
             </div>
           </div>
         </div>
@@ -167,6 +212,41 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
           </div>
         ) : (
           <>
+            {(settings?.show_teacher_stats !== false || settings?.show_teacher_ranking === true) && candidate && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                {settings?.show_teacher_stats !== false && (
+                  <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                      <BarChart2 size={24} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500 font-medium">Thống kê hồ sơ</p>
+                      <div className="flex items-end gap-2">
+                        <p className="text-2xl font-bold text-slate-800">{stats.totalAchievements} <span className="text-sm font-normal text-slate-500">thành tích</span></p>
+                        {settings?.use_scoring !== false && (
+                          <p className="text-sm font-medium text-emerald-600 mb-1">({stats.score} điểm)</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {settings?.show_teacher_ranking === true && ['admin_approved', 'ranked', 'finalized'].includes(candidate.status) && teacherRank !== null && (
+                  <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                      <Award size={24} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500 font-medium">Vị thứ xét duyệt ưu tiên</p>
+                      <p className="text-2xl font-bold text-slate-800">
+                        Hạng {teacherRank} <span className="text-sm font-normal text-slate-500">/ {totalRanked}</span>
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {candidate?.status === 'head_rejected' && (
               <div className="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-lg mb-6 flex items-start gap-3 shadow-sm">
                 <AlertCircle className="shrink-0 mt-0.5" />

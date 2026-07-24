@@ -14,7 +14,7 @@ export const SettingsModal = ({ isOpen, onClose }) => {
     const handleChange = (id, value) => {
       setLocalSettings(prev => ({
         ...prev,
-        [id]: (id === 'use_scoring' || id === 'allow_direct_to_secretary') ? value : parseFloat(value) || 0
+        [id]: (['use_scoring', 'allow_direct_to_secretary', 'allow_submit_to_head', 'show_teacher_stats', 'show_teacher_ranking'].includes(id)) ? value : parseFloat(value) || 0
       }));
     };
 
@@ -113,6 +113,21 @@ export const SettingsModal = ({ isOpen, onClose }) => {
                         <label className="flex items-center gap-3 cursor-pointer group">
                           <input 
                             type="checkbox"
+                            checked={localSettings['allow_submit_to_head'] !== false} // Default true
+                            onChange={(e) => handleChange('allow_submit_to_head', e.target.checked)}
+                            className="w-5 h-5 border-2 border-slate-300 rounded text-blue-600 focus:ring-blue-500 peer"
+                          />
+                          <div>
+                            <div className="font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">Cho phép GV nộp Tổ trưởng</div>
+                            <div className="text-xs text-slate-500 mt-0.5">Hiển thị nút cho phép GV nộp hồ sơ lên Tổ trưởng/BM.</div>
+                          </div>
+                        </label>
+                      </div>
+
+                      <div className="flex flex-col bg-slate-50 p-3 rounded-xl border border-slate-200 justify-center">
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                          <input 
+                            type="checkbox"
                             checked={localSettings['allow_direct_to_secretary'] === true}
                             onChange={(e) => handleChange('allow_direct_to_secretary', e.target.checked)}
                             className="w-5 h-5 border-2 border-slate-300 rounded text-blue-600 focus:ring-blue-500 peer"
@@ -120,6 +135,36 @@ export const SettingsModal = ({ isOpen, onClose }) => {
                           <div>
                             <div className="font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">Cho phép GV nộp thẳng Thư ký</div>
                             <div className="text-xs text-slate-500 mt-0.5">Hiển thị nút cho phép GV nộp hồ sơ bỏ qua Tổ trưởng.</div>
+                          </div>
+                        </label>
+                      </div>
+
+                      <div className="flex flex-col bg-slate-50 p-3 rounded-xl border border-slate-200 justify-center">
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                          <input 
+                            type="checkbox"
+                            checked={localSettings['show_teacher_stats'] !== false}
+                            onChange={(e) => handleChange('show_teacher_stats', e.target.checked)}
+                            className="w-5 h-5 border-2 border-slate-300 rounded text-blue-600 focus:ring-blue-500 peer"
+                          />
+                          <div>
+                            <div className="font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">Hiển thị thống kê cho Giáo viên</div>
+                            <div className="text-xs text-slate-500 mt-0.5">Cho phép GV xem số lượng thành tích trên bảng điều khiển.</div>
+                          </div>
+                        </label>
+                      </div>
+
+                      <div className="flex flex-col bg-slate-50 p-3 rounded-xl border border-slate-200 justify-center">
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                          <input 
+                            type="checkbox"
+                            checked={localSettings['show_teacher_ranking'] === true}
+                            onChange={(e) => handleChange('show_teacher_ranking', e.target.checked)}
+                            className="w-5 h-5 border-2 border-slate-300 rounded text-blue-600 focus:ring-blue-500 peer"
+                          />
+                          <div>
+                            <div className="font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">Hiển thị Xếp hạng cho Giáo viên</div>
+                            <div className="text-xs text-slate-500 mt-0.5">Cho phép GV xem hạng ưu tiên của họ trong đợt xét.</div>
                           </div>
                         </label>
                       </div>

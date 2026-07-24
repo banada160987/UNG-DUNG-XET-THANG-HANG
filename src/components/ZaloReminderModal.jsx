@@ -11,7 +11,7 @@ export const ZaloReminderModal = ({ isOpen, onClose, candidates, scope, departme
   const pendingCandidates = candidates.filter(c => pendingStatuses.includes(c.status));
   const count = pendingCandidates.length;
 
-  const deadlineText = activeBatch?.deadline ? `23h59 phút ngày ${new Date(activeBatch.deadline).toLocaleDateString('vi-VN')}` : 'thời hạn quy định';
+  const deadlineText = activeBatch?.deadline ? `${new Date(activeBatch.deadline).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} ngày ${new Date(activeBatch.deadline).toLocaleDateString('vi-VN')}` : 'thời hạn quy định';
 
   // Nhóm theo Tổ (dành cho Admin)
   const groupedByUnit = pendingCandidates.reduce((acc, c) => {

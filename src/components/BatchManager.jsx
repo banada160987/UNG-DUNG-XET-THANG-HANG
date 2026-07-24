@@ -170,14 +170,14 @@ export const BatchManager = ({ activeBatchId, onSelectBatch }) => {
       </div>
 
       {isCreating && (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 bg-slate-50 p-4 rounded-lg mb-4 border border-slate-200">
-          <input type="text" placeholder="Tên đợt (VD: Đợt 1 năm 2026)" value={newBatch.name} onChange={e => setNewBatch({...newBatch, name: e.target.value})} className="border border-slate-300 rounded p-2 text-sm col-span-2" />
-          <select value={newBatch.type} onChange={e => setNewBatch({...newBatch, type: e.target.value})} className="border border-slate-300 rounded p-2 text-sm bg-white">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-4 bg-slate-50 p-3 rounded border border-slate-200">
+          <input type="text" placeholder="Tên đợt (VD: Năm học 2025-2026)" value={newBatch.name} onChange={e => setNewBatch({...newBatch, name: e.target.value})} className="border border-slate-300 rounded p-2 text-sm" />
+          <select value={newBatch.type} onChange={e => setNewBatch({...newBatch, type: e.target.value})} className="border border-slate-300 rounded p-2 text-sm">
             <option>III -&gt; II</option>
             <option>II -&gt; I</option>
           </select>
           <input type="number" placeholder="Chỉ tiêu" value={newBatch.quota} onChange={e => setNewBatch({...newBatch, quota: parseInt(e.target.value)})} className="border border-slate-300 rounded p-2 text-sm" />
-          <input type="date" value={newBatch.deadline} onChange={e => setNewBatch({...newBatch, deadline: e.target.value})} className="border border-slate-300 rounded p-2 text-sm" />
+          <input type="datetime-local" value={newBatch.deadline} onChange={e => setNewBatch({...newBatch, deadline: e.target.value})} className="border border-slate-300 rounded p-2 text-sm" />
           <div className="col-span-full flex justify-end gap-2 mt-2">
             <button onClick={() => {
               setIsCreating(false);
@@ -192,23 +192,26 @@ export const BatchManager = ({ activeBatchId, onSelectBatch }) => {
         {batches.length === 0 ? <p className="text-slate-500 text-sm italic">Chưa có đợt xét nào. Hãy tạo mới.</p> : batches.map(b => (
           <div 
             key={b.id} 
-            className={`flex flex-col text-left px-4 py-3 rounded-lg border min-w-[200px] transition-all relative group cursor-pointer ${activeBatchId === b.id ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500' : 'border-slate-200 hover:border-blue-300 bg-white'}`}
+            className={`p-3 border rounded-xl cursor-pointer transition-all relative group ${
+              b.id === activeBatchId 
+                ? 'bg-blue-50 border-blue-200 shadow-sm' 
+                : 'bg-white hover:bg-slate-50 border-slate-200'
+            }`}
             onClick={() => onSelectBatch(b.id)}
           >
-            <div className="flex justify-between items-start mb-1">
-              <span className="font-semibold text-slate-800 text-sm truncate pr-2">{b.name}</span>
-              {activeBatchId === b.id && <Check size={16} className="text-blue-600 flex-shrink-0" />}
+            <div className="flex justify-between items-center mb-1">
+              <span className="font-semibold text-slate-800">{b.name}</span>
+              {b.id === activeBatchId && <Check size={16} className="text-blue-600" />}
             </div>
-            <div className="text-xs text-slate-500 flex justify-between mt-auto items-center">
+            <div className="flex justify-between items-center text-xs text-slate-500">
               <span>Hạng: {b.type}</span>
               <span className="font-medium text-slate-700">Chỉ tiêu: {b.quota}</span>
             </div>
             {b.deadline && (
               <div className="text-[10px] text-rose-500 mt-1 flex items-center gap-1">
-                <span className="font-semibold">Hạn nộp:</span> 23h59 phút ngày {new Date(b.deadline).toLocaleDateString('vi-VN')}
+                <span className="font-semibold">Hạn nộp:</span> {new Date(b.deadline).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} ngày {new Date(b.deadline).toLocaleDateString('vi-VN')}
               </div>
             )}
-            {/* Các nút sửa xóa hiển thị khi hover */}
             <div className="absolute -top-2 -right-2 hidden group-hover:flex bg-white shadow-sm border border-slate-200 rounded-lg overflow-hidden z-10">
               <button 
                 onClick={(e) => handleEdit(b, e)} 

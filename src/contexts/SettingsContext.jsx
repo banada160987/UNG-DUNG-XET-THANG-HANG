@@ -27,7 +27,11 @@ export const SettingsProvider = ({ children }) => {
     "gk_dang_uy_xa": 1,
     "gk_so_nganh_xa": 1,
     "seniority_per_year": 1,
-    "use_scoring": true
+    "use_scoring": true,
+    "allow_submit_to_head": true,
+    "allow_direct_to_secretary": false,
+    "show_teacher_stats": true,
+    "show_teacher_ranking": false
   };
 
   const fetchSettings = async () => {
