@@ -1,0 +1,121 @@
+        { id: '', year: new Date().getFullYear(), type: 'Cá nhân', decisionNo: '', link: '' }
+      otherAchievements: [...formData.otherAchievements, { id: '', year: new Date().getFullYear(), type: 'cá nhân', decisionNo: '', link: '' }]
+      showAlert('Thông báo', "File quá l�:n! Vui lòng chọn file dư�:i 5MB.");
+      showAlert('Thông báo', "L�i tải file: " + error.message);
+    if (!confirm("Bạn mu�n xóa file này?")) return;
+    // Tùy chọn: Xóa file trên Storage thực tế
+      showAlert('Thiếu thông tin', 'Bắt bu�"c phải tick chọn "Phiếu �ánh giá, xếp loại các nĒm trong thời gian công tác �ược tính xét thĒng hạng" �x mục V.', 'warning');
+      showAlert('Thiếu thông tin', 'Bắt bu�"c phải có Chứng ch�0 theo yêu cầu của chức danh nghề nghi�!p �Ồ �ủ �iều ki�!n xét thĒng hạng.', 'warning');
+    // Ràng bu�"c thành tích chính
+      showAlert('Thiếu thông tin', 'Vui lòng chọn Loại thành tích và nhập �ầy �ủ S� quyết ��9nh cho các thành tích �x phần VI.', 'warning');
+    // Ràng bu�"c thành tích khác
+      showAlert('Thiếu thông tin', 'Vui lòng nhập �ầy �ủ Tên thành tích và S� quyết ��9nh cho các thành tích �x phần VIII.', 'warning');
+    // Ràng bu�"c không cho phép nhập thành tích chính vào mục thành tích khác
+        'chiến sĩ thi �ua', 'chiến sỹ thi �ua', 'cst�', 'cstd', 
+        'huân chương', 'nhà giáo ưu tú', 'nhà giáo nhân dân', 'ngưt', 'ngnd',
+        'bằng khen của b�"', 'bằng khen của ubnd', 'bằng khen của t�0nh', 'bằng khen thủ tư�:ng', 'bằng khen của ban thường vụ'
+      showAlert('Sai v�9 trí thành tích', `Thành tích "${overlappingAch.id}" thu�"c danh mục Thành tích chính quy ��9nh tại Kế hoạch 125. Vui lòng bấm nút mũi tên chuyỒn thành tích này lên mục VI �Ồ hợp l�! và �ược tính �iỒm.`, 'warning');
+      'Xác nhận n�"p', 
+      'Bạn có chắc chắn mu�n n�"p h� sơ này cho T�" trư�xng? Bạn sẽ không thỒ sửa nếu chưa b�9 trả lại.', 
+      showAlert('Thiếu thông tin', 'Vui lòng kiỒm tra lại Phiếu �ánh giá và Chứng ch�0.', 'warning');
+      'N�"p thẳng cho Thư ký', 
+      'Bạn có chắc chắn n�"p h� sơ thẳng lên cho Thư ký (Bỏ qua T�" trư�xng)? Hành ��"ng này thường ch�0 dùng khi bạn b�" sung h� sơ theo yêu cầu.', 
+        showAlert('Thông báo', "Không nhận di�!n �ược thông tin. Vui lòng thử ảnh rõ nét hơn.");
+        showAlert('Thông báo', `Đã nhận di�!n thành công:\nCCCD: ${data.cccd || 'Không tìm thấy'}\nHọ Tên: ${data.fullName || 'Không tìm thấy'}\nNgày Sinh: ${data.dob || 'Không tìm thấy'}`);
+      showAlert('Thông báo', "Có l�i xảy ra khi quét OCR. Vui lòng nhập tay.");
+      b.push({ id: 'cert', name: 'Kỹ nĒng Đa dạng', icon: <Globe size={16} className="text-blue-600" />, bg: 'bg-blue-100 text-blue-800 border-blue-200' });
+      b.push({ id: 'ach', name: 'Giáo viên Xuất sắc', icon: <Trophy size={16} className="text-amber-600" />, bg: 'bg-amber-100 text-amber-800 border-amber-200' });
+      b.push({ id: 'ach2', name: 'Nhiều Thành tích', icon: <Star size={16} className="text-rose-600" />, bg: 'bg-rose-100 text-rose-800 border-rose-200' });
+            <h3 className="font-semibold text-rose-800">H� sơ cần ch�0nh sửa</h3>
+              Đ�" hoàn thi�!n h� sơ: {progress}%
+                ? "Tuy�!t vời! H� sơ của bạn �ã sẵn sàng �Ồ n�"p." 
+                : "Hãy �iền thêm các thông tin vĒn bằng, chứng ch�0 và thành tích �Ồ �ạt 100%."}
+            <h4 className="text-sm font-semibold text-slate-600 mb-3 uppercase tracking-wider">Huy hi�!u �ạt �ược</h4>
+                <span className="text-sm text-slate-400 italic">Chưa có huy hi�!u nào</span>
+          <h3 className="text-lg font-semibold text-slate-800">I. Thông tin cá nhân</h3>
+                  {ocrLoading ? `Đang nhận di�!n... ${ocrProgress}%` : 'Quét ảnh �iền tự ��"ng'}
+          <Input label="S� CCCD" name="cccd" value={formData.cccd} onChange={handleChange} required disabled={!!fixedCccd || isReadOnly} />
+          <Input label="Họ tên" name="fullName" value={formData.fullName} onChange={handleChange} required disabled={isReadOnly} />
+          <Input label="Ngày sinh" name="dob" type="date" value={formData.dob} onChange={handleChange} required disabled={isReadOnly} />
+            <label className="text-sm font-medium text-slate-700">Gi�:i tính</label>
+          <Input label="Dân t�"c" name="ethnicity" value={formData.ethnicity} onChange={handleChange} disabled={isReadOnly} />
+          <Input label="SĐT (Có Zalo)" name="phone" value={formData.phone} onChange={handleChange} placeholder="09xxxxxxx" required disabled={isReadOnly} />
+          <Input label="Đơn v�9 công tác (Trường)" name="workplace" value={formData.workplace} onChange={handleChange} placeholder="Trường THPT..." required disabled={isReadOnly} />
+            <label className="text-sm font-medium text-slate-700">T�" chuyên môn <span className="text-rose-500">*</span></label>
+              {departments.length === 0 && <option value="">Chưa có dữ li�!u T�"</option>}
+          <Input label="Chức danh hi�!n giữ" name="currentTitle" value={formData.currentTitle} onChange={handleChange} required disabled={isReadOnly} />
+            <label className="text-sm font-medium text-slate-700">Chức danh �Ēng ký xét</label>
+      {/* 2. Quyết ��9nh công tác */}
+        <h3 className="text-lg font-semibold border-b pb-2 mb-4 text-slate-800">II. Thông tin công tác</h3>
+          <DecisionInputGroup title="Quyết ��9nh TuyỒn dụng" type="decisionRecruitment" data={formData.decisionRecruitment} onChange={handleDecisionChange} disabled={isReadOnly} filePrefix={filePrefix} />
+          <DecisionInputGroup title="Quyết ��9nh Hết tập sự" type="decisionProbation" data={formData.decisionProbation} onChange={handleDecisionChange} disabled={isReadOnly} filePrefix={filePrefix} />
+          <DecisionInputGroup title="Quyết ��9nh B�" nhi�!m hạng" type="decisionAppointment" data={formData.decisionAppointment} onChange={handleDecisionChange} disabled={isReadOnly} filePrefix={filePrefix} />
+          <DecisionInputGroup title="Quyết ��9nh Nâng lương gần nhất" type="decisionSalary" data={formData.decisionSalary} onChange={handleDecisionChange} disabled={isReadOnly} filePrefix={filePrefix} />
+      {/* 3. VĒn bằng */}
+          <h3 className="text-lg font-semibold text-slate-800">III. VĒn bằng</h3>
+              <Plus size={16} /> Thêm vĒn bằng
+          <p className="text-slate-400 italic text-center py-4">Chưa có vĒn bằng nào �ược thêm.</p>
+                  <GraduationCap size={14} /> VĒn bằng {index + 1}
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Trình ��"</label>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Chuyên ngành</label>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">NĒm cấp</label>
+                    <label className="text-xs font-medium text-slate-500 mb-1 block">S� hi�!u</label>
+                      <Trash2 size={16} /> Xóa
+      {/* 4. Chứng ch�0 chức danh nghề nghi�!p */}
+          <h3 className="text-lg font-semibold text-slate-800">IV. Chứng ch�0 theo yêu cầu của chức danh nghề nghi�!p xét thĒng hạng</h3>
+              <Plus size={16} /> Thêm chứng ch�0
+          <p className="text-slate-400 italic text-center py-4">Chưa có chứng ch�0 nào �ược thêm.</p>
+                  <Medal size={14} /> Chứng ch�0 {index + 1}
+                    <label className="text-xs font-medium text-slate-500 mb-1 block">Tên chứng ch�0</label>
+                    <label className="text-xs font-medium text-slate-500 mb-1 block">NĒm cấp</label>
+                    <label className="text-xs font-medium text-slate-500 mb-1 block">S� hi�!u</label>
+                      <Trash2 size={16} /> Xóa
+      {/* 5. Thành phần h� sơ khác (Sơ yếu lý l�9ch, Nhận xét) */}
+        <h3 className="text-lg font-semibold border-b pb-2 mb-4 text-slate-800">V. Thành phần h� sơ khác</h3>
+          <Checkbox disabled={isReadOnly} label="Đã có Sơ yếu lý l�9ch (Mẫu HS02-VC/BNV)" name="resumeDoc" checked={formData.resumeDoc} onChange={handleChange} />
+          <Checkbox disabled={isReadOnly} label="Đã có Bản nhận xét, �ánh giá của thủ trư�xng" name="reviewDoc" checked={formData.reviewDoc} onChange={handleChange} />
+          <Checkbox required disabled={isReadOnly} label="Phiếu �ánh giá, xếp loại các nĒm trong thời gian công tác �ược tính xét thĒng hạng" name="ratingSheets" checked={formData.ratingSheets} onChange={handleChange} />
+          <Checkbox disabled={isReadOnly} label="Tin học (Có chứng ch�0 hoặc xác nhận)" name="certIT" checked={formData.certIT} onChange={handleChange} />
+          <Checkbox disabled={isReadOnly} label="Ngoại ngữ (Có chứng ch�0 hoặc xác nhận)" name="certLanguage" checked={formData.certLanguage} onChange={handleChange} />
+          <Checkbox disabled={isReadOnly} label="Tiếng dân t�"c thiỒu s� (Có chứng ch�0 hoặc xác nhận)" name="certEthnic" checked={formData.certEthnic} onChange={handleChange} />
+          <Checkbox disabled={isReadOnly} label="Đã có Biên bản �ánh giá nĒng lực của T�" chuyên môn (Thay thế cho Sáng kiến kinh nghi�!m/Bằng khen)" name="evalMinute" checked={formData.evalMinute} onChange={handleChange} />
+      {/* 6. Thành tích */}
+          <h3 className="text-lg font-semibold text-slate-800">VI. Thành tích (Cập nhật �úng theo Kế hoạch)</h3>
+              <Plus size={16} /> Thêm thành tích
+          <p className="text-slate-400 italic text-center py-4">Chưa khai báo thành tích nào.</p>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Loại thành tích</label>
+                    <option value="" disabled hidden>-- Chọn loại thành tích --</option>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">NĒm</label>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Cá nhân/Tập thỒ</label>
+                    <option value="cá nhân">Cá nhân</option>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">S� Quyết ��9nh <span className="text-rose-500">*</span></label>
+                  <input disabled={isReadOnly} required type="text" value={ach.decisionNo} title={ach.decisionNo} onChange={(e) => updateAchievement(index, 'decisionNo', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Nhập s� QĐ..." />
+                      <button type="button" onClick={() => moveToOtherAchievements(index)} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg" title="ChuyỒn xu�ng Thành tích khác">
+                        <ArrowDown size={12} /> ChuyỒn xu�ng Mục VIII
+                        <Trash2 size={12} /> Xóa thành tích
+      {/* 5.5. Thành tích khác */}
+          <h3 className="text-lg font-semibold text-slate-800">VIII. Các thành tích khác (Nếu có)</h3>
+              <Plus size={16} /> Thêm thành tích
+          <p className="text-slate-400 italic text-center py-4">Chưa khai báo thành tích khác.</p>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Tên thành tích <span className="text-rose-500">*</span></label>
+                          <option value="" disabled>-- Chọn phân loại thành tích --</option>
+                            placeholder="Nhập tên thành tích khác của bạn..."
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">NĒm</label>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Cá nhân/Tập thỒ</label>
+                    <option value="cá nhân">Cá nhân</option>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">S� Quyết ��9nh <span className="text-rose-500">*</span></label>
+                  <input disabled={isReadOnly} required type="text" value={ach.decisionNo} title={ach.decisionNo} onChange={(e) => updateOtherAchievement(index, 'decisionNo', e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 text-sm disabled:bg-slate-100" placeholder="Nhập s� QĐ..." />
+                      <button type="button" onClick={() => moveToMainAchievements(index)} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg" title="ChuyỒn lên Thành tích chính">
+                        <ArrowUp size={12} /> ChuyỒn lên Mục VI
+                        <Trash2 size={12} /> Xóa thành tích
+      {/* 6. Đã Xóa phần �ính kèm file chung */}
+            <Save size={18} /> Lưu nháp
+              <Send size={18} /> N�"p thẳng Thư ký
+              <Send size={18} /> N�"p cho T�" trư�xng
+      <input disabled={disabled} type="text" placeholder="S� quyết ��9nh" value={data.number} onChange={e => onChange(type, 'number', e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500" />
+      <input disabled={disabled} type="date" title="Ngày ký" value={data.date} onChange={e => onChange(type, 'date', e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500" />
+      <input disabled={disabled} type="text" placeholder="Cơ quan ban hành" value={data.issuer} onChange={e => onChange(type, 'issuer', e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-500" />
+              const cmt = await showPrompt(`Nhập nhận xét cho [${label}]:`, "Nhập nhận xét...", current);
+            title="Thêm bình luận/báo l�i"
+              const cmt = await showPrompt(`Nhập nhận xét cho [${label}]:`, "Nhập nhận xét...", current);
+            title="Thêm bình luận/báo l�i"
