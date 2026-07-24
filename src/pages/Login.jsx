@@ -90,7 +90,10 @@ export const Login = ({ onLogin }) => {
         }
 
         const hashedPass = await hashPassword(teacherPass);
-        if (teacher.password !== hashedPass) {
+        const isLegacyPass = teacher.password === teacherPass;
+        const isHashedPass = teacher.password === hashedPass;
+
+        if (!isLegacyPass && !isHashedPass) {
           const isLocked = await handleFailedAttempt('teachers', 'cccd', cccd, teacher.failed_attempts || 0);
           await logAccess(cccd, 'teacher', 'FAILED');
           if (isLocked) {
@@ -99,6 +102,10 @@ export const Login = ({ onLogin }) => {
              showAlert('Lỗi', 'Sai mật khẩu!');
           }
           return;
+        }
+
+        if (isLegacyPass && !isHashedPass) {
+          await supabase.from('teachers').update({ password: hashedPass }).eq('cccd', cccd);
         }
         
         await handleSuccessfulLogin('teachers', 'cccd', cccd);
@@ -121,7 +128,10 @@ export const Login = ({ onLogin }) => {
       }
 
       const hashedPass = await hashPassword(headPass);
-      if (head.password !== hashedPass) {
+      const isLegacyPass = head.password === headPass;
+      const isHashedPass = head.password === hashedPass;
+
+      if (!isLegacyPass && !isHashedPass) {
         const isLocked = await handleFailedAttempt('heads', 'department', selectedDept, head.failed_attempts || 0);
         await logAccess(selectedDept, 'head', 'FAILED');
         if (isLocked) {
@@ -130,6 +140,10 @@ export const Login = ({ onLogin }) => {
            showAlert('Lỗi', 'Sai mật khẩu Tổ trưởng!');
         }
         return;
+      }
+
+      if (isLegacyPass && !isHashedPass) {
+        await supabase.from('heads').update({ password: hashedPass }).eq('department', selectedDept);
       }
 
       await handleSuccessfulLogin('heads', 'department', selectedDept);
@@ -152,7 +166,10 @@ export const Login = ({ onLogin }) => {
       }
 
       const hashedPass = await hashPassword(secPass);
-      if (data.password !== hashedPass) {
+      const isLegacyPass = data.password === secPass;
+      const isHashedPass = data.password === hashedPass;
+
+      if (!isLegacyPass && !isHashedPass) {
         const isLocked = await handleFailedAttempt('secretaries', 'username', secUser, data.failed_attempts || 0);
         await logAccess(secUser, 'secretary', 'FAILED');
         if (isLocked) {
@@ -161,6 +178,10 @@ export const Login = ({ onLogin }) => {
            showAlert('Lỗi', 'Sai mật khẩu Thư ký!');
         }
         return;
+      }
+
+      if (isLegacyPass && !isHashedPass) {
+        await supabase.from('secretaries').update({ password: hashedPass }).eq('username', secUser);
       }
 
       await handleSuccessfulLogin('secretaries', 'username', secUser);
