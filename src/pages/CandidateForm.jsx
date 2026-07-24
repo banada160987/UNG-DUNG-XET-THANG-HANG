@@ -212,7 +212,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onSubmitToSecretary, onC
     const { error } = await supabase.storage.from('evidence_files').upload(filePath, file);
     
     if (error) {
-      showAlert('Thông báo', "Lđi tải file: " + error.message);
+      showAlert('Thông báo', "Lỗi tải file: " + error.message);
     } else {
       const { data } = supabase.storage.from('evidence_files').getPublicUrl(filePath);
       if (data) {
@@ -226,7 +226,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onSubmitToSecretary, onC
   };
 
   const removeFile = async (index) => {
-    if (!confirm("Bạn muđn xóa file này?")) return;
+    if (!confirm("Bạn muốn xóa file này?")) return;
     const fileToRemove = formData.files[index];
     
     // Tùy chọn: Xóa file trên Storage thực tế
@@ -284,7 +284,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onSubmitToSecretary, onC
       const lower = text.toLowerCase().trim();
       if (lower.length < 4) return false;
       const exactOrPartialKeywords = [
-        'chiến sĩ thi đa', 'chiến sỹ thi đa', 'cstđ', 'cstd', 
+        'chiến sĩ thi đua', 'chiến sỹ thi đua', 'cstđ ', 'cstd', 
         'huân chương', 'nhà giáo ưu tú', 'nhà giáo nhân dân', 'ngưt', 'ngnd',
         'bằng khen của bộ', 'bằng khen của ubnd', 'bằng khen của tỉnh', 'bằng khen thủ tướng', 'bằng khen của ban thường vụ'
       ];
@@ -292,15 +292,27 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onSubmitToSecretary, onC
       const officialNames = ACHIEVEMENT_LEVELS.map(lvl => lvl.name.toLowerCase().trim());
       return officialNames.some(name => name === lower || lower.includes(name) || (lower.length > 15 && name.includes(lower)));
     };
+    
     const overlappingAch = formData.otherAchievements?.find(ach => checkIsOfficial(ach.id));
     if (overlappingAch) {
       showAlert('Sai vị trí thành tích', `Thành tích "${overlappingAch.id}" thuộc danh mục Thành tích chính quy định tại Kế hoạch 125. Vui lòng bấm nút mũi tên chuyển thành tích này lên mục VI để hợp lệ và được tính điểm.`, 'warning');
       return;
     }
 
+    if (!allowSubmitToHead) {
+      if (typeof onSubmitToSecretary === 'function') {
+        handleSubmitToSecretary(e);
+      }
+      return;
+    }
+
+    if (!validateForm()) {
+      return;
+    }
+
     const isConfirmed = await showConfirm(
       'Xác nhận nộp', 
-      'Bạn có chắc chắn muđn nộp hồ sơ này cho Tổ trưởng? Bạn sẽ không thể sửa nếu chưa bị trả lại.', 
+      'Bạn có chắc chắn muốn nộp hồ sơ này cho Tổ trưởng/BM? Bạn sẽ không thể tự chỉnh sửa sau khi đã nộp.', 
       'question'
     );
     
