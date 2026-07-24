@@ -4,11 +4,26 @@ import { supabase } from './supabaseClient';
  * Mã hóa mật khẩu bằng SHA-256 (Web Crypto API)
  */
 export const hashPassword = async (password) => {
-  const msgBuffer = new TextEncoder().encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  return hashHex;
+  try {
+    if (typeof crypto !== 'undefined' && crypto.subtle) {
+      const msgBuffer = new TextEncoder().encode(password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashHex;
+    }
+  } catch (e) {
+    console.warn("Web Crypto API failed, using fallback hash", e);
+  }
+  
+  // Fallback for non-secure contexts (HTTP)
+  let hash = 0;
+  for (let i = 0; i < password.length; i++) {
+      const char = password.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+  }
+  return Math.abs(hash).toString(16) + "fb"; // Append 'fb' to denote fallback
 };
 
 /**

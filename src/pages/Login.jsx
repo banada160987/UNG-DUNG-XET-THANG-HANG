@@ -50,7 +50,7 @@ export const Login = ({ onLogin }) => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    
+    try {
     if (role === 'teacher') {
       if (cccd.length !== 12 || !/^\d{12}$/.test(cccd)) {
         showAlert('Thông báo', 'Vui lòng nhập đúng 12 số CCCD!');
@@ -123,7 +123,8 @@ export const Login = ({ onLogin }) => {
          const hashedPass = await hashPassword(headPass);
          const { error: insertError } = await supabase.from('heads').insert([{ department: selectedDept, password: hashedPass }]);
          if (insertError) {
-           showAlert('Thông báo', 'Lỗi tạo tài khoản!');
+           console.error("Head insert error:", insertError);
+           showAlert('Thông báo', 'Lỗi tạo tài khoản! ' + insertError.message);
            return;
          }
          await logAccess(selectedDept, 'head', 'SUCCESS');
@@ -171,7 +172,8 @@ export const Login = ({ onLogin }) => {
          const hashedPass = await hashPassword(secPass);
          const { error: insertError } = await supabase.from('secretaries').insert([{ username: secUser, password: hashedPass }]);
          if (insertError) {
-           showAlert('Thông báo', 'Lỗi tạo tài khoản!');
+           console.error("Secretary insert error:", insertError);
+           showAlert('Thông báo', 'Lỗi tạo tài khoản! ' + insertError.message);
            return;
          }
          await logAccess(secUser, 'secretary', 'SUCCESS');
@@ -213,21 +215,20 @@ export const Login = ({ onLogin }) => {
       const { data: adminConfig } = await supabase.from('settings').select('points').eq('id', 'admin_config').maybeSingle();
       const defaultAdminPass = import.meta.env.VITE_ADMIN_PASS;
       
-      let isValid = false;
-      if (adminConfig && adminConfig.points && adminConfig.points.password) {
-        const hashedPass = await hashPassword(adminPass);
-        isValid = (adminConfig.points.password === hashedPass);
+      let actualPass = (adminConfig?.points?.password) || defaultAdminPass;
+      const hashedPass = await hashPassword(adminPass);
+      
+      if (adminPass === actualPass || hashedPass === actualPass) {
+        await logAccess('admin', 'admin', 'SUCCESS');
+        handleLoginSuccess({ role: 'admin' });
       } else {
-        isValid = (adminPass === defaultAdminPass);
-      }
-
-      if (!isValid) {
         await logAccess('admin', 'admin', 'FAILED');
         showAlert('Thông báo', 'Sai mật khẩu Quản trị!');
-        return;
       }
-      await logAccess('admin', 'admin', 'SUCCESS');
-      handleLoginSuccess({ role: 'admin' });
+    }
+    } catch (err) {
+      console.error("Login crashed:", err);
+      showAlert('Lỗi hệ thống', 'Đã xảy ra lỗi không xác định: ' + err.message);
     }
   };
 
