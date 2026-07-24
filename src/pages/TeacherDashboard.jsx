@@ -299,6 +299,7 @@ export const TeacherDashboard = ({ cccd, onLogout }) => {
               onSave={handleSaveDraft}
               onSubmitToHead={handleSubmitToHead}
               onSubmitToSecretary={settings?.allow_direct_to_secretary ? handleSubmitToSecretary : undefined}
+              allowSubmitToHead={settings?.allow_submit_to_head !== false}
               isReadOnly={isReadOnly}
             />
           </>

@@ -323,11 +323,26 @@ export const SecretaryDashboard = ({ secretaryInfo, onLogout }) => {
               </div>
 
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-                <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-                  <h3 className="font-semibold text-slate-800 flex items-center gap-2">
-                    <FileText size={18} className="text-slate-500" />
-                    Danh sách được phân công rà soát
-                  </h3>
+                <div className="p-4 border-b border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer"
+                      checked={displayList.length > 0 && selectedForCompare.length === displayList.length}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedForCompare(displayList.map(c => c.id));
+                        } else {
+                          setSelectedForCompare([]);
+                        }
+                      }}
+                      title="Chọn tất cả danh sách hiện tại"
+                    />
+                    <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+                      <FileText size={18} className="text-slate-500" />
+                      Danh sách được phân công rà soát
+                    </h3>
+                  </div>
                   <div className="flex gap-2">
                     {settings?.use_scoring !== false && (
                       <button

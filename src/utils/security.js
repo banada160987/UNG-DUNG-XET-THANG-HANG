@@ -1,7 +1,7 @@
-﻿import { supabase } from './supabaseClient';
+import { supabase } from './supabaseClient';
 
 /**
- * MÃ£ hÃ³a máº­t kháº©u báº±ng SHA-256 (Web Crypto API)
+ * Mã hóa mật khẩu bằng SHA-256 (Web Crypto API)
  */
 export const hashPassword = async (password) => {
   const msgBuffer = new TextEncoder().encode(password);
@@ -12,7 +12,7 @@ export const hashPassword = async (password) => {
 };
 
 /**
- * Láº¥y IP cÃ´ng khai cá»§a thiáº¿t bá»‹
+ * Lấy IP công khai của thiết bị
  */
 export const getDeviceIp = async () => {
   try {
@@ -26,7 +26,7 @@ export const getDeviceIp = async () => {
 };
 
 /**
- * Ghi láº¡i lá»‹ch sá»­ Ä‘Äƒng nháº­p vÃ o báº£ng access_logs
+ * Ghi lại lịch sử đăng nhập vào bảng access_logs
  */
 export const logAccess = async (username, role, status) => {
   try {
@@ -41,24 +41,24 @@ export const logAccess = async (username, role, status) => {
       status: status
     }]);
   } catch (error) {
-    console.error("Lá»—i khi ghi access log:", error);
+    console.error("Lỗi khi ghi access log:", error);
   }
 };
 
 /**
- * Xá»­ lÃ½ tháº¥t báº¡i Ä‘Äƒng nháº­p: tÄƒng failed_attempts vÃ  khÃ³a tÃ i khoáº£n náº¿u cáº§n
- * @param {string} table TÃªn báº£ng ('teachers', 'heads', 'secretaries')
- * @param {string} idField Cá»™t khÃ³a chÃ­nh ('cccd', 'department', 'username')
- * @param {string} idValue GiÃ¡ trá»‹ khÃ³a chÃ­nh
- * @param {number} currentFailedAttempts Sá»‘ láº§n sai hiá»‡n táº¡i
- * @returns {Promise<boolean>} true náº¿u tÃ i khoáº£n bá»‹ khÃ³a sau láº§n sai nÃ y
+ * Xử lý thất bại đăng nhập: tăng failed_attempts và khóa tài khoản nếu cần
+ * @param {string} table Tên bảng ('teachers', 'heads', 'secretaries')
+ * @param {string} idField Cột khóa chính ('cccd', 'department', 'username')
+ * @param {string} idValue Giá trị khóa chính
+ * @param {number} currentFailedAttempts Số lần sai hiện tại
+ * @returns {Promise<boolean>} true nếu tài khoản bị khóa sau lần sai này
  */
 export const handleFailedAttempt = async (table, idField, idValue, currentFailedAttempts) => {
   const newAttempts = currentFailedAttempts + 1;
   let updates = { failed_attempts: newAttempts };
   let isLocked = false;
 
-  // Náº¿u sai 5 láº§n trá»Ÿ lÃªn => khÃ³a 15 phÃºt
+  // Nếu sai 5 lần trở lên => khóa 15 phút
   if (newAttempts >= 5) {
     const lockedUntil = new Date(Date.now() + 15 * 60 * 1000).toISOString();
     updates.locked_until = lockedUntil;
@@ -70,7 +70,7 @@ export const handleFailedAttempt = async (table, idField, idValue, currentFailed
 };
 
 /**
- * Xá»­ lÃ½ thÃ nh cÃ´ng Ä‘Äƒng nháº­p: reset failed_attempts vÃ  locked_until
+ * Xử lý thành công đăng nhập: reset failed_attempts và locked_until
  */
 export const handleSuccessfulLogin = async (table, idField, idValue) => {
   await supabase.from(table).update({
@@ -80,8 +80,8 @@ export const handleSuccessfulLogin = async (table, idField, idValue) => {
 };
 
 /**
- * Kiá»ƒm tra xem tÃ i khoáº£n cÃ³ Ä‘ang bá»‹ khÃ³a hay khÃ´ng
- * @returns {number|null} Sá»‘ phÃºt bá»‹ khÃ³a cÃ²n láº¡i, hoáº·c null náº¿u khÃ´ng bá»‹ khÃ³a
+ * Kiểm tra xem tài khoản có đang bị khóa hay không
+ * @returns {number|null} Số phút bị khóa còn lại, hoặc null nếu không bị khóa
  */
 export const getRemainingLockMinutes = (lockedUntil) => {
   if (!lockedUntil) return null;
@@ -94,7 +94,7 @@ export const getRemainingLockMinutes = (lockedUntil) => {
 };
 
 /**
- * T?o token don gi?n cho phiên làm vi?c (mã hóa base64 v?i timestamp d? có th?i h?n)
+ * Tạo token đơn giản cho phiên làm việc (mã hóa base64 với timestamp để có thời hạn)
  */
 export const generateSessionToken = (userPayload) => {
   const payload = {
@@ -105,7 +105,7 @@ export const generateSessionToken = (userPayload) => {
 };
 
 /**
- * Ki?m tra tính h?p l? c?a token
+ * Kiểm tra tính hợp lệ của token
  */
 export const verifySessionToken = (tokenStr) => {
   if (!tokenStr) return null;
@@ -119,7 +119,7 @@ export const verifySessionToken = (tokenStr) => {
 };
 
 /**
- * Ghi log Audit (Nh?t ký h? th?ng)
+ * Ghi log Audit (Nhật ký hệ thống)
  */
 export const logAudit = async (actor, actionType, targetId, oldData, newData) => {
   try {
@@ -131,6 +131,6 @@ export const logAudit = async (actor, actionType, targetId, oldData, newData) =>
       new_data: newData
     }]);
   } catch (error) {
-    console.error("L?i khi ghi audit log:", error);
+    console.error("Lỗi khi ghi audit log:", error);
   }
 };
