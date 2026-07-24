@@ -689,7 +689,7 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onSubmitToSecretary, onC
       {/* 6. Thành tích */}
       <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <div className="flex justify-between items-center border-b pb-2 mb-4">
-          <h3 className="text-lg font-semibold text-slate-800">VI. Thành tích (Cập nhật đúng theo Kế hoạch)</h3>
+          <h3 className="text-lg font-semibold text-slate-800">VI. Thành tích (Cập nhật đúng theo Kế hoạch)</h3>
           {!isReadOnly && (
             <button type="button" onClick={addAchievement} className="flex items-center gap-1 text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 font-medium">
               <Plus size={16} /> Thêm thành tích
@@ -702,7 +702,10 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onSubmitToSecretary, onC
         ) : (
           <div className="space-y-4">
             {formData.achievements.map((ach, index) => (
-              <div key={index} className="flex flex-col md:flex-row gap-3 items-start md:items-end bg-slate-50 p-4 rounded-lg border border-slate-200">
+              <div key={index} className="relative flex flex-col md:flex-row gap-3 items-start md:items-end bg-slate-50 p-4 pt-8 md:pt-6 rounded-lg border border-slate-200">
+                <div className="absolute top-0 left-0 bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1 rounded-br-lg rounded-tl-lg shadow-sm border-b border-r border-slate-300">
+                  STT {index + 1}
+                </div>
                 <div className="flex-1 w-full">
                   <label className="text-xs font-medium text-slate-500 mb-1 block">Loại thành tích</label>
                   <select 
@@ -795,7 +798,10 @@ export const CandidateForm = ({ onSave, onSubmitToHead, onSubmitToSecretary, onC
         ) : (
           <div className="space-y-4">
             {formData.otherAchievements.map((ach, index) => (
-              <div key={index} className="flex flex-col md:flex-row gap-3 items-start md:items-end bg-slate-50 p-4 rounded-lg border border-slate-200">
+              <div key={index} className="relative flex flex-col md:flex-row gap-3 items-start md:items-end bg-slate-50 p-4 pt-8 md:pt-6 rounded-lg border border-slate-200">
+                <div className="absolute top-0 left-0 bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1 rounded-br-lg rounded-tl-lg shadow-sm border-b border-r border-slate-300">
+                  STT {index + 1}
+                </div>
                 <div className="flex-1 w-full">
                   <label className="text-xs font-medium text-slate-500 mb-1 block">Tên thành tích <span className="text-rose-500">*</span></label>
                   {(() => {
